@@ -1,0 +1,10 @@
+{
+  "variable": {
+    "path": {
+      "type": "string"
+    },
+    "content": {
+      "type": "object({header = string, body = string})"
+    }
+  }
+}
