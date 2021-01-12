@@ -25,32 +25,32 @@ var validateCmd = &cobra.Command{
 
 func init() {
 	schemaCmd.AddCommand(validateCmd)
-	validateCmd.Flags().StringP("document", "d", "document.json", "Path to JSON document")
+	validateCmd.Flags().StringP("document", "d", "document.json", "Path to JSON or YAML document")
 }
 
 // Validate the input object against the schema
 func Validate(schemaPath string, documentPath string) bool {
-	schemaLoader := getSchemaLoader(schemaPath)
-	documentLoader := getSchemaLoader(documentPath)
+	schemaLoader := getLoader(schemaPath)
+	documentLoader := getLoader(documentPath)
 
 	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
 	maybeHandleError(err)
 
 	if result.Valid() {
 		fmt.Printf("The document is valid\n")
+		return true
 	} else {
 		fmt.Printf("The document is not valid. see errors :\n")
 		for _, desc := range result.Errors() {
 			fmt.Printf("- %s\n", desc)
 		}
+		return false
 	}
-	return true
 }
 
-func getSchemaLoader(path string) gojsonschema.JSONLoader {
+func getLoader(path string) gojsonschema.JSONLoader {
 	prefix := "file://"
 	ref := prefix + expandPath(path)
-
 	return gojsonschema.NewReferenceLoader(ref)
 }
 
