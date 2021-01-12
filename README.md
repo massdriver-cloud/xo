@@ -22,3 +22,4 @@ xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NA
 
 **Generating variable definitions and variable files**:
 
+TBD
