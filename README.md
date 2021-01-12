@@ -22,4 +22,18 @@ xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NA
 
 **Generating variable definitions and variable files**:
 
+[Terraform Variable Types](https://www.terraform.io/docs/configuration/expressions/types.html#types)
+
 TBD
+
+## Development
+
+### Adding Commands
+
+Add commands using the [Cobra Generator](https://github.com/spf13/cobra/blob/master/cobra/README.md).
+
+Commands should be scoped (subcommand) under a parent "command" to facilitate organization.
+
+Blogs on writing Cobra commands:
+
+* https://towardsdatascience.com/how-to-create-a-cli-in-golang-with-cobra-d729641c7177
