@@ -8,16 +8,9 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// Property is a single JSON Schema property field
-type Property struct {
-	Type string `json:"type"`
-}
-
-// Convert a JSON Schema to Terraform Variable Definition JSON
-func Convert(mainPath string) string {
-	properties := getProperties(mainPath)
-
-	fmt.Printf("Properties: %+v\n", properties)
+// Compile a JSON Schema to Terraform Variable Definition JSON
+func Compile(path string) string {
+	properties := getProperties(path)
 
 	variableDef := map[string]interface{}{
 		"variable": properties,
@@ -25,22 +18,21 @@ func Convert(mainPath string) string {
 
 	// TODO handle this :D
 	result, _ := json.Marshal(variableDef)
+
 	return string(result)
 }
 
 func getProperties(path string) interface{} {
 	schemaLoader := gojsonschema.NewReferenceLoader(path)
 
-	sl := gojsonschema.NewSchemaLoader()
-	what, serr := sl.Compile(schemaLoader)
-	fmt.Printf("what: %+v\n", what)
-	fmt.Printf("serr: %+v\n", serr)
-
 	// TODO handle this :D
 	schemaSrc, schemaErr := schemaLoader.LoadJSON()
+	src, _ := schemaLoader.JsonReference()
+	fmt.Printf("Src: %+v\n", src.String())
 
-	fmt.Printf("Schema: %+v\n", schemaSrc)
-	fmt.Printf("schemaErr: %+v\n", schemaErr)
+	// fmt.Printf("Schema: %+v\n", schemaSrc)
+	// fmt.Printf("schemaErr: %+v\n", schemaErr)
+	_ = schemaErr
 
 	// TODO handle this :D
 	schema, _ := schemaSrc.(map[string]interface{})

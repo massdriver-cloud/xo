@@ -1,23 +1,21 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-
-  "definitions": {
+  "type": "object",
+  "properties": {
     "person": {
       "type": "object",
       "properties": {
         "name": { "type": "string" },
         "children": {
           "type": "array",
-          "items": { "$ref": "#/definitions/person" },
-          "default": []
+          "items": { 
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" }              
+            }
+          }
         }
       }
     }
-  },
-
-  "type": "object",
-
-  "properties": {
-    "person": { "$ref": "#/definitions/person" }
   }
 }

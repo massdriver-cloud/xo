@@ -25,7 +25,7 @@ var validateCmd = &cobra.Command{
 
 func init() {
 	schemaCmd.AddCommand(validateCmd)
-	validateCmd.Flags().StringP("document", "d", "document.json", "Path to JSON or YAML document")
+	validateCmd.Flags().StringP("document", "d", "document.json", "Path to JSON document")
 }
 
 // Validate the input object against the schema

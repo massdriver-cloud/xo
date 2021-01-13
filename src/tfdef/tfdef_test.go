@@ -24,16 +24,73 @@ func doc(str string) string {
 // first. I assume we'll end up treating the bundle's JSON Schema as the main
 // and ref loading a single 'definitions' JSON Schema that has all of our
 // secrets and connections
-func TestConvertRemoteRefSchemas(t *testing.T) {
-	got := Convert("file://./testdata/remote-ref-schema.json")
+// func TestCompileRemoteRefSchemas(t *testing.T) {
+// 	got := Compile("file://./testdata/remote-ref-schema.json")
+// 	want := doc(`
+// 	{
+// 		"variable": {
+// 			"local": {
+// 				"type": "string"
+// 			},
+// 			"remote": {
+// 				"type": "string"
+// 			}
+// 		}
+// 	}
+// `)
+
+// 	if got != want {
+// 		t.Errorf("got %s want %s", got, want)
+// 	}
+// }
+
+func TestCompileArrayTypes(t *testing.T) {
+	got := Compile("file://./testdata/array-types-schema.json")
 	want := doc(`
 	{
 		"variable": {
-			"local": {
-				"type": "string"
+			"favNumbers": {
+				"type": "list(number)"
 			},
-			"remote": {
-				"type": "string"
+			"favStrings": {
+				"type": "list(string)"
+			},
+			"favThings": {
+				"type": "list(any)"
+			}
+		}
+	}	
+`)
+
+	if got != want {
+		t.Errorf("got %s want %s", got, want)
+	}
+}
+
+func TestCompileObjectTypes(t *testing.T) {
+	got := Compile("file://./testdata/object-types-schema.json")
+	want := doc(`
+	{
+		"variable": {
+			"address": {
+				"type": "object(city = string, state = string, street_address = string)"
+			}
+		}
+	}	
+`)
+
+	if got != want {
+		t.Errorf("got %s want %s", got, want)
+	}
+}
+
+func TestNestedObjectTypes(t *testing.T) {
+	got := Compile("file://./testdata/nested-object-schema.json")
+	want := doc(`
+	{
+		"variable": {
+			"person": {
+				"type": "object(children = list(object(name = string), name = string)"
 			}
 		}
 	}
@@ -44,8 +101,8 @@ func TestConvertRemoteRefSchemas(t *testing.T) {
 	}
 }
 
-func TestConvertScalarTypes(t *testing.T) {
-	got := Convert("file://./testdata/scalar-types-schema.json")
+func TestCompileScalarTypes(t *testing.T) {
+	got := Compile("file://./testdata/scalar-types-schema.json")
 	want := doc(`
 	{
 		"variable": {
