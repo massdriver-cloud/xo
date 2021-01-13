@@ -7,7 +7,7 @@
       "$ref": "#/definitions/LocalString"
     },
     "remote": {
-      "$ref": "definitions.json#/definitions/RemoteString"
+      "$ref": "referenced-schema.json#/definitions/RemoteString"
     }
   },
   "definitions": {
