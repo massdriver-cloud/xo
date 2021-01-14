@@ -18,28 +18,51 @@ type TFVariable struct {
 
 // NewTFVariable creates a new TFVariable from a JSON Schema Property
 func NewTFVariable(p Property) TFVariable {
-	t := convertPropertyToType(p)
+	t := convertPropertyToType(p.Type, p.Properties, p.Items)
 	return TFVariable{Type: t}
 }
 
-func convertPropertyToType(p Property) string {
-	switch p.Type {
+func convertPropertyToType(pType string, pProperties PropertiesMap, pItems PropertyItemsType) string {
+	switch pType {
 	case "array":
-		t := p.Items.Type
-		if len(t) == 0 {
+		var t string
+		switch pItems.Type {
+		case "":
 			t = "any"
+		case "array":
+			t = convertArray()
+		case "object":
+			t = convertObject(pItems.Properties)
+		default:
+			t = pItems.Type
 		}
+
 		return fmt.Sprintf("list(%s)", t)
 	case "object":
-		var types []string
-		for name, prop := range p.Properties {
-			subType := fmt.Sprintf("%s = %s", name, convertPropertyToType(prop))
-			types = append(types, subType)
-		}
-		sort.Strings(types)
-		strTypes := strings.Join(types, ", ")
-		return fmt.Sprintf("object(%s)", strTypes)
+		return convertObject(pProperties)
 	default:
-		return p.Type
+		return convertScalar(pType)
 	}
+}
+
+func convertArray() string {
+	// t = convertPropertyToType(pItems.Type, pItems.Properties, PropertyItemsType{})
+	//TODO
+	return "convertArray - not implemented"
+}
+
+func convertObject(pProperties PropertiesMap) string {
+	var types []string
+	for name, prop := range pProperties {
+		subType := convertPropertyToType(prop.Type, prop.Properties, prop.Items)
+		subTypeDeclaration := fmt.Sprintf("%s = %s", name, subType)
+		types = append(types, subTypeDeclaration)
+	}
+	sort.Strings(types)
+	strTypes := strings.Join(types, ", ")
+	return fmt.Sprintf("object(%s)", strTypes)
+}
+
+func convertScalar(pType string) string {
+	return pType
 }

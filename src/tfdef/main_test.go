@@ -46,7 +46,7 @@ func TestCompile(t *testing.T) {
 // This test is failing because the library doesnt automatically
 // resolve $refs until a document is validated. You can trick it into
 // doing it w/ the last example mentioned in the above link, but
-// we will need to have an idea of how we are doing that in massdriver-bundles
+// we will need to have an idea of how we are doing that in bundles
 // first. I assume we'll end up treating the bundle's JSON Schema as the main
 // and ref loading a single 'definitions' JSON Schema that has all of our
 // secrets and connections
