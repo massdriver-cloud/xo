@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io/ioutil"
 
 	"xo/tfdef"
 
@@ -24,18 +25,38 @@ to quickly create a Cobra application.`,
 func init() {
 	provisionerCmd.AddCommand(definitionsCmd)
 	definitionsCmd.Flags().StringP("schema", "s", "schema.json", "Path to JSON Schema")
+	definitionsCmd.Flags().StringP("output", "o", "variables.tf.json", "Output path. Use - for STDOUT")
 }
 
 func runDefinitions(cmd *cobra.Command, args []string) error {
 	provisioner := args[0]
+	outputPath, _ := cmd.Flags().GetString("output")
+	schema, _ := cmd.Flags().GetString("schema")
+	var compiled string
+	var err error
+
 	switch provisioner {
 	case "terraform":
-		schema, _ := cmd.Flags().GetString("schema")
-		compiled, _ := tfdef.Compile(schema)
+		compiled, err = tfdef.Compile(schema)
+		if err != nil {
+			return err
+		}
+	default:
+		err := fmt.Errorf("Unsupported argument %s the single argument 'terraform' is supported", provisioner)
+		return err
+	}
+
+	return writeVariableFile(compiled, outputPath)
+}
+
+func writeVariableFile(compiled string, outPath string) error {
+	switch outPath {
+	case "-":
 		fmt.Println(compiled)
 		return nil
 	default:
-		err := fmt.Errorf("Unsupported argument %s the single argument 'terraform' is supported", provisioner)
+		data := []byte(compiled)
+		err := ioutil.WriteFile(outPath, data, 0644)
 		return err
 	}
 }

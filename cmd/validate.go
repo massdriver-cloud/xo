@@ -20,9 +20,7 @@ var validateCmd = &cobra.Command{
 func runValidate(cmd *cobra.Command, args []string) error {
 	schema, _ := cmd.Flags().GetString("schema")
 	document, _ := cmd.Flags().GetString("document")
-
-	result, err := Validate(schema, document)
-	fmt.Printf("Document valid? %t", result)
+	_, err := Validate(schema, document)
 	return err
 }
 
@@ -49,7 +47,6 @@ func Validate(schemaPath string, documentPath string) (bool, error) {
 			msg = msg + fmt.Sprintf("- %s\n", desc)
 		}
 
-		err = errors.New(msg)
-		return false, err
+		return false, errors.New(msg)
 	}
 }
