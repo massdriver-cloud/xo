@@ -48,7 +48,7 @@ func TestCompile(t *testing.T) {
 // doing it w/ the last example mentioned in the above link, but
 // we will need to have an idea of how we are doing that in bundles
 // first. I assume we'll end up treating the bundle's JSON Schema as the main
-// and ref loading a single 'definitions' JSON Schema that has all of our
+// and ref loading a single 'compile' JSON Schema that has all of our
 // secrets and connections
 // func TestCompileRemoteSchemas(t *testing.T) {
 // 	got, _  := Compile("file://./testdata/remote-schema.json")

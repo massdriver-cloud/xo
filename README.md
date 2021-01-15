@@ -2,7 +2,6 @@
 
 `xo` is a small tool to handle munging data in our bundle and architecture workflows.
 
-
 ## Usage
 
 **Validate a JSON Schema**:
@@ -20,12 +19,20 @@ cd massdriver-bundles
 xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NAME/metadata.json
 ```
 
-**Generating variable definitions**:
+**Compiling variable definitions**:
 
 [Terraform Variable Types](https://www.terraform.io/docs/configuration/expressions/types.html#types)
 
+Output to STDOUT:
+
 ```shell
-xo provisioner definitions terraform -s examples/tf-json-internals/variables.schema.json
+xo provisioner compile terraform -s examples/tf-json-internals/variables.schema.json -o -
+```
+
+Output to file:
+
+```shell
+xo provisioner compile terraform -s examples/tf-json-internals/variables.schema.json -o variables.tf.json
 ```
 
 ## Development

@@ -60,7 +60,7 @@ func convertObject(pProperties PropertiesMap) string {
 	}
 	sort.Strings(types)
 	strTypes := strings.Join(types, ", ")
-	return fmt.Sprintf("object(%s)", strTypes)
+	return fmt.Sprintf("object({%s})", strTypes)
 }
 
 func convertScalar(pType string) string {
