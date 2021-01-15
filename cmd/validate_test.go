@@ -9,7 +9,7 @@ import (
 func TestValidateJSONDocument(t *testing.T) {
 	cwd, _ := os.Getwd()
 	schema := path.Join(cwd, "testdata/valid-schema.json")
-	got := Validate(schema, "testdata/valid-document.json")
+	got, _ := Validate(schema, "testdata/valid-document.json")
 	want := true
 
 	if got != want {
@@ -18,7 +18,7 @@ func TestValidateJSONDocument(t *testing.T) {
 }
 
 func TestInvalidateJSONDocument(t *testing.T) {
-	got := Validate("testdata/valid-schema.json", "testdata/invalid-document.json")
+	got, _ := Validate("testdata/valid-schema.json", "testdata/invalid-document.json")
 	want := false
 
 	if got != want {

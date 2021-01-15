@@ -18,7 +18,7 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	RunE: run,
+	RunE: runDefinitions,
 }
 
 func init() {
@@ -26,7 +26,7 @@ func init() {
 	definitionsCmd.Flags().StringP("schema", "s", "schema.json", "Path to JSON Schema")
 }
 
-func run(cmd *cobra.Command, args []string) error {
+func runDefinitions(cmd *cobra.Command, args []string) error {
 	provisioner := args[0]
 	switch provisioner {
 	case "terraform":

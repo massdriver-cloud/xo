@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"xo/schemaloader"
 
@@ -13,13 +14,16 @@ var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validates an input object against a schema",
 	Long:  `Validates a JSON object against a JSON Schema.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		schema, _ := cmd.Flags().GetString("schema")
-		document, _ := cmd.Flags().GetString("document")
+	RunE:  runValidate,
+}
 
-		// TODO: Handle error
-		Validate(schema, document)
-	},
+func runValidate(cmd *cobra.Command, args []string) error {
+	schema, _ := cmd.Flags().GetString("schema")
+	document, _ := cmd.Flags().GetString("document")
+
+	result, err := Validate(schema, document)
+	fmt.Printf("Document valid? %t", result)
+	return err
 }
 
 func init() {
@@ -28,27 +32,24 @@ func init() {
 }
 
 // Validate the input object against the schema
-func Validate(schemaPath string, documentPath string) bool {
+func Validate(schemaPath string, documentPath string) (bool, error) {
 	sl := schemaloader.Load(schemaPath)
 	dl := schemaloader.Load(documentPath)
 
 	result, err := gojsonschema.Validate(sl, dl)
-	maybeHandleError(err)
+	if err != nil {
+		return false, err
+	}
 
 	if result.Valid() {
-		fmt.Printf("The document is valid\n")
-		return true
+		return true, nil
 	} else {
-		fmt.Printf("The document is not valid. see errors :\n")
+		msg := "The document is not valid. see errors :\n"
 		for _, desc := range result.Errors() {
-			fmt.Printf("- %s\n", desc)
+			msg = msg + fmt.Sprintf("- %s\n", desc)
 		}
-		return false
-	}
-}
 
-func maybeHandleError(err error) {
-	if err != nil {
-		panic(err.Error())
+		err = errors.New(msg)
+		return false, err
 	}
 }
