@@ -17,7 +17,7 @@ func doc(str string) string {
 }
 
 func TestCompile(t *testing.T) {
-	got := Compile("file://./testdata/local-schema.json")
+	got, _ := Compile("file://./testdata/local-schema.json")
 	want := doc(`
 	{
 		"variable": {
@@ -51,7 +51,7 @@ func TestCompile(t *testing.T) {
 // and ref loading a single 'definitions' JSON Schema that has all of our
 // secrets and connections
 // func TestCompileRemoteSchemas(t *testing.T) {
-// 	got := Compile("file://./testdata/remote-schema.json")
+// 	got, _  := Compile("file://./testdata/remote-schema.json")
 // 	want := doc(`
 // 	{
 // 		"variable": {

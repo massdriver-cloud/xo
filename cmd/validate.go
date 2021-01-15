@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path"
+	"xo/schemaloader"
 
 	"github.com/spf13/cobra"
 	"github.com/xeipuuv/gojsonschema"
@@ -30,10 +29,10 @@ func init() {
 
 // Validate the input object against the schema
 func Validate(schemaPath string, documentPath string) bool {
-	schemaLoader := getLoader(schemaPath)
-	documentLoader := getLoader(documentPath)
+	sl := schemaloader.Load(schemaPath)
+	dl := schemaloader.Load(documentPath)
 
-	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	result, err := gojsonschema.Validate(sl, dl)
 	maybeHandleError(err)
 
 	if result.Valid() {
@@ -46,22 +45,6 @@ func Validate(schemaPath string, documentPath string) bool {
 		}
 		return false
 	}
-}
-
-func getLoader(path string) gojsonschema.JSONLoader {
-	prefix := "file://"
-	ref := prefix + expandPath(path)
-	return gojsonschema.NewReferenceLoader(ref)
-}
-
-func expandPath(p string) string {
-	if path.IsAbs(p) {
-		return p
-	}
-
-	cwd, err := os.Getwd()
-	maybeHandleError(err)
-	return path.Join(cwd, p)
 }
 
 func maybeHandleError(err error) {

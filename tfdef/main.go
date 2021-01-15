@@ -2,17 +2,17 @@ package tfdef
 
 import (
 	"encoding/json"
-
-	"github.com/xeipuuv/gojsonschema"
+	"xo/schemaloader"
 )
 
 // Compile a JSON Schema to Terraform Variable Definition JSON
-func Compile(path string) string {
+func Compile(path string) (string, error) {
+
 	variableFile := TFVariableFile{Variable: getVars(path)}
 
 	// TODO handle this :D
 	result, _ := json.Marshal(variableFile)
-	return string(result)
+	return string(result), nil
 }
 
 func getVars(path string) map[string]TFVariable {
@@ -25,14 +25,10 @@ func getVars(path string) map[string]TFVariable {
 }
 
 func getJSONSchema(path string) Schema {
-	schemaLoader := gojsonschema.NewReferenceLoader(path)
+	sl := schemaloader.Load(path)
 
 	// TODO handle this :D
-	schemaSrc, schemaErr := schemaLoader.LoadJSON()
-
-	// fmt.Printf("Schema: %+v\n", schemaSrc)
-	// fmt.Printf("schemaErr: %+v\n", schemaErr)
-	_ = schemaErr
+	schemaSrc, _ := sl.LoadJSON()
 	byteData, _ := json.Marshal(schemaSrc)
 
 	schema := Schema{}

@@ -12,19 +12,21 @@ Useful for:
 * Validating _our_ bundles' `manifest.json` in _our_ CI before release
 * Validating _user_ input to **payloads** at the beginning of a workflow
 
-```bash
-xo schema validate --schema=path/to/schema.json --input=path/to/input.json
+```shell
+xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
 
 # or
 cd massdriver-bundles
 xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NAME/metadata.json
 ```
 
-**Generating variable definitions and variable files**:
+**Generating variable definitions**:
 
 [Terraform Variable Types](https://www.terraform.io/docs/configuration/expressions/types.html#types)
 
-TBD
+```shell
+xo provisioner definitions terraform -s examples/tf-json-internals/variables.schema.json
+```
 
 ## Development
 
