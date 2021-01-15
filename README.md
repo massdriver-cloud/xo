@@ -26,13 +26,13 @@ xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NA
 Output to STDOUT:
 
 ```shell
-xo provisioner compile terraform -s examples/tf-json-internals/variables.schema.json -o -
+xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o -
 ```
 
 Output to file:
 
 ```shell
-xo provisioner compile terraform -s examples/tf-json-internals/variables.schema.json -o variables.tf.json
+xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o variables.tf.json
 ```
 
 ## Development
