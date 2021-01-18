@@ -13,7 +13,7 @@ jobs:
       - name: Generate build files
         uses: thatisuday/go-cross-build@v1
         with:
-          platforms: "linux/amd64, darwin/amd64, linux/x86"
+          platforms: "linux/amd64, darwin/amd64, linux/amd64"
           name: "xo"
           compress: "false"
           dest: "dist"
