@@ -15,7 +15,7 @@ func Compile(path string) (string, error) {
 	variableFile := TFVariableFile{Variable: vars}
 
 	// TODO handle this :D
-	result, err := json.Marshal(variableFile)
+	result, err := json.MarshalIndent(variableFile, "", "  ")
 	if err != nil {
 		return "", err
 	}

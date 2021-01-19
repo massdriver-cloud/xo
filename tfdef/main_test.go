@@ -12,7 +12,7 @@ func doc(str string) string {
 	jsonMap := make(map[string](interface{}))
 	json.Unmarshal([]byte(b), &jsonMap)
 
-	outBytes, _ := json.Marshal(jsonMap)
+	outBytes, _ := json.MarshalIndent(jsonMap, "", "  ")
 	return string(outBytes)
 }
 
