@@ -10,9 +10,11 @@ test:
 	./xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o -	
 
 .PHONY: setup
-setup: ## Install CLI deps
+setup: ## Install CLI/editor deps
 	go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u github.com/twitchtv/twirp/protoc-gen-twirp
+	go get google.golang.org/protobuf/reflect/protoreflect@v1.26.0
+	go get google.golang.org/protobuf/runtime/protoimpl@v1.26.0
 
 clean: 
 	rm -rf massdriver/deployments.{pb,twirp}.go

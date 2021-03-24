@@ -12,4 +12,5 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/twitchtv/twirp v7.1.1+incompatible // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	google.golang.org/protobuf v1.26.0 // indirect
 )
