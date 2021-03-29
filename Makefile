@@ -5,9 +5,10 @@ MASSDRIVER_PROTOS=${MASSDRIVER_PATH}/protos
 test:
 	go test ./cmd
 	go test ./tfdef
+	go test ./massdriver
 	go build
 	./xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
-	./xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o -	
+	./xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o -
 
 .PHONY: setup
 setup: ## Install CLI/editor deps
@@ -16,7 +17,7 @@ setup: ## Install CLI/editor deps
 	go get google.golang.org/protobuf/reflect/protoreflect@v1.26.0
 	go get google.golang.org/protobuf/runtime/protoimpl@v1.26.0
 
-clean: 
+clean:
 	rm -rf massdriver/deployments.{pb,twirp}.go
 
 massdriver/deployments.pb.go:
