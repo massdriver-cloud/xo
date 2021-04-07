@@ -1,14 +1,14 @@
 package massdriver
 
 import (
-	"testing"
-  "bytes"
+	"bytes"
 	"io/ioutil"
-  http "net/http"
+	http "net/http"
+	"testing"
 
-  mocks "xo/utils/mocks"
+	mocks "xo/utils/mocks"
 
-  proto "github.com/golang/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 )
 
 func init() {
@@ -16,13 +16,13 @@ func init() {
 }
 
 func TestGetDeployment(t *testing.T) {
-  expectedToken := "nothing"
-  testDeployment := Deployment{
-    Id:     "1234",
-  }
+	expectedToken := "nothing"
+	testDeployment := Deployment{
+		Id: "1234",
+	}
 
-  respBytes, _ := proto.Marshal(&testDeployment)
-  r := ioutil.NopCloser(bytes.NewReader(respBytes))
+	respBytes, _ := proto.Marshal(&testDeployment)
+	r := ioutil.NopCloser(bytes.NewReader(respBytes))
 	mocks.MockDoFunc = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: 200,
