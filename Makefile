@@ -17,12 +17,8 @@ setup: ## Install CLI/editor deps
 	go get google.golang.org/protobuf/reflect/protoreflect@v1.26.0
 	go get google.golang.org/protobuf/runtime/protoimpl@v1.26.0
 
-.PHONY: clean
 clean:
 	rm -rf massdriver/*.{pb,twirp}.go
 
-.PHONY: protos
-protos: clean massdriver/workflow.pb.go
-
-massdriver/%.pb.go:
-	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=. $(MASSDRIVER_PROTOS)/$*.proto
+massdriver/workflow.pb.go:
+	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=. $(MASSDRIVER_PROTOS)/workflow.proto
