@@ -16,10 +16,9 @@ func init() {
 }
 
 func TestGetDeployment(t *testing.T) {
-  expectedToken := "testTokenabcd1234"
+  expectedToken := "nothing"
   testDeployment := Deployment{
     Id:     "1234",
-    Token:  expectedToken,
   }
 
   respBytes, _ := proto.Marshal(&testDeployment)
@@ -31,7 +30,7 @@ func TestGetDeployment(t *testing.T) {
 		}, nil
 	}
 
-	got, _ := GetDeployment("whatever")
+	got, _ := GetDeployment("whatever", "token")
 
 	if got != expectedToken {
 		t.Fatalf("expected: %v, got: %v", expectedToken, got)

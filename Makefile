@@ -18,7 +18,7 @@ setup: ## Install CLI/editor deps
 	go get google.golang.org/protobuf/runtime/protoimpl@v1.26.0
 
 clean:
-	rm -rf massdriver/deployments.{pb,twirp}.go
+	rm -rf massdriver/workflow.{pb,twirp}.go
 
-massdriver/deployments.pb.go:
-	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=. $(MASSDRIVER_PROTOS)/deployments.proto
+massdriver/workflow.pb.go:
+	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=. $(MASSDRIVER_PROTOS)/workflow.proto
