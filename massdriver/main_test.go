@@ -9,6 +9,7 @@ import (
 	mocks "xo/utils/mocks"
 
 	proto "github.com/golang/protobuf/proto"
+	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 func init() {
@@ -16,9 +17,26 @@ func init() {
 }
 
 func TestGetDeployment(t *testing.T) {
-	expectedToken := "nothing"
+	testInputs, _ := structpb.NewStruct(map[string]interface{}{
+		"aws_region": "us-east-1",
+		"some_key":   true,
+		"other_key":  27,
+		"nested_key": map[string]interface{}{
+			"key_a": "value_a",
+			"key_b": 123.456,
+		},
+	})
+	testConnections, _ := structpb.NewStruct(map[string]interface{}{
+		"default": map[string]interface{}{
+			"aws_access_key_id":     "ACOVIBUOISKLWJEFKJL",
+			"aws_secret_access_key": "8ba0u90uwe9fuq90j3490tj0q923u12093u09gj90u130",
+		},
+	})
 	testDeployment := Deployment{
-		Id: "1234",
+		Id:          "1234",
+		Status:      DeploymentStatus_PENDING,
+		Inputs:      testInputs,
+		Connections: testConnections,
 	}
 
 	respBytes, _ := proto.Marshal(&testDeployment)
@@ -30,9 +48,13 @@ func TestGetDeployment(t *testing.T) {
 		}, nil
 	}
 
-	got, _ := GetDeployment("whatever", "token")
+	got, _ := GetDeployment("id", "token")
 
-	if got != expectedToken {
-		t.Fatalf("expected: %v, got: %v", expectedToken, got)
+	gotString := proto.MarshalTextString(got)
+	wantString := proto.MarshalTextString(&testDeployment)
+
+	if gotString != wantString {
+		t.Fatalf("expected: %+v, got: %+v", gotString, wantString)
 	}
+
 }
