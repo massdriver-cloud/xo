@@ -8,7 +8,7 @@ import (
 
 	mocks "xo/utils/mocks"
 
-	proto "github.com/golang/protobuf/proto"
+	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -50,11 +50,8 @@ func TestGetDeployment(t *testing.T) {
 
 	got, _ := GetDeployment("id", "token")
 
-	gotString := proto.MarshalTextString(got)
-	wantString := proto.MarshalTextString(&testDeployment)
-
-	if gotString != wantString {
-		t.Fatalf("expected: %+v, got: %+v", gotString, wantString)
+	if !proto.Equal(got, &testDeployment) {
+		t.Fatalf("expected: %+v, got: %+v", got.String(), testDeployment.String())
 	}
 }
 
