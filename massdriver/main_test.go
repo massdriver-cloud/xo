@@ -56,5 +56,26 @@ func TestGetDeployment(t *testing.T) {
 	if gotString != wantString {
 		t.Fatalf("expected: %+v, got: %+v", gotString, wantString)
 	}
+}
 
+func TestWriteSchema(t *testing.T) {
+	testInputs, _ := structpb.NewStruct(map[string]interface{}{
+		"aws_region": "us-east-1",
+		"some_key":   true,
+		"other_key":  27,
+		"nested_key": map[string]interface{}{
+			"key_a": "value_a",
+			"key_b": 123.456,
+		},
+	})
+
+	buf := bytes.Buffer{}
+	writeSchema(testInputs, &buf)
+
+	gotString := buf.String()
+	wantString := "{\"aws_region\":\"us-east-1\",\"nested_key\":{\"key_a\":\"value_a\",\"key_b\":123.456},\"other_key\":27,\"some_key\":true}"
+
+	if gotString != wantString {
+		t.Fatalf("expected: %v, got: %v", gotString, wantString)
+	}
 }
