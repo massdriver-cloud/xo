@@ -24,5 +24,7 @@ func main() {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
+	// [metadata, artifactJson, inputJson, connectionJson] =
 	ParseBundle(*bundleFilePath)
+	// each to file
 }
