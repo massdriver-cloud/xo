@@ -1,0 +1,36 @@
+schema: draft-07
+#$id is auto generated based on folder name and {conn,input,arti} below
+uuid: FC2C7101-86A6-437B-B8C2-A2391FE8C847
+title: "AWS VPC"
+description: Something
+
+#- everything above is replicated for each of the three keys below and suffixed w the key -artifacts, etc
+#- below is the yaml form of the JSON Schema... with special processing to replace the string conn://
+#- with a {"$ref": 'path/to/the/conn.json'}
+
+connections:
+  properties:
+    default: artifact://aws-example
+
+artifacts:
+  items:
+    anyOf:
+      - artifact://aws-example
+      - artifact://aws-example
+
+inputs:
+  allOf:
+    - artifact://aws-example
+    - properties:
+        specs/kubernetes: spec://kubernetes
+  required:
+    - specs
+  properties:
+    specs:
+      type: object
+      properties:
+        platform_version:
+          type: string
+          enum:
+            - eks1
+            - eks2
