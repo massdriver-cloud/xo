@@ -13,5 +13,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	github.com/twitchtv/twirp v7.1.1+incompatible // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.16.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )
