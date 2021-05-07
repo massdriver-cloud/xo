@@ -6,13 +6,14 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	homedir "github.com/mitchellh/go-homedir"
-	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
+var logger *zap.Logger
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -68,10 +69,6 @@ func initConfig() {
 }
 
 func setupLogging() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	debug, _ := rootCmd.PersistentFlags().GetBool("debug")
-	if debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
+	logger, _ = zap.NewProduction()
+	defer logger.Sync()
 }
