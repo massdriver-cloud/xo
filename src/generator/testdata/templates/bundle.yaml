@@ -1,0 +1,30 @@
+# This file will is used to generate all of the schema-*.json files in a bundle
+# The root section will be the schema, uuid, title, description for all three schema-*.json files
+schema: draft-07
+#$id is auto generated based on folder name and {conn,input,arti} below
+uuid: {{ .Uuid }} 
+title: {{ .Name }}
+description: {{ .Description }}
+
+#- everything above is replicated for each of the three keys below and suffixed w the key -artifacts, etc
+#- below is the yaml form of the JSON Schema... with special processing to replace the string artifact://
+#- with a {"$ref": 'path/to/the/conn.json'}
+
+# Each key here down is a schema-*.json file JSON Schema equivalent
+# schema-connections.json
+connections:
+  properties:
+    default: artifact://aws-example
+
+# schema-artifacts.json
+artifacts:
+  items:
+    anyOf:
+      - artifact://aws-example
+      - artifact://aws-example
+
+# schema-inputs.json
+inputs:
+  allOf:
+    - artifact://aws-example1
+    - artifact://aws-example2
