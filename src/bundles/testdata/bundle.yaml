@@ -1,9 +1,10 @@
 # This file will be used to generate all of the schema-*.json files in a bundle
+slug: aws-vpc
 
+uuid: FC2C7101-86A6-437B-B8C2-A2391FE8C847
 # The root section will be the schema, uuid, title, description for all three schema-*.json files
 schema: draft-07
 #$id is auto generated based on folder name and {conn,input,arti} below
-uuid: FC2C7101-86A6-437B-B8C2-A2391FE8C847
 title: "AWS VPC"
 description: Something
 
@@ -35,6 +36,8 @@ inputs:
         # bundles make artifacts, and artifacts have specs
         # Leaving the support here as we may be able to use the same hydrate code
         # to hydrate/compile the artifact JSON schemas!!!
+        # Alternatively we could compile the artifacts w/ the python compile tool and then
+        # have xo bundle build work on the definitions/compiled/ dir instead
         specs/kubernetes: spec://kubernetes
   required:
     - specs

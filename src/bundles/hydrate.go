@@ -23,12 +23,18 @@ func Hydrate(any interface{}) interface{} {
 			if err != nil {
 				panic(err)
 			}
+			// TODO: Do we want to recursively hydrate specs. We could replace $ref's w/ specs/artifacts
+			// and fully hydrate a snapshot of the entire JSON Schema into one file for the bundle... which
+			// would stop any weirdness in file changes between deploys/caching
 			return artifact
 		} else if specPattern.MatchString(val.String()) {
 			spec, err := readSpecRef(val.String())
 			if err != nil {
 				panic(err)
 			}
+			// TODO: Do we want to recursively hydrate specs. We could replace $ref's w/ specs/artifacts
+			// and fully hydrate a snapshot of the entire JSON Schema into one file for the bundle... which
+			// would stop any weirdness in file changes between deploys/caching
 			return spec
 		} else {
 			return val.String()
