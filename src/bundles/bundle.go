@@ -77,8 +77,6 @@ func (b *Bundle) Build(dir string) {
 	connectionsSchemaFile := createFile(dir, "connections")
 	artifactsSchemaFile := createFile(dir, "artifacts")
 
-	// TODO: connect to build cmd and run in aws-vpc!
-
 	BuildSchema(b.Inputs, b.Metadata(), inputsSchemaFile)
 	BuildSchema(b.Connections, b.Metadata(), connectionsSchemaFile)
 	BuildSchema(b.Artifacts, b.Metadata(), artifactsSchemaFile)
