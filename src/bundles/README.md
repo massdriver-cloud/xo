@@ -2,7 +2,6 @@
 
 The `bundles` packages parses massdriver-bundles' _bundle.yaml_ file and creates:
 
-* metadata.yaml
 * schema-inputs.json
 * schema-connections.json
 * schema-artifacts.json
@@ -20,6 +19,12 @@ slug: aws-vpc
 title: AWS VPC
 # A human friendly description for the bundle, this _WILL_ show up in the UI
 description: AWS VPV bundle with public, private, and internal subnets
+# The provisioner this bundle runs
+provisioner: terraform
+# The visibility scope of this bundle on massdriver.sh
+access: public
+# bundle or architecture type
+type: bundle
 
 # YAML format of a JSON Schema for schema-inputs.json
 # Include everything you would include besides: $schema, title, $id, description

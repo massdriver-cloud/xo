@@ -3,6 +3,9 @@ slug: aws-vpc
 schema: draft-07
 title: "AWS VPC"
 description: Something
+provisioner: terraform
+access: public
+type: bundle
 inputs:
   required: ["name"]
   properties:

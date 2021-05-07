@@ -70,12 +70,13 @@ func createFile(dir string, fileName string) *os.File {
 
 // Build generates all bundle files in the given directory
 func (b *Bundle) Build(dir string) {
+	err := os.MkdirAll(dir, 0755)
+	checkErr(err)
+
 	inputsSchemaFile := createFile(dir, "inputs")
 	connectionsSchemaFile := createFile(dir, "connections")
 	artifactsSchemaFile := createFile(dir, "artifacts")
 
-	// TODO: BuildManifest
-	// TODO: consider recursive walk
 	// TODO: connect to build cmd and run in aws-vpc!
 
 	BuildSchema(b.Inputs, b.Metadata(), inputsSchemaFile)

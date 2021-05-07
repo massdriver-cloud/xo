@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 	"xo/src/bundles"
@@ -16,7 +17,11 @@ func init() {
 
 func TestBuild(t *testing.T) {
 	var bundle = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
-	bundle.Build("/tmp")
+	bundle.Build("./tmp/")
+
+	// TODO: assert the files are there :D
+
+	defer os.RemoveAll("./tmp")
 }
 
 func TestBuildSchema(t *testing.T) {
