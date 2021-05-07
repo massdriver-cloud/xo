@@ -1,4 +1,4 @@
-package main
+package bundles
 
 import (
 	"encoding/json"
@@ -8,9 +8,8 @@ import (
 	"regexp"
 )
 
-const artifactPath = "./testdata/artifacts"
-const specPath = "./testdata/specs"
-
+var ArtifactPath = "./definitions/artifacts"
+var SpecPath = "./definitions/specs"
 var artifactPattern = regexp.MustCompile("^artifact://([a-z0-9-]+)")
 var specPattern = regexp.MustCompile("^spec://([a-z0-9-]+)")
 
@@ -68,7 +67,7 @@ func readSpecRef(ref string) (map[string]interface{}, error) {
 	m := specPattern.FindSubmatch(refBytes)
 
 	filename := string(m[1])
-	filepath := fmt.Sprintf("%s/%s.json", specPath, filename)
+	filepath := fmt.Sprintf("%s/%s.json", SpecPath, filename)
 	data, err := ioutil.ReadFile(filepath)
 
 	if err != nil {
@@ -89,7 +88,7 @@ func readArtifactRef(ref string) (map[string]interface{}, error) {
 	m := artifactPattern.FindSubmatch(refBytes)
 
 	filename := string(m[1])
-	filepath := fmt.Sprintf("%s/%s.json", artifactPath, filename)
+	filepath := fmt.Sprintf("%s/%s.json", ArtifactPath, filename)
 	data, err := ioutil.ReadFile(filepath)
 
 	if err != nil {

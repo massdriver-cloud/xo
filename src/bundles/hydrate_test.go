@@ -1,9 +1,10 @@
-package main
+package bundles_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"xo/src/bundles"
 )
 
 type TestCase struct {
@@ -13,6 +14,9 @@ type TestCase struct {
 }
 
 func TestHydrate(t *testing.T) {
+	bundles.ArtifactPath = "./testdata/artifacts"
+	bundles.SpecPath = "./testdata/specs"
+
 	cases := []TestCase{
 		{
 			Name:  "Hydrates a shallow map with an artifact ref",
@@ -72,7 +76,7 @@ func TestHydrate(t *testing.T) {
 
 	for _, test := range cases {
 		t.Run(test.Name, func(t *testing.T) {
-			got := Hydrate(test.Input)
+			got := bundles.Hydrate(test.Input)
 
 			if fmt.Sprint(got) != fmt.Sprint(test.Expected) {
 				t.Errorf("got %v, want %v", got, test.Expected)

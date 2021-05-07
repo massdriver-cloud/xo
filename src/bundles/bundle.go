@@ -1,4 +1,4 @@
-package main
+package bundles
 
 import (
 	"encoding/json"
@@ -7,8 +7,6 @@ import (
 
 	"gopkg.in/yaml.v3"
 )
-
-type WeakSchema map[string]interface{}
 
 type Bundle struct {
 	Schema      string     `json:"schema"`
