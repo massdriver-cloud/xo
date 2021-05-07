@@ -12,6 +12,8 @@ import (
 // TODO: build files...
 // [ ] metadata.json
 // [ ] inputs, connections, artifacts JSON
+
+// TODO: this file goes away when cmd starts calling bundles.ParseBundle()
 func main() {
 	debug := flag.Bool("debug", false, "sets log level to debug")
 	bundleFilePath := flag.String("input", "./bundle.yaml", "Path to bundle file")

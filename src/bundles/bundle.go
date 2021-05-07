@@ -1,8 +1,6 @@
 package bundles
 
 import (
-	"encoding/json"
-	"fmt"
 	"io/ioutil"
 
 	"gopkg.in/yaml.v3"
@@ -35,9 +33,9 @@ func ParseBundle(path string) Bundle {
 	hydratedConnections := Hydrate(bundle.Connections)
 	bundle.Connections = hydratedConnections.(map[string]interface{})
 
-	hydratedBundle, err := json.Marshal(bundle)
-	checkErr(err)
-	fmt.Printf(string(hydratedBundle))
+	// hydratedBundle, err := json.Marshal(bundle)
+	// checkErr(err)
+	// fmt.Printf(string(hydratedBundle))
 	return bundle
 }
 
