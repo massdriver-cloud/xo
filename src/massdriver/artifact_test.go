@@ -5,7 +5,7 @@ import (
 	ioutil "io/ioutil"
 	http "net/http"
 	"testing"
-	mocks "xo/utils/mocks"
+	mocks "xo/src/utils/mocks"
 
 	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"

@@ -1,7 +1,7 @@
 package massdriver
 
 import (
-	mocks "xo/utils/mocks"
+	mocks "xo/src/utils/mocks"
 )
 
 func init() {
