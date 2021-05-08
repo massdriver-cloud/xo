@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"io/fs"
 	"io/ioutil"
 	"os"
@@ -34,16 +35,21 @@ func Generate(data TemplateData) error {
 		return err
 	}
 
+	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Name)
+	terraformDir := fmt.Sprintf("%s/%s", bundleDir, "terraform")
+	os.Mkdir(bundleDir, 0777)
+	os.Mkdir(terraformDir, 0777)
+
 	for _, file := range files {
 		templatePath := data.TemplateDir + "/" + file.Name()
-		filePath := data.BundleDir + "/" + file.Name()
+		renderPath := fmt.Sprintf("%s/%s", bundleDir, file.Name())
 		tmpl, err := template.ParseFiles(templatePath)
 
 		if err != nil {
 			return err
 		}
 
-		fileToWrite, err := os.Create(filePath)
+		fileToWrite, err := os.Create(renderPath)
 
 		if err != nil {
 			return err

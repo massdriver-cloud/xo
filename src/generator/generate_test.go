@@ -21,13 +21,15 @@ func TestGenerate(t *testing.T) {
 		Provisioner: "terraform",
 	}
 
+	os.Mkdir(bundleData.BundleDir, 0777)
+
 	err := generator.Generate(bundleData)
 
 	if err != nil {
 		t.Errorf("Generating the bundle encounted an unexpected error %v", err)
 	}
 
-	bundleYamlPath := fmt.Sprintf("%s/bundle.yaml", bundleData.BundleDir)
+	bundleYamlPath := fmt.Sprintf("%s/%s/bundle.yaml", bundleData.BundleDir, bundleData.Name)
 	content, err := ioutil.ReadFile(bundleYamlPath)
 
 	if err != nil {
@@ -38,7 +40,7 @@ func TestGenerate(t *testing.T) {
 		t.Errorf("Data failed to render in the generated template")
 	}
 
-	readmePath := fmt.Sprintf("%s/README.md", bundleData.BundleDir)
+	readmePath := fmt.Sprintf("%s/%s/README.md", bundleData.BundleDir, bundleData.Name)
 	content, err = ioutil.ReadFile(readmePath)
 
 	if err != nil {
@@ -49,8 +51,12 @@ func TestGenerate(t *testing.T) {
 		t.Errorf("Data failed to render in the generated template")
 	}
 
+	terraformPath := fmt.Sprintf("%s/terraform", bundleData.BundleDir)
+	if _, err := os.Stat(terraformPath); !os.IsNotExist(err) {
+		t.Errorf("Terraform directory was not created")
+	}
+
 	t.Cleanup(func() {
-		os.RemoveAll(bundleYamlPath)
-		os.RemoveAll(readmePath)
+		os.RemoveAll(bundleData.BundleDir)
 	})
 }
