@@ -47,6 +47,7 @@ func convertPropertyToType(pType string, pProperties PropertiesMap, pItems Prope
 
 func convertArray() string {
 	// t = convertPropertyToType(pItems.Type, pItems.Properties, PropertyItemsType{})
+	//TODO
 	return "convertArray - not implemented"
 }
 

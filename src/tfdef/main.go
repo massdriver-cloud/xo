@@ -2,7 +2,7 @@ package tfdef
 
 import (
 	"encoding/json"
-	"xo/schemaloader"
+	"xo/src/schemaloader"
 )
 
 // Compile a JSON Schema to Terraform Variable Definition JSON
