@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"fmt"
 	"xo/src/bundles"
+	"xo/src/generator"
 
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
@@ -22,7 +22,7 @@ var bundleBuildCmd = &cobra.Command{
 }
 
 var bundleGenerateCmd = &cobra.Command{
-	Use:   "generate [Bundle name]",
+	Use:   "generate",
 	Short: "Generates a new bundle",
 	RunE:  runBundleGenerate,
 }
@@ -32,7 +32,7 @@ func init() {
 	bundleCmd.AddCommand(bundleBuildCmd)
 	bundleBuildCmd.Flags().StringP("output", "o", ".", "Path to output directory.")
 	bundleCmd.AddCommand(bundleGenerateCmd)
-	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./xo-bundle-template", "Path to template directory")
+	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
 }
 
@@ -66,6 +66,23 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 }
 
 func runBundleGenerate(cmd *cobra.Command, args []string) error {
-	fmt.Println(args)
-	return nil
+	bundleDir, err := cmd.Flags().GetString("bundle-dir")
+	if err != nil {
+		return err
+	}
+
+	templateDir, err := cmd.Flags().GetString("template-dir")
+	if err != nil {
+		return err
+	}
+
+	templateData := &generator.TemplateData{
+		BundleDir:   bundleDir,
+		TemplateDir: templateDir,
+	}
+
+	generator.RunPrompt(templateData)
+	generator.Generate(*templateData)
+
+	return err
 }
