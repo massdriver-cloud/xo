@@ -10,11 +10,6 @@ import (
 	"xo/src/bundles"
 )
 
-func init() {
-	bundles.ArtifactPath = "./testdata/artifacts"
-	bundles.SpecPath = "./testdata/specs"
-}
-
 func TestBuild(t *testing.T) {
 	var bundle = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	bundle.Build("./tmp/")
@@ -42,6 +37,7 @@ func TestBuildSchema(t *testing.T) {
 }
 
 func TestParseBundle(t *testing.T) {
+	// TODO: add some $refs to the bundle.yaml
 	var got = bundles.ParseBundle("./testdata/bundle.yaml")
 	var want = bundles.Bundle{
 		Uuid:        "FC2C7101-86A6-437B-B8C2-A2391FE8C847",
@@ -49,53 +45,30 @@ func TestParseBundle(t *testing.T) {
 		Slug:        "aws-vpc",
 		Title:       "AWS VPC",
 		Description: "Something",
-		Artifacts: map[string]interface{}{
-			"items": map[string]interface{}{
-				"anyOf": []interface{}{
-					map[string]interface{}{
-						"id": "fake-schema-id",
-					},
-					map[string]interface{}{
-						"id": "fake-schema-id",
-					},
-				},
-			},
-		},
+		Artifacts:   map[string]interface{}{},
 		Inputs: map[string]interface{}{
-			"allOf": []interface{}{
-				map[string]interface{}{
-					"id": "fake-schema-id",
-				},
-				map[string]interface{}{
-					"properties": map[string]interface{}{
-						"specs/kubernetes": map[string]interface{}{
-							"version": "1.15",
-						},
-					},
-				},
-			},
 			"properties": map[string]interface{}{
-				"specs": map[string]interface{}{
-					"properties": map[string]interface{}{
-						"platform_version": map[string]interface{}{
-							"enum": []interface{}{
-								"eks1",
-								"eks2",
-							},
-							"type": "string",
-						},
-					},
-					"type": "object",
+				"name": map[string]interface{}{
+					"type":  "string",
+					"title": "Name",
+				},
+				"age": map[string]interface{}{
+					"type":  "integer",
+					"title": "Age",
 				},
 			},
 			"required": []interface{}{
-				"specs",
+				"name",
 			},
 		},
 		Connections: map[string]interface{}{
+			"required": []interface{}{
+				"default",
+			},
 			"properties": map[string]interface{}{
 				"default": map[string]interface{}{
-					"id": "fake-schema-id",
+					"type":  "string",
+					"title": "Default credential",
 				},
 			},
 		},

@@ -14,19 +14,7 @@ type TestCase struct {
 }
 
 func TestHydrate(t *testing.T) {
-	bundles.ArtifactPath = "./testdata/artifacts"
-	bundles.SpecPath = "./testdata/specs"
-
 	cases := []TestCase{
-		{
-			Name:  "Hydrates a shallow map with an artifact ref",
-			Input: jsonDecode(`{"key": "artifact://aws-example"}`),
-			Expected: map[string]map[string]string{
-				"key": {
-					"id": "fake-schema-id",
-				},
-			},
-		},
 		{
 			Name:  "Hydrates a $ref",
 			Input: jsonDecode(`{"$ref": "./testdata/artifacts/aws-example.json"}`),
@@ -35,19 +23,18 @@ func TestHydrate(t *testing.T) {
 			},
 		},
 		{
+			Name:  "Hydrates a $ref alongside arbitrary values",
+			Input: jsonDecode(`{"kewl": true, "$ref": "./testdata/artifacts/aws-example.json"}`),
+			Expected: map[string]interface{}{
+				"kewl": true,
+				"id":   "fake-schema-id",
+			},
+		},
+		{
 			Name:  "Hydrates a nested $ref",
 			Input: jsonDecode(`{"key": {"$ref": "./testdata/artifacts/aws-example.json"}}`),
 			Expected: map[string]map[string]string{
 				"key": {
-					"id": "fake-schema-id",
-				},
-			},
-		},
-		{
-			Name:  "Hydrates a $ref recursively",
-			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
-			Expected: map[string]map[string]string{
-				"properties": {
 					"id": "fake-schema-id",
 				},
 			},
@@ -67,50 +54,27 @@ func TestHydrate(t *testing.T) {
 			},
 		},
 		{
-			Name:  "Hydrates a shallow map with an spec ref",
-			Input: jsonDecode(`{"key": "spec://kubernetes"}`),
-			Expected: map[string]map[string]string{
-				"key": {
-					"version": "1.15",
-				},
-			},
-		},
-		{
-			Name:  "Map with arbiratry values",
-			Input: jsonDecode(`{"s": "just-a-string", "i": 3, "key": "artifact://aws-example"}`),
+			Name:  "Hydrates $refs in a list",
+			Input: jsonDecode(`{"list": ["string", {"$ref": "./testdata/artifacts/aws-example.json"}]}`),
 			Expected: map[string]interface{}{
-				"s": "just-a-string",
-				"i": 3,
-				"key": map[string]interface{}{
-					"id": "fake-schema-id",
-				},
-			},
-		},
-		{
-			Name:  "Nested map",
-			Input: jsonDecode(`{"parent": {"key": "artifact://aws-example"}}`),
-			Expected: map[string]interface{}{
-				"parent": map[string]interface{}{
-					"key": map[string]interface{}{
+				"list": []interface{}{
+					"string",
+					map[string]interface{}{
 						"id": "fake-schema-id",
 					},
 				},
 			},
 		},
 		{
-			Name:  "Lists",
-			Input: jsonDecode(`{"list": ["string", {"key": "artifact://aws-example"}]}`),
-			Expected: map[string]interface{}{
-				"list": []interface{}{
-					"string",
-					map[string]interface{}{
-						"key": map[string]interface{}{
-							"id": "fake-schema-id",
-						},
-					},
+			Name:  "Hydrates a $ref recursively",
+			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
+			Expected: map[string]map[string]string{
+				"properties": {
+					"id": "fake-schema-id",
 				},
 			},
 		},
+		// TODO hydrates a ref deterministically (keys outside of ref always win)
 	}
 
 	for _, test := range cases {

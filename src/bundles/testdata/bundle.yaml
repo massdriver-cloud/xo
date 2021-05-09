@@ -1,52 +1,25 @@
-# This file will be used to generate all of the schema-*.json files in a bundle
-slug: aws-vpc
-
 uuid: FC2C7101-86A6-437B-B8C2-A2391FE8C847
-# The root section will be the schema, uuid, title, description for all three schema-*.json files
+slug: aws-vpc
 schema: draft-07
-#$id is auto generated based on folder name and {conn,input,arti} below
 title: "AWS VPC"
 description: Something
-
-#- everything above is replicated for each of the three keys below and suffixed w the key -artifacts, etc
-#- below is the yaml form of the JSON Schema... with special processing to replace the string conn://
-#- with a {"$ref": 'path/to/the/conn.json'}
-
-# Each key here down is a schema-*.json file JSON Schema equivalent
-# schema-connections.json
-connections:
-  properties:
-    default: artifact://aws-example
-
-# schema-artifacts.json
-artifacts:
-  items:
-    anyOf:
-      - artifact://aws-example
-      - artifact://aws-example
-
-# schema-inputs.json
+provisioner: terraform
+access: public
+type: bundle
 inputs:
-  allOf:
-    - artifact://aws-example
-    - properties:
-        # we dont technically need to support specs, because a bundle.yaml will never have them...
-        # only artifacts have specs...
-        # bundles have input schemas,
-        # bundles make artifacts, and artifacts have specs
-        # Leaving the support here as we may be able to use the same hydrate code
-        # to hydrate/compile the artifact JSON schemas!!!
-        # Alternatively we could compile the artifacts w/ the python compile tool and then
-        # have xo bundle build work on the definitions/compiled/ dir instead
-        specs/kubernetes: spec://kubernetes
-  required:
-    - specs
+  required: ["name"]
   properties:
-    specs:
-      type: object
-      properties:
-        platform_version:
-          type: string
-          enum:
-            - eks1
-            - eks2
+    name:
+      type: string
+      title: Name
+    age:
+      type: integer
+      title: Age
+connections:
+  required: ["default"]
+  properties:
+    default:
+      type: string
+      title: Default credential
+
+artifacts:
