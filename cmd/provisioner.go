@@ -66,7 +66,7 @@ func runProvisionerCompile(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	default:
-		err := fmt.Errorf("Unsupported argument %s the single argument 'terraform' is supported", provisioner)
+		err := fmt.Errorf("unsupported argument %s the single argument 'terraform' is supported", provisioner)
 		log.Error().Err(err).Msg("Compilation failed.")
 		return err
 	}

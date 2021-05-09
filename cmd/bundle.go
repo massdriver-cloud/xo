@@ -43,7 +43,7 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 	bundle := bundles.ParseBundle(path)
 	bundle.Build(output)
 
-	logger.Info("building built",
+	logger.Info("bundle built",
 		zap.String("source", path),
 		zap.String("output", output),
 	)

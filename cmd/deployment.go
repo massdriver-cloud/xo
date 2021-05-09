@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"os"
 	"xo/src/massdriver"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 var deploymentCmd = &cobra.Command{
@@ -17,7 +19,7 @@ var deploymentCmd = &cobra.Command{
 
 var deploymentGetCmd = &cobra.Command{
 	Use:                   "get -i [id]",
-	Short:                 "Fetch object from Massdriver",
+	Short:                 "Fetch deployment from Massdriver",
 	Long:                  ``,
 	RunE:                  RunDeploymentGet,
 	DisableFlagsInUseLine: true,
@@ -26,22 +28,28 @@ var deploymentGetCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 	deploymentCmd.AddCommand(deploymentGetCmd)
-	deploymentGetCmd.Flags().StringP("id", "i", "", "ID of resource to fetch")
-	deploymentGetCmd.Flags().StringP("token", "t", "", "Secure token to authenticate with Massdriver")
+	deploymentGetCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID")
+	deploymentGetCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver")
 	deploymentGetCmd.Flags().StringP("dest", "d", ".", "Destination path to write deployment json files")
 	deploymentGetCmd.MarkFlagRequired("id")
 }
 
 func RunDeploymentGet(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("id")
+	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
 	dest, _ := cmd.Flags().GetString("dest")
 
+	logger.Info("getting deployment from massdriver",
+		zap.String("deployment", id),
+	)
 	dep, err := massdriver.GetDeployment(id, token)
 	if err != nil {
 		return err
 	}
 
+	logger.Info("writing deployment to file",
+		zap.String("deployment", id),
+	)
 	err = massdriver.WriteDeploymentToFile(dep, dest)
 	return err
 }
