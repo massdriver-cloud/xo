@@ -33,10 +33,10 @@ func ParseBundle(path string) Bundle {
 	bundle := Bundle{}
 
 	data, err := ioutil.ReadFile(path)
-	checkErr(err)
+	maybePanic(err)
 
 	err = yaml.Unmarshal([]byte(data), &bundle)
-	checkErr(err)
+	maybePanic(err)
 
 	hydratedArtifacts := Hydrate(bundle.Artifacts)
 	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
@@ -63,7 +63,7 @@ func (b *Bundle) Metadata() map[string]string {
 func createFile(dir string, fileName string) *os.File {
 	filePath := fmt.Sprintf("%s/schema-%s.json", dir, fileName)
 	f, err := os.Create(filePath)
-	checkErr(err)
+	maybePanic(err)
 
 	return f
 }
@@ -71,7 +71,7 @@ func createFile(dir string, fileName string) *os.File {
 // Build generates all bundle files in the given directory
 func (b *Bundle) Build(dir string) {
 	err := os.MkdirAll(dir, 0755)
-	checkErr(err)
+	maybePanic(err)
 
 	inputsSchemaFile := createFile(dir, "inputs")
 	connectionsSchemaFile := createFile(dir, "connections")
@@ -92,16 +92,10 @@ func BuildSchema(schema WeakSchema, metadata map[string]string, buffer io.Writer
 	var mergedSchema = mergeMaps(schema, metadata)
 
 	json, err := json.Marshal(mergedSchema)
-	checkErr(err)
+	maybePanic(err)
 
 	_, err = fmt.Fprint(buffer, string(json))
-	checkErr(err)
-}
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
+	maybePanic(err)
 }
 
 func mergeMaps(a map[string]interface{}, b map[string]string) map[string]interface{} {
@@ -118,4 +112,10 @@ func generateIdUrl(slug string) string {
 
 func generateSchemaUrl(schema string) string {
 	return fmt.Sprintf(jsonSchemaUrlPattern, schema)
+}
+
+func maybePanic(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

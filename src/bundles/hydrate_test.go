@@ -28,6 +28,45 @@ func TestHydrate(t *testing.T) {
 			},
 		},
 		{
+			Name:  "Hydrates a $ref",
+			Input: jsonDecode(`{"$ref": "./testdata/artifacts/aws-example.json"}`),
+			Expected: map[string]string{
+				"id": "fake-schema-id",
+			},
+		},
+		{
+			Name:  "Hydrates a nested $ref",
+			Input: jsonDecode(`{"key": {"$ref": "./testdata/artifacts/aws-example.json"}}`),
+			Expected: map[string]map[string]string{
+				"key": {
+					"id": "fake-schema-id",
+				},
+			},
+		},
+		{
+			Name:  "Hydrates a $ref recursively",
+			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
+			Expected: map[string]map[string]string{
+				"properties": {
+					"id": "fake-schema-id",
+				},
+			},
+		},
+		{
+			Name:  "Does not hydrate HTTPS refs",
+			Input: jsonDecode(`{"$ref": "https://elsewhere.com/schema.json"}`),
+			Expected: map[string]string{
+				"$ref": "https://elsewhere.com/schema.json",
+			},
+		},
+		{
+			Name:  "Does not hydrate fragment (#) refs",
+			Input: jsonDecode(`{"$ref": "#/its-in-this-file"}`),
+			Expected: map[string]string{
+				"$ref": "#/its-in-this-file",
+			},
+		},
+		{
 			Name:  "Hydrates a shallow map with an spec ref",
 			Input: jsonDecode(`{"key": "spec://kubernetes"}`),
 			Expected: map[string]map[string]string{
