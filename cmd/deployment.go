@@ -12,9 +12,6 @@ var deploymentCmd = &cobra.Command{
 	Use:   "deployment",
 	Short: "Manage Massdriver deployments",
 	Long:  ``,
-	// Run: func(cmd *cobra.Command, args []string) {
-	// 	fmt.Println("schema called")
-	// },
 }
 
 var deploymentGetCmd = &cobra.Command{
@@ -31,7 +28,6 @@ func init() {
 	deploymentGetCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID")
 	deploymentGetCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver")
 	deploymentGetCmd.Flags().StringP("dest", "d", ".", "Destination path to write deployment json files")
-	deploymentGetCmd.MarkFlagRequired("id")
 }
 
 func RunDeploymentGet(cmd *cobra.Command, args []string) error {
@@ -39,17 +35,13 @@ func RunDeploymentGet(cmd *cobra.Command, args []string) error {
 	token, _ := cmd.Flags().GetString("token")
 	dest, _ := cmd.Flags().GetString("dest")
 
-	logger.Info("getting deployment from massdriver",
-		zap.String("deployment", id),
-	)
+	logger.Info("getting deployment from massdriver", zap.String("deployment", id))
 	dep, err := massdriver.GetDeployment(id, token)
 	if err != nil {
 		return err
 	}
 
-	logger.Info("writing deployment to file",
-		zap.String("deployment", id),
-	)
+	logger.Info("writing deployment to file", zap.String("deployment", id))
 	err = massdriver.WriteDeploymentToFile(dep, dest)
 	return err
 }
