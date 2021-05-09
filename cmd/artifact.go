@@ -37,7 +37,7 @@ var artifactUploadCmd = &cobra.Command{
 	Short:                 "Upload artifact to Massdriver",
 	Long:                  artifactUploadLong,
 	Example:               artifactUploadExamples,
-	RunE:                  RunArtifactUpload,
+	Run:                   RunArtifactUpload,
 	DisableFlagsInUseLine: true,
 }
 
@@ -49,20 +49,22 @@ func init() {
 	artifactUploadCmd.Flags().StringP("file", "f", "./artifact.json", "JSON formatted artifact file to upload")
 }
 
-func RunArtifactUpload(cmd *cobra.Command, args []string) error {
+func RunArtifactUpload(cmd *cobra.Command, args []string) {
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
 	file, _ := cmd.Flags().GetString("file")
 
 	if id == "" || token == "" {
-		fmt.Println("\tERROR: Both deployment-id and token must be set (by flags or environment variable)")
 		cmd.Help()
-		os.Exit(0)
+		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
+		os.Exit(1)
 	}
 
 	logger.Info("uploading artifact file", zap.String("deployment", id))
 	err := massdriver.UploadArtifactFile(file, id, token)
+	if err != nil {
+		logger.Error("an error occurred while uploading artifact files", zap.String("deployment", id), zap.Error(err))
+		os.Exit(1)
+	}
 	logger.Info("artifact uploaded", zap.String("deployment", id))
-
-	return err
 }
