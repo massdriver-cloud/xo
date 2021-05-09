@@ -74,7 +74,14 @@ func TestHydrate(t *testing.T) {
 				},
 			},
 		},
-		// TODO hydrates a ref deterministically (keys outside of ref always win)
+		{
+			Name:  "Hydrates a $ref deterministically (keys outside of ref always win)",
+			Input: jsonDecode(`{"conflictingKey": "not-from-ref", "$ref": "./testdata/artifacts/conflicting-keys.json"}`),
+			Expected: map[string]string{
+				"conflictingKey": "not-from-ref",
+				"nonConflictKey": "from-ref",
+			},
+		},
 	}
 
 	for _, test := range cases {
