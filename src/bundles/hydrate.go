@@ -15,37 +15,36 @@ func Hydrate(any interface{}) interface{} {
 
 	switch val.Kind() {
 	case reflect.Slice, reflect.Array:
-		newList := make([]interface{}, 0)
+		hydratedList := make([]interface{}, 0)
 		for i := 0; i < val.Len(); i++ {
 			hydratedVal := Hydrate(val.Index(i).Interface())
-			newList = append(newList, hydratedVal)
+			hydratedList = append(hydratedList, hydratedVal)
 		}
-		return newList
+		return hydratedList
 	case reflect.Map:
-		newMap := map[string]interface{}{}
-		for _, keyInterface := range val.MapKeys() {
-			var key = keyInterface.String()
-			var valueInterface = val.MapIndex(keyInterface).Interface()
+		schemaInterface := val.Interface()
+		schema := schemaInterface.(map[string]interface{})
+		hydratedMap := map[string]interface{}{}
 
-			if key == "$ref" {
-				var refPath = getValue(valueInterface).String()
-				if relativeFilePathPattern.MatchString(refPath) {
-					jsonObject, err := readJsonFile(refPath)
-					maybePanic(err)
-
-					// non-deterministic...
-					// i think we can fix this by merging new into ref'd and setting result as new
-					for k, v := range jsonObject {
-						newMap[k] = Hydrate(v.(interface{}))
-					}
-				} else {
-					newMap[key] = Hydrate(valueInterface)
-				}
-			} else {
-				newMap[key] = Hydrate(valueInterface)
+		// if this part of the schema has a $ref that is a local file, read it and make it
+		// the map that we hydrate into. This causes any keys in the ref'ing object to override anything in the ref'd object
+		// which adheres to the JSON Schema spec.
+		if schemaRefInterface, ok := schema["$ref"]; ok {
+			schemaRefPath := schemaRefInterface.(string)
+			if relativeFilePathPattern.MatchString(schemaRefPath) {
+				jsonObject, err := readJsonFile(schemaRefPath)
+				maybePanic(err)
+				// Remove it if, so it doesn't get hydrated below
+				delete(schema, "$ref")
+				hydratedMap = jsonObject
 			}
 		}
-		return newMap
+
+		for key, value := range schema {
+			var valueInterface = value.(interface{})
+			hydratedMap[key] = Hydrate(valueInterface)
+		}
+		return hydratedMap
 	default:
 		return any
 	}

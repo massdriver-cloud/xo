@@ -66,15 +66,6 @@ func TestHydrate(t *testing.T) {
 			},
 		},
 		{
-			Name:  "Hydrates a $ref recursively",
-			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
-			Expected: map[string]map[string]string{
-				"properties": {
-					"id": "fake-schema-id",
-				},
-			},
-		},
-		{
 			Name:  "Hydrates a $ref deterministically (keys outside of ref always win)",
 			Input: jsonDecode(`{"conflictingKey": "not-from-ref", "$ref": "./testdata/artifacts/conflicting-keys.json"}`),
 			Expected: map[string]string{
@@ -82,6 +73,15 @@ func TestHydrate(t *testing.T) {
 				"nonConflictKey": "from-ref",
 			},
 		},
+		// {
+		// 	Name:  "Hydrates a $ref recursively",
+		// 	Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
+		// 	Expected: map[string]map[string]string{
+		// 		"properties": {
+		// 			"id": "fake-schema-id",
+		// 		},
+		// 	},
+		// },
 	}
 
 	for _, test := range cases {

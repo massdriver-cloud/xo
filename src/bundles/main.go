@@ -13,16 +13,15 @@ import (
 const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-inputs.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
-type WeakSchema map[string]interface{}
 type Bundle struct {
-	Uuid        string     `json:"uuid"`
-	Schema      string     `json:"schema"`
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Slug        string     `json:"slug"`
-	Artifacts   WeakSchema `json:"artifacts"`
-	Inputs      WeakSchema `json:"inputs"`
-	Connections WeakSchema `json:"connections"`
+	Uuid        string                 `json:"uuid"`
+	Schema      string                 `json:"schema"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Slug        string                 `json:"slug"`
+	Artifacts   map[string]interface{} `json:"artifacts"`
+	Inputs      map[string]interface{} `json:"inputs"`
+	Connections map[string]interface{} `json:"connections"`
 }
 
 // ParseBundle parses a bundle from a YAML file
@@ -87,7 +86,7 @@ func (b *Bundle) Build(dir string) {
 }
 
 // BuildSchema generates schema-*.json files
-func BuildSchema(schema WeakSchema, metadata map[string]string, buffer io.Writer) {
+func BuildSchema(schema map[string]interface{}, metadata map[string]string, buffer io.Writer) {
 	var err error
 	var mergedSchema = mergeMaps(schema, metadata)
 
