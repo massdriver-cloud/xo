@@ -8,7 +8,7 @@
 
 Useful for:
 
-* Validating _our_ bundles' `manifest.json` in _our_ CI before release
+* Validating _our_ bundles' schemas in _our_ CI before release
 * Validating _user_ input to **payloads** at the beginning of a workflow
 
 ```shell
@@ -16,7 +16,7 @@ xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testda
 
 # or
 cd massdriver-bundles
-xo schema validate -s ./definitions/bundle-metadata.json -i ./bundles/$BUNDLE_NAME/metadata.json
+xo schema validate -s path/to/draft-07-schema.json -i ./bundles/$BUNDLE_NAME/schema-{inputs,connections,artifacts}.json
 ```
 
 **Compiling variable definitions**:
@@ -46,3 +46,16 @@ Commands should be scoped (subcommand) under a parent "command" to facilitate or
 Blogs on writing Cobra commands:
 
 * https://towardsdatascience.com/how-to-create-a-cli-in-golang-with-cobra-d729641c7177
+
+### Dereferencing $refs (hydration)
+
+Hydrating schemas is important for a few reasons:
+
+* storybook can't resolve json schema
+* provides us w/ schema "snapshots" of a release
+  * if clients are making http requests for schemas, artifacts, and specs, technically a deployment could change one of those files while they are requesting their "batch" to build the front-end UIs. By dereferencing everything into one file, it negates this changes
+* less HTTP requests for the front-end clients
+* much easier to debug,
+* tfcompiler doesnt understand refs
+
+Base on [compiletojsonschema](https://compiletojsonschema.readthedocs.io/en/latest/index.html)
