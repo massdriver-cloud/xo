@@ -30,6 +30,8 @@ type Bundle struct {
 // bundle.Build(".")
 func ParseBundle(path string) Bundle {
 	bundle := Bundle{}
+	// TODO: should this be a flag/argument?
+	cwd := "."
 
 	data, err := ioutil.ReadFile(path)
 	maybePanic(err)
@@ -37,13 +39,13 @@ func ParseBundle(path string) Bundle {
 	err = yaml.Unmarshal([]byte(data), &bundle)
 	maybePanic(err)
 
-	hydratedArtifacts := Hydrate(bundle.Artifacts)
+	hydratedArtifacts := Hydrate(bundle.Artifacts, cwd)
 	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
 
-	hydratedInputs := Hydrate(bundle.Inputs)
+	hydratedInputs := Hydrate(bundle.Inputs, cwd)
 	bundle.Inputs = hydratedInputs.(map[string]interface{})
 
-	hydratedConnections := Hydrate(bundle.Connections)
+	hydratedConnections := Hydrate(bundle.Connections, cwd)
 	bundle.Connections = hydratedConnections.(map[string]interface{})
 
 	return bundle

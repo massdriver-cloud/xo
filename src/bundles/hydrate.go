@@ -3,6 +3,7 @@ package bundles
 import (
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"regexp"
 )
@@ -10,21 +11,22 @@ import (
 // relativeFilePathPattern only accepts relative file path prefixes "./" and "../"
 var relativeFilePathPattern = regexp.MustCompile(`^(\.\/|\.\.\/)`)
 
-func Hydrate(any interface{}) interface{} {
+func Hydrate(any interface{}, cwd string) interface{} {
+	_ = cwd
 	val := getValue(any)
 
 	switch val.Kind() {
 	case reflect.Slice, reflect.Array:
 		hydratedList := make([]interface{}, 0)
 		for i := 0; i < val.Len(); i++ {
-			hydratedVal := Hydrate(val.Index(i).Interface())
+			hydratedVal := Hydrate(val.Index(i).Interface(), cwd)
 			hydratedList = append(hydratedList, hydratedVal)
 		}
 		return hydratedList
 	case reflect.Map:
 		schemaInterface := val.Interface()
 		schema := schemaInterface.(map[string]interface{})
-		hydratedMap := map[string]interface{}{}
+		hydratedSchema := map[string]interface{}{}
 
 		// if this part of the schema has a $ref that is a local file, read it and make it
 		// the map that we hydrate into. This causes any keys in the ref'ing object to override anything in the ref'd object
@@ -32,21 +34,28 @@ func Hydrate(any interface{}) interface{} {
 		if schemaRefInterface, ok := schema["$ref"]; ok {
 			schemaRefPath := schemaRefInterface.(string)
 			if relativeFilePathPattern.MatchString(schemaRefPath) {
-				referencedSchema, err := readJsonFile(schemaRefPath)
+				// Build up the path from where the dir current schema was read
+				schemaRefAbsPath, err := filepath.Abs(filepath.Join(cwd, schemaRefPath))
 				maybePanic(err)
-				// Remove it if, so it doesn't get hydrated below
+
+				schemaRefDir := filepath.Dir(schemaRefAbsPath)
+				referencedSchema, err := readJsonFile(schemaRefAbsPath)
+				maybePanic(err)
+				// Remove it if, so it doesn't get rehydrated below
 				delete(schema, "$ref")
 
-				// TODO: we need to hydrate the fields in here
-				hydratedMap = referencedSchema
+				// TODO: Why won't Hydrate accept referencedSchema.(interface{})
+				for k, v := range referencedSchema {
+					hydratedSchema[k] = Hydrate(v.(interface{}), schemaRefDir)
+				}
 			}
 		}
 
 		for key, value := range schema {
 			var valueInterface = value.(interface{})
-			hydratedMap[key] = Hydrate(valueInterface)
+			hydratedSchema[key] = Hydrate(valueInterface, cwd)
 		}
-		return hydratedMap
+		return hydratedSchema
 	default:
 		return any
 	}

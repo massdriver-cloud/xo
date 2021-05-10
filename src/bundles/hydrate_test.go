@@ -24,10 +24,11 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Hydrates a $ref alongside arbitrary values",
-			Input: jsonDecode(`{"kewl": true, "$ref": "./testdata/artifacts/aws-example.json"}`),
+			Input: jsonDecode(`{"foo": true, "bar": {}, "$ref": "./testdata/artifacts/aws-example.json"}`),
 			Expected: map[string]interface{}{
-				"kewl": true,
-				"id":   "fake-schema-id",
+				"foo": true,
+				"bar": map[string]interface{}{},
+				"id":  "fake-schema-id",
 			},
 		},
 		{
@@ -82,11 +83,20 @@ func TestHydrate(t *testing.T) {
 				},
 			},
 		},
+		{
+			Name:  "Hydrates a $ref recursively",
+			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-lower-dir-aws-example.json"}`),
+			Expected: map[string]map[string]string{
+				"properties": {
+					"id": "fake-schema-id",
+				},
+			},
+		},
 	}
 
 	for _, test := range cases {
 		t.Run(test.Name, func(t *testing.T) {
-			got := bundles.Hydrate(test.Input)
+			got := bundles.Hydrate(test.Input, ".")
 
 			if fmt.Sprint(got) != fmt.Sprint(test.Expected) {
 				t.Errorf("got %v, want %v", got, test.Expected)
