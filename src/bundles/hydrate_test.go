@@ -73,15 +73,15 @@ func TestHydrate(t *testing.T) {
 				"nonConflictKey": "from-ref",
 			},
 		},
-		// {
-		// 	Name:  "Hydrates a $ref recursively",
-		// 	Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
-		// 	Expected: map[string]map[string]string{
-		// 		"properties": {
-		// 			"id": "fake-schema-id",
-		// 		},
-		// 	},
-		// },
+		{
+			Name:  "Hydrates a $ref recursively",
+			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
+			Expected: map[string]map[string]string{
+				"properties": {
+					"id": "fake-schema-id",
+				},
+			},
+		},
 	}
 
 	for _, test := range cases {

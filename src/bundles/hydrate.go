@@ -32,11 +32,13 @@ func Hydrate(any interface{}) interface{} {
 		if schemaRefInterface, ok := schema["$ref"]; ok {
 			schemaRefPath := schemaRefInterface.(string)
 			if relativeFilePathPattern.MatchString(schemaRefPath) {
-				jsonObject, err := readJsonFile(schemaRefPath)
+				referencedSchema, err := readJsonFile(schemaRefPath)
 				maybePanic(err)
 				// Remove it if, so it doesn't get hydrated below
 				delete(schema, "$ref")
-				hydratedMap = jsonObject
+
+				// TODO: we need to hydrate the fields in here
+				hydratedMap = referencedSchema
 			}
 		}
 

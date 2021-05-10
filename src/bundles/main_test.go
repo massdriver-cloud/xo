@@ -37,7 +37,7 @@ func TestBuildSchema(t *testing.T) {
 }
 
 func TestParseBundle(t *testing.T) {
-	// TODO: add some $refs to the bundle.yaml
+	// TODO: add some $refs to the bundle.yaml for a better test
 	var got = bundles.ParseBundle("./testdata/bundle.yaml")
 	var want = bundles.Bundle{
 		Uuid:        "FC2C7101-86A6-437B-B8C2-A2391FE8C847",
