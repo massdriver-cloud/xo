@@ -23,7 +23,7 @@ func TestBuildSchema(t *testing.T) {
 	var bundle = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
-	bundles.BuildSchema(bundle.Inputs, bundle.Metadata(), &inputIo)
+	bundles.BuildSchema(bundle.Inputs, bundle.Metadata("inputs"), &inputIo)
 	var gotJson = &map[string]interface{}{}
 	_ = json.Unmarshal(inputIo.Bytes(), gotJson)
 

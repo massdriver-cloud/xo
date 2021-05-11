@@ -6,11 +6,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
 
-const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-inputs.json"
+const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
@@ -30,8 +31,7 @@ type Bundle struct {
 // bundle.Build(".")
 func ParseBundle(path string) Bundle {
 	bundle := Bundle{}
-	// TODO: should this be a flag/argument?
-	cwd := "."
+	cwd := filepath.Dir(path)
 
 	data, err := ioutil.ReadFile(path)
 	maybePanic(err)
@@ -52,10 +52,10 @@ func ParseBundle(path string) Bundle {
 }
 
 // Metadata returns common metadata fields for each JSON Schema
-func (b *Bundle) Metadata() map[string]string {
+func (b *Bundle) Metadata(schemaType string) map[string]string {
 	return map[string]string{
 		"$schema":     generateSchemaUrl(b.Schema),
-		"$id":         generateIdUrl(b.Slug),
+		"$id":         generateIdUrl(b.Slug, schemaType),
 		"title":       b.Title,
 		"description": b.Description,
 	}
@@ -78,9 +78,9 @@ func (b *Bundle) Build(dir string) {
 	connectionsSchemaFile := createFile(dir, "connections")
 	artifactsSchemaFile := createFile(dir, "artifacts")
 
-	BuildSchema(b.Inputs, b.Metadata(), inputsSchemaFile)
-	BuildSchema(b.Connections, b.Metadata(), connectionsSchemaFile)
-	BuildSchema(b.Artifacts, b.Metadata(), artifactsSchemaFile)
+	BuildSchema(b.Inputs, b.Metadata("inputs"), inputsSchemaFile)
+	BuildSchema(b.Connections, b.Metadata("connections"), connectionsSchemaFile)
+	BuildSchema(b.Artifacts, b.Metadata("artifacts"), artifactsSchemaFile)
 
 	defer inputsSchemaFile.Close()
 	defer connectionsSchemaFile.Close()
@@ -107,8 +107,8 @@ func mergeMaps(a map[string]interface{}, b map[string]string) map[string]interfa
 	return a
 }
 
-func generateIdUrl(slug string) string {
-	return fmt.Sprintf(idUrlPattern, slug)
+func generateIdUrl(slug string, schemaType string) string {
+	return fmt.Sprintf(idUrlPattern, slug, schemaType)
 }
 
 func generateSchemaUrl(schema string) string {
