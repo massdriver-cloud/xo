@@ -11,18 +11,20 @@ import (
 // relativeFilePathPattern only accepts relative file path prefixes "./" and "../"
 var relativeFilePathPattern = regexp.MustCompile(`^(\.\/|\.\.\/)`)
 
-func Hydrate(any interface{}, cwd string) interface{} {
-	_ = cwd
+func Hydrate(any interface{}, cwd string) (interface{}, error) {
 	val := getValue(any)
 
 	switch val.Kind() {
 	case reflect.Slice, reflect.Array:
 		hydratedList := make([]interface{}, 0)
 		for i := 0; i < val.Len(); i++ {
-			hydratedVal := Hydrate(val.Index(i).Interface(), cwd)
+			hydratedVal, err := Hydrate(val.Index(i).Interface(), cwd)
+			if err != nil {
+				return hydratedList, err
+			}
 			hydratedList = append(hydratedList, hydratedVal)
 		}
-		return hydratedList
+		return hydratedList, nil
 	case reflect.Map:
 		schemaInterface := val.Interface()
 		schema := schemaInterface.(map[string]interface{})
@@ -36,28 +38,42 @@ func Hydrate(any interface{}, cwd string) interface{} {
 			if relativeFilePathPattern.MatchString(schemaRefPath) {
 				// Build up the path from where the dir current schema was read
 				schemaRefAbsPath, err := filepath.Abs(filepath.Join(cwd, schemaRefPath))
-				maybePanic(err)
+				if err != nil {
+					return hydratedSchema, err
+				}
 
 				schemaRefDir := filepath.Dir(schemaRefAbsPath)
 				referencedSchema, err := readJsonFile(schemaRefAbsPath)
-				maybePanic(err)
+				if err != nil {
+					return hydratedSchema, err
+				}
+
 				// Remove it if, so it doesn't get rehydrated below
 				delete(schema, "$ref")
 
-				// TODO: Why won't Hydrate accept referencedSchema.(interface{})
 				for k, v := range referencedSchema {
-					hydratedSchema[k] = Hydrate(v.(interface{}), schemaRefDir)
+					hydratedValue, err := Hydrate(v.(interface{}), schemaRefDir)
+					if err != nil {
+						return hydratedSchema, err
+					}
+					hydratedSchema[k] = hydratedValue
 				}
 			}
 		}
 
 		for key, value := range schema {
 			var valueInterface = value.(interface{})
-			hydratedSchema[key] = Hydrate(valueInterface, cwd)
+			hydratedValue, err := Hydrate(valueInterface, cwd)
+			if err != nil {
+				return hydratedSchema, err
+			}
+			hydratedSchema[key] = hydratedValue
 		}
-		return hydratedSchema
+
+		// hydratedSchema["additionalProperties"] = false
+		return hydratedSchema, nil
 	default:
-		return any
+		return any, nil
 	}
 }
 
@@ -74,9 +90,16 @@ func getValue(any interface{}) reflect.Value {
 func readJsonFile(filepath string) (map[string]interface{}, error) {
 	var result map[string]interface{}
 	data, err := ioutil.ReadFile(filepath)
-	maybePanic(err)
+	if err != nil {
+		return result, err
+	}
 	err = json.Unmarshal([]byte(data), &result)
-	maybePanic(err)
 
 	return result, err
+}
+
+func maybePanic(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

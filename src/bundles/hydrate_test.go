@@ -96,7 +96,7 @@ func TestHydrate(t *testing.T) {
 
 	for _, test := range cases {
 		t.Run(test.Name, func(t *testing.T) {
-			got := bundles.Hydrate(test.Input, ".")
+			got, _ := bundles.Hydrate(test.Input, ".")
 
 			if fmt.Sprint(got) != fmt.Sprint(test.Expected) {
 				t.Errorf("got %v, want %v", got, test.Expected)

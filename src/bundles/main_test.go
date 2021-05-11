@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuild(t *testing.T) {
-	var bundle = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
+	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	bundle.Build("./tmp/")
 
 	// TODO: assert the files are there :D
@@ -20,7 +20,7 @@ func TestBuild(t *testing.T) {
 }
 
 func TestBuildSchema(t *testing.T) {
-	var bundle = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
+	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
 	bundles.BuildSchema(bundle.Inputs, bundle.Metadata("inputs"), &inputIo)
@@ -38,7 +38,7 @@ func TestBuildSchema(t *testing.T) {
 
 func TestParseBundle(t *testing.T) {
 	// TODO: add some $refs to the bundle.yaml for a better test
-	var got = bundles.ParseBundle("./testdata/bundle.yaml")
+	var got, _ = bundles.ParseBundle("./testdata/bundle.yaml")
 	var want = bundles.Bundle{
 		Uuid:        "FC2C7101-86A6-437B-B8C2-A2391FE8C847",
 		Schema:      "draft-07",
