@@ -70,7 +70,6 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 			hydratedSchema[key] = hydratedValue
 		}
 
-		// hydratedSchema["additionalProperties"] = false
 		return hydratedSchema, nil
 	default:
 		return any, nil

@@ -12,9 +12,20 @@ import (
 
 func TestBuild(t *testing.T) {
 	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
-	bundle.Build("./tmp/")
+	_ = bundle.Build("./tmp/")
 
-	// TODO: assert the files are there :D
+	gotDir, _ := os.ReadDir("./tmp")
+	got := []string{}
+
+	for _, dirEntry := range gotDir {
+		got = append(got, dirEntry.Name())
+	}
+
+	want := []string{"schema-artifacts.json", "schema-connections.json", "schema-inputs.json"}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v, want %v", got, want)
+	}
 
 	defer os.RemoveAll("./tmp")
 }
