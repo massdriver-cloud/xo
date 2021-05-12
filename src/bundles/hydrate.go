@@ -2,59 +2,77 @@ package bundles
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"reflect"
 	"regexp"
 )
 
-var ArtifactPath = "./definitions/artifacts"
-var SpecPath = "./definitions/specs"
-var artifactPattern = regexp.MustCompile("^artifact://([a-z0-9-]+)")
-var specPattern = regexp.MustCompile("^spec://([a-z0-9-]+)")
+// relativeFilePathPattern only accepts relative file path prefixes "./" and "../"
+var relativeFilePathPattern = regexp.MustCompile(`^(\.\/|\.\.\/)`)
 
-func Hydrate(any interface{}) interface{} {
+func Hydrate(any interface{}, cwd string) (interface{}, error) {
 	val := getValue(any)
 
 	switch val.Kind() {
-	case reflect.String:
-		if artifactPattern.MatchString(val.String()) {
-			artifact, err := readArtifactRef(val.String())
-			if err != nil {
-				panic(err)
-			}
-			// TODO: Do we want to recursively hydrate specs. We could replace $ref's w/ specs/artifacts
-			// and fully hydrate a snapshot of the entire JSON Schema into one file for the bundle... which
-			// would stop any weirdness in file changes between deploys/caching
-			return artifact
-		} else if specPattern.MatchString(val.String()) {
-			spec, err := readSpecRef(val.String())
-			if err != nil {
-				panic(err)
-			}
-			// TODO: Do we want to recursively hydrate specs. We could replace $ref's w/ specs/artifacts
-			// and fully hydrate a snapshot of the entire JSON Schema into one file for the bundle... which
-			// would stop any weirdness in file changes between deploys/caching
-			return spec
-		} else {
-			return val.String()
-		}
 	case reflect.Slice, reflect.Array:
-		newList := make([]interface{}, 0)
+		hydratedList := make([]interface{}, 0)
 		for i := 0; i < val.Len(); i++ {
-			hydratedVal := Hydrate(val.Index(i).Interface())
-			newList = append(newList, hydratedVal)
+			hydratedVal, err := Hydrate(val.Index(i).Interface(), cwd)
+			if err != nil {
+				return hydratedList, err
+			}
+			hydratedList = append(hydratedList, hydratedVal)
 		}
-		return newList
+		return hydratedList, nil
 	case reflect.Map:
-		newMap := map[string]interface{}{}
-		for _, key := range val.MapKeys() {
-			hydratedVal := Hydrate(val.MapIndex(key).Interface())
-			newMap[key.String()] = hydratedVal
+		schemaInterface := val.Interface()
+		schema := schemaInterface.(map[string]interface{})
+		hydratedSchema := map[string]interface{}{}
+
+		// if this part of the schema has a $ref that is a local file, read it and make it
+		// the map that we hydrate into. This causes any keys in the ref'ing object to override anything in the ref'd object
+		// which adheres to the JSON Schema spec.
+		if schemaRefInterface, ok := schema["$ref"]; ok {
+			schemaRefPath := schemaRefInterface.(string)
+			if relativeFilePathPattern.MatchString(schemaRefPath) {
+				// Build up the path from where the dir current schema was read
+				schemaRefAbsPath, err := filepath.Abs(filepath.Join(cwd, schemaRefPath))
+				if err != nil {
+					return hydratedSchema, err
+				}
+
+				schemaRefDir := filepath.Dir(schemaRefAbsPath)
+				referencedSchema, err := readJsonFile(schemaRefAbsPath)
+				if err != nil {
+					return hydratedSchema, err
+				}
+
+				// Remove it if, so it doesn't get rehydrated below
+				delete(schema, "$ref")
+
+				for k, v := range referencedSchema {
+					hydratedValue, err := Hydrate(v.(interface{}), schemaRefDir)
+					if err != nil {
+						return hydratedSchema, err
+					}
+					hydratedSchema[k] = hydratedValue
+				}
+			}
 		}
-		return newMap
+
+		for key, value := range schema {
+			var valueInterface = value.(interface{})
+			hydratedValue, err := Hydrate(valueInterface, cwd)
+			if err != nil {
+				return hydratedSchema, err
+			}
+			hydratedSchema[key] = hydratedValue
+		}
+
+		return hydratedSchema, nil
 	default:
-		return any
+		return any, nil
 	}
 }
 
@@ -68,44 +86,19 @@ func getValue(any interface{}) reflect.Value {
 	return val
 }
 
-func readSpecRef(ref string) (map[string]interface{}, error) {
-	refBytes := ([]byte(ref))
-	m := specPattern.FindSubmatch(refBytes)
-
-	filename := string(m[1])
-	filepath := fmt.Sprintf("%s/%s.json", SpecPath, filename)
-	data, err := ioutil.ReadFile(filepath)
-
-	if err != nil {
-		return nil, err
-	}
-
+func readJsonFile(filepath string) (map[string]interface{}, error) {
 	var result map[string]interface{}
-	err = json.Unmarshal([]byte(data), &result)
+	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
+	err = json.Unmarshal([]byte(data), &result)
 
 	return result, err
 }
 
-func readArtifactRef(ref string) (map[string]interface{}, error) {
-	refBytes := ([]byte(ref))
-	m := artifactPattern.FindSubmatch(refBytes)
-
-	filename := string(m[1])
-	filepath := fmt.Sprintf("%s/%s.json", ArtifactPath, filename)
-	data, err := ioutil.ReadFile(filepath)
-
+func maybePanic(err error) {
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	var result map[string]interface{}
-	err = json.Unmarshal([]byte(data), &result)
-	if err != nil {
-		return nil, err
-	}
-
-	return result, err
 }

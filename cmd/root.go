@@ -19,7 +19,7 @@ var logger *zap.Logger
 var rootCmd = &cobra.Command{
 	Use:   "xo",
 	Short: "eXecution Orchestrator",
-	Long:  `Connectivity tooling for bundle steps, connections, and outputs.`,
+	Long:  `Connective tooling for bundle provisioning.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return errors.New("A subcommand is required")
 	},
