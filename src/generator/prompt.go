@@ -16,7 +16,7 @@ var prompts = []func(t *TemplateData){
 	getDescription,
 }
 
-//TODO: Validation and Error Handling
+//TODO: Error Handling
 func RunPrompt(t *TemplateData) *TemplateData {
 	fmt.Println("in run prompt")
 
