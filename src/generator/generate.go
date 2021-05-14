@@ -3,8 +3,8 @@ package generator
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"text/template"
 
 	"github.com/google/uuid"
@@ -28,43 +28,49 @@ func (g TemplateData) Uuid() string {
 	return uuid.String()
 }
 
-func Generate(data TemplateData) error {
-	files, err := getTemplateFiles(data.TemplateDir)
-
-	if err != nil {
-		return err
-	}
-
+func Generate(data TemplateData) {
 	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Name)
-	terraformDir := fmt.Sprintf("%s/%s", bundleDir, "terraform")
-	os.Mkdir(bundleDir, 0777)
-	os.Mkdir(terraformDir, 0777)
+	currentDirectory := ""
 
-	for _, file := range files {
-		templatePath := data.TemplateDir + "/" + file.Name()
-		renderPath := fmt.Sprintf("%s/%s", bundleDir, file.Name())
-		tmpl, err := template.ParseFiles(templatePath)
+	filepath.WalkDir(data.TemplateDir, func(path string, info fs.DirEntry, err error) error {
 
-		if err != nil {
-			return err
+		if info.IsDir() {
+			if isRootPath(path, data.TemplateDir) {
+				os.MkdirAll(bundleDir, 0777)
+				return nil
+			}
+
+			subDirectory := fmt.Sprintf("%s/%s", bundleDir, info.Name())
+			os.Mkdir(subDirectory, 0777)
+			currentDirectory = fmt.Sprintf("%s/", info.Name())
+			return nil
 		}
 
-		fileToWrite, err := os.Create(renderPath)
+		renderPath := fmt.Sprintf("%s/%s%s", bundleDir, currentDirectory, info.Name())
+		renderTemplate(path, renderPath, data)
 
-		if err != nil {
-			return err
-		}
-
-		tmpl.Execute(fileToWrite, data)
-
-		fileToWrite.Close()
-	}
-
-	return nil
+		return nil
+	})
 }
 
-func getTemplateFiles(templateDir string) ([]fs.FileInfo, error) {
-	files, err := ioutil.ReadDir(templateDir)
+func renderTemplate(path, renderPath string, data TemplateData) {
+	tmpl, err := template.ParseFiles(path)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		os.Exit(1)
+	}
 
-	return files, err
+	fileToWrite, err := os.Create(renderPath)
+	if err != nil {
+		fmt.Printf("Error: %s", err)
+		os.Exit(1)
+	}
+
+	tmpl.Execute(fileToWrite, data)
+
+	fileToWrite.Close()
+}
+
+func isRootPath(rootPath, currentPath string) bool {
+	return rootPath == currentPath
 }
