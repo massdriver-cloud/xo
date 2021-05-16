@@ -21,44 +21,38 @@ func TestGenerate(t *testing.T) {
 		Provisioner: "terraform",
 	}
 
+	assertFileCreatedAndContainsText := func(t testing.TB, filename, expectedContent string) {
+		t.Helper()
+		content, err := ioutil.ReadFile(filename)
+
+		if err != nil {
+			t.Errorf("Failed to create %s", filename)
+		}
+
+		if !strings.Contains(string(content), expectedContent) {
+			t.Errorf("Data failed to render in template %s", filename)
+		}
+	}
+
 	os.Mkdir(bundleData.BundleDir, 0777)
 
 	generator.Generate(bundleData)
 
 	bundleYamlPath := fmt.Sprintf("%s/%s/bundle.yaml", bundleData.BundleDir, bundleData.Name)
-	content, err := ioutil.ReadFile(bundleYamlPath)
+	expectedContent := "title: aws-vpc"
 
-	if err != nil {
-		t.Errorf("Failed to create bundle.yaml")
-	}
-
-	if !strings.Contains(string(content), "title: aws-vpc") {
-		t.Errorf("Data failed to render in the generated template")
-	}
+	assertFileCreatedAndContainsText(t, bundleYamlPath, expectedContent)
 
 	readmePath := fmt.Sprintf("%s/%s/README.md", bundleData.BundleDir, bundleData.Name)
-	content, err = ioutil.ReadFile(readmePath)
+	expectedContent = "a vpc"
 
-	if err != nil {
-		t.Errorf("Failed to create Readme.md")
-	}
-
-	if !strings.Contains(string(content), "a vpc") {
-		t.Errorf("Data failed to render in the generated template")
-	}
+	assertFileCreatedAndContainsText(t, readmePath, expectedContent)
 
 	terraformPath := fmt.Sprintf("%s/%s/terraform", bundleData.BundleDir, bundleData.Name)
-
 	mainTFPath := fmt.Sprintf("%s/main.tf", terraformPath)
-	content, err = ioutil.ReadFile(mainTFPath)
+	expectedContent = "random_pet"
 
-	if err != nil {
-		t.Errorf("Failed to create main.tf")
-	}
-
-	if !strings.Contains(string(content), "random_pet") {
-		t.Errorf("Data failed to render in the generated template")
-	}
+	assertFileCreatedAndContainsText(t, mainTFPath, expectedContent)
 
 	t.Cleanup(func() {
 		os.RemoveAll(bundleData.BundleDir)
