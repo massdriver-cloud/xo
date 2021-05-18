@@ -14,7 +14,9 @@ func TestGenerate(t *testing.T) {
 	//The testing/testFS package isn't quite there yet and afero although cool seems like it has implications
 	//for the broader application.
 	bundleData := generator.TemplateData{
-		Name:        "aws-vpc",
+		Name:        "AWS VPC",
+		Slug:        "aws-vpc",
+		Access:      "Private",
 		Description: "a vpc",
 		TemplateDir: "./testdata/templates",
 		BundleDir:   "./testdata/bundle",
@@ -38,17 +40,19 @@ func TestGenerate(t *testing.T) {
 
 	generator.Generate(bundleData)
 
-	bundleYamlPath := fmt.Sprintf("%s/%s/bundle.yaml", bundleData.BundleDir, bundleData.Name)
-	expectedContent := "title: aws-vpc"
+	templatePath := fmt.Sprintf("%s/%s", bundleData.BundleDir, bundleData.Slug)
+
+	bundleYamlPath := fmt.Sprintf("%s/bundle.yaml", templatePath)
+	expectedContent := "title: AWS VPC"
 
 	assertFileCreatedAndContainsText(t, bundleYamlPath, expectedContent)
 
-	readmePath := fmt.Sprintf("%s/%s/README.md", bundleData.BundleDir, bundleData.Name)
+	readmePath := fmt.Sprintf("%s/README.md", templatePath)
 	expectedContent = "a vpc"
 
 	assertFileCreatedAndContainsText(t, readmePath, expectedContent)
 
-	terraformPath := fmt.Sprintf("%s/%s/terraform", bundleData.BundleDir, bundleData.Name)
+	terraformPath := fmt.Sprintf("%s/terraform", templatePath)
 	mainTFPath := fmt.Sprintf("%s/main.tf", terraformPath)
 	expectedContent = "random_pet"
 
