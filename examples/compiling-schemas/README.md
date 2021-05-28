@@ -1,4 +1,4 @@
-# Terraform JSON Variables and Inputs
+# Terraform JSON Params and Connections
 
 [Details here](https://www.terraform.io/docs/configuration/syntax-json.html#variable-blocks)
 

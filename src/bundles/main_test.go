@@ -21,7 +21,7 @@ func TestBuild(t *testing.T) {
 		got = append(got, dirEntry.Name())
 	}
 
-	want := []string{"schema-artifacts.json", "schema-connections.json", "schema-inputs.json"}
+	want := []string{"schema-artifacts.json", "schema-connections.json", "schema-params.json"}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -34,11 +34,11 @@ func TestBuildSchema(t *testing.T) {
 	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
-	bundles.BuildSchema(bundle.Inputs, bundle.Metadata("inputs"), &inputIo)
+	bundles.BuildSchema(bundle.Params, bundle.Metadata("params"), &inputIo)
 	var gotJson = &map[string]interface{}{}
 	_ = json.Unmarshal(inputIo.Bytes(), gotJson)
 
-	wantBytes, _ := ioutil.ReadFile("./testdata/bundle.Build/schema-inputs.json")
+	wantBytes, _ := ioutil.ReadFile("./testdata/bundle.Build/schema-params.json")
 	var wantJson = &map[string]interface{}{}
 	_ = json.Unmarshal(wantBytes, wantJson)
 
@@ -56,7 +56,7 @@ func TestParseBundle(t *testing.T) {
 		Title:       "AWS VPC",
 		Description: "Something",
 		Artifacts:   map[string]interface{}{},
-		Inputs: map[string]interface{}{
+		Params: map[string]interface{}{
 			"properties": map[string]interface{}{
 				"name": map[string]interface{}{
 					"type":  "string",

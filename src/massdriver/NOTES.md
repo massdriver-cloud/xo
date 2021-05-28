@@ -44,7 +44,7 @@ func TestGetDeployment(t *testing.T) {
 
 	// log("got %v", deployment.Id)
 	// deployment.Connections.AsInterface() > connection.json
-	// deployment.Inputs.AsInterface() > inputs.json
+	// deployment.Params.AsInterface() > params.json
 	json := m.AsInterface()
 	fmt.Printf("%v", json)
 

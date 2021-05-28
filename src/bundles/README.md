@@ -2,7 +2,7 @@
 
 The `bundles` packages parses massdriver-bundles' _bundle.yaml_ file and creates:
 
-* schema-inputs.json
+* schema-params.json
 * schema-connections.json
 * schema-artifacts.json
 
@@ -26,9 +26,9 @@ access: public
 # bundle or architecture type
 type: bundle
 
-# YAML format of a JSON Schema for schema-inputs.json
+# YAML format of a JSON Schema for schema-params.json
 # Include everything you would include besides: $schema, title, $id, description
-inputs:
+params:
   required: ["name"]
   properties:
     name:
@@ -38,7 +38,7 @@ inputs:
       type: integer
       title: Age
 
-# YAML format of a JSON Schema for schema-inputs.json
+# YAML format of a JSON Schema for schema-params.json
 # Include everything you would include besides: $schema, title, $id, description
 connections:
   required:
@@ -46,7 +46,7 @@ connections:
   properties:
     defaultAwsCredentials: artifact://aws-credentials
 
-# YAML format of a JSON Schema for schema-inputs.json
+# YAML format of a JSON Schema for schema-params.json
 # Include everything you would include besides: $schema, title, $id, description
 artifacts:
   items:

@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetDeployment(t *testing.T) {
-	testInputs, _ := structpb.NewStruct(map[string]interface{}{
+	testParams, _ := structpb.NewStruct(map[string]interface{}{
 		"aws_region": "us-east-1",
 		"some_key":   true,
 		"other_key":  27,
@@ -32,7 +32,7 @@ func TestGetDeployment(t *testing.T) {
 	testDeployment := Deployment{
 		Id:          "1234",
 		Status:      DeploymentStatus_PENDING,
-		Inputs:      testInputs,
+		Params:      testParams,
 		Connections: testConnections,
 	}
 
@@ -53,7 +53,7 @@ func TestGetDeployment(t *testing.T) {
 }
 
 func TestWriteSchema(t *testing.T) {
-	testInputs, _ := structpb.NewStruct(map[string]interface{}{
+	testParams, _ := structpb.NewStruct(map[string]interface{}{
 		"aws_region": "us-east-1",
 		"some_key":   true,
 		"other_key":  27,
@@ -64,7 +64,7 @@ func TestWriteSchema(t *testing.T) {
 	})
 
 	buf := bytes.Buffer{}
-	writeSchema(testInputs, &buf)
+	writeSchema(testParams, &buf)
 
 	wantString := `{"aws_region":"us-east-1","nested_key":{"key_a":"value_a","key_b":123.456},"other_key":27,"some_key":true}`
 

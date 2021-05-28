@@ -21,7 +21,7 @@ type Bundle struct {
 	Description string                 `json:"description"`
 	Slug        string                 `json:"slug"`
 	Artifacts   map[string]interface{} `json:"artifacts"`
-	Inputs      map[string]interface{} `json:"inputs"`
+	Params      map[string]interface{} `json:"params"`
 	Connections map[string]interface{} `json:"connections"`
 }
 
@@ -50,11 +50,11 @@ func ParseBundle(path string) (Bundle, error) {
 
 	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
 
-	hydratedInputs, err := Hydrate(bundle.Inputs, cwd)
+	hydratedParams, err := Hydrate(bundle.Params, cwd)
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Inputs = hydratedInputs.(map[string]interface{})
+	bundle.Params = hydratedParams.(map[string]interface{})
 
 	hydratedConnections, err := Hydrate(bundle.Connections, cwd)
 	if err != nil {
@@ -87,7 +87,7 @@ func (b *Bundle) Build(dir string) error {
 		return err
 	}
 
-	inputsSchemaFile, err := createFile(dir, "inputs")
+	paramsSchemaFile, err := createFile(dir, "params")
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (b *Bundle) Build(dir string) error {
 		return err
 	}
 
-	err = BuildSchema(b.Inputs, b.Metadata("inputs"), inputsSchemaFile)
+	err = BuildSchema(b.Params, b.Metadata("params"), paramsSchemaFile)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func (b *Bundle) Build(dir string) error {
 		return err
 	}
 
-	defer inputsSchemaFile.Close()
+	defer paramsSchemaFile.Close()
 	defer connectionsSchemaFile.Close()
 	defer artifactsSchemaFile.Close()
 

@@ -12,8 +12,8 @@ import (
 var deploymentGetLong = `
 	Fetches metadata about a Massdriver deployment and writes the data to files.
 
-	Specifically this is fetching the inputs and connections and writing them to
-	inputs.tfvars.json and connections.tfvars.json, respectively. This is intended
+	Specifically this is fetching the params and connections and writing them to
+	params.tfvars.json and connections.tfvars.json, respectively. This is intended
 	to be used as a step in workflow execution to gather resources for the provisioner.
 	`
 var deploymentGetExamples = `

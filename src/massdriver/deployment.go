@@ -14,7 +14,7 @@ func GetDeployment(id string, token string) (*Deployment, error) {
 }
 
 func WriteDeploymentToFile(dep *Deployment, dest string) error {
-	inputHandle, err := os.OpenFile(dest+"/inputs.tfvars.json", os.O_CREATE, 0644)
+	inputHandle, err := os.OpenFile(dest+"/params.tfvars.json", os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
@@ -23,7 +23,7 @@ func WriteDeploymentToFile(dep *Deployment, dest string) error {
 		return err
 	}
 
-	writeSchema(dep.Inputs, inputHandle)
+	writeSchema(dep.Params, inputHandle)
 	writeSchema(dep.Connections, connHandle)
 
 	return err

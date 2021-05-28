@@ -278,7 +278,7 @@ type Deployment struct {
 
 	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	Status      DeploymentStatus       `protobuf:"varint,2,opt,name=status,proto3,enum=mdtwirp.DeploymentStatus" json:"status,omitempty"`
-	Inputs      *structpb.Struct       `protobuf:"bytes,3,opt,name=inputs,proto3" json:"inputs,omitempty"`
+	Params      *structpb.Struct       `protobuf:"bytes,3,opt,name=params,proto3" json:"params,omitempty"`
 	Connections *structpb.Struct       `protobuf:"bytes,4,opt,name=connections,proto3" json:"connections,omitempty"`
 	CreatedAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -330,9 +330,9 @@ func (x *Deployment) GetStatus() DeploymentStatus {
 	return DeploymentStatus_PENDING
 }
 
-func (x *Deployment) GetInputs() *structpb.Struct {
+func (x *Deployment) GetParams() *structpb.Struct {
 	if x != nil {
-		return x.Inputs
+		return x.Params
 	}
 	return nil
 }
@@ -455,7 +455,7 @@ var file_workflow_proto_depIdxs = []int32{
 	5,  // 1: mdtwirp.Artifact.specs:type_name -> google.protobuf.Struct
 	2,  // 2: mdtwirp.UploadArtifactsRequest.artifacts:type_name -> mdtwirp.Artifact
 	0,  // 3: mdtwirp.Deployment.status:type_name -> mdtwirp.DeploymentStatus
-	5,  // 4: mdtwirp.Deployment.inputs:type_name -> google.protobuf.Struct
+	5,  // 4: mdtwirp.Deployment.params:type_name -> google.protobuf.Struct
 	5,  // 5: mdtwirp.Deployment.connections:type_name -> google.protobuf.Struct
 	6,  // 6: mdtwirp.Deployment.created_at:type_name -> google.protobuf.Timestamp
 	6,  // 7: mdtwirp.Deployment.updated_at:type_name -> google.protobuf.Timestamp

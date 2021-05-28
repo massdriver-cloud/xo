@@ -6,7 +6,7 @@ description: Something
 provisioner: terraform
 access: public
 type: bundle
-inputs:
+params:
   required: ["name"]
   properties:
     name:

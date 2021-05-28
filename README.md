@@ -16,7 +16,7 @@ xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testda
 
 # or
 cd massdriver-bundles
-xo schema validate -s path/to/draft-07-schema.json -i ./bundles/$BUNDLE_NAME/schema-{inputs,connections,artifacts}.json
+xo schema validate -s path/to/draft-07-schema.json -i ./bundles/$BUNDLE_NAME/schema-{params,connections,artifacts}.json
 ```
 
 **Compiling variable definitions**:
