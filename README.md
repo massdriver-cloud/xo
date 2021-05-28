@@ -9,7 +9,7 @@
 Useful for:
 
 * Validating _our_ bundles' schemas in _our_ CI before release
-* Validating _user_ input to **payloads** at the beginning of a workflow
+* Validating _user_ input to **packages** at the beginning of a workflow
 
 ```shell
 xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
