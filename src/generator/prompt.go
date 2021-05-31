@@ -10,7 +10,7 @@ import (
 
 var bundleNameFormat = regexp.MustCompile(`^[a-z0-9-]{5,}`)
 
-var prompts = []func(t *TemplateData){
+var prompts = []func(t *TemplateData) error{
 	getSlug,
 	getName,
 	getAccessLevel,
@@ -19,17 +19,21 @@ var prompts = []func(t *TemplateData){
 }
 
 //TODO: Error Handling
-func RunPrompt(t *TemplateData) *TemplateData {
+func RunPrompt(t *TemplateData) error {
+	var err error
 	fmt.Println("in run prompt")
 
 	for _, prompt := range prompts {
-		prompt(t)
+		err = prompt(t)
+		if err != nil {
+			return err
+		}
 	}
 
-	return t
+	return nil
 }
 
-func getSlug(t *TemplateData) {
+func getSlug(t *TemplateData) error {
 	validate := func(input string) error {
 		if !bundleNameFormat.MatchString(input) {
 			return errors.New("name must be greater than 4 characters and can only include lowercase letters and dashes")
@@ -44,26 +48,29 @@ func getSlug(t *TemplateData) {
 
 	result, err := prompt.Run()
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		return err
 	}
 
 	t.Slug = result
+	return nil
 }
 
-func getName(t *TemplateData) {
+func getName(t *TemplateData) error {
 	prompt := promptui.Prompt{
 		Label: "Name",
 	}
 
 	result, err := prompt.Run()
+
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		return err
 	}
 
 	t.Name = result
+	return nil
 }
 
-func getAccessLevel(t *TemplateData) {
+func getAccessLevel(t *TemplateData) error {
 	prompt := promptui.Select{
 		Label: "Access Level",
 		Items: []string{"Public", "Private"},
@@ -72,13 +79,14 @@ func getAccessLevel(t *TemplateData) {
 	_, result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		return err
 	}
 
 	t.Access = result
+	return nil
 }
 
-func getProvisioner(t *TemplateData) {
+func getProvisioner(t *TemplateData) error {
 	prompt := promptui.Select{
 		Label: "Provisioner",
 		Items: []string{"terraform"},
@@ -86,13 +94,14 @@ func getProvisioner(t *TemplateData) {
 	_, result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		return err
 	}
 
 	t.Provisioner = result
+	return nil
 }
 
-func getDescription(t *TemplateData) {
+func getDescription(t *TemplateData) error {
 	prompt := promptui.Prompt{
 		Label: "Description",
 	}
@@ -100,8 +109,9 @@ func getDescription(t *TemplateData) {
 	result, err := prompt.Run()
 
 	if err != nil {
-		fmt.Printf("Error: %s", err)
+		return err
 	}
 
 	t.Description = result
+	return nil
 }

@@ -66,6 +66,8 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 }
 
 func runBundleGenerate(cmd *cobra.Command, args []string) error {
+	var err error
+
 	bundleDir, err := cmd.Flags().GetString("bundle-dir")
 	if err != nil {
 		return err
@@ -81,8 +83,15 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 		TemplateDir: templateDir,
 	}
 
-	generator.RunPrompt(templateData)
-	generator.Generate(*templateData)
+	err = generator.RunPrompt(templateData)
+	if err != nil {
+		return err
+	}
 
-	return err
+	err = generator.Generate(*templateData)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

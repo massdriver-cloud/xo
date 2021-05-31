@@ -30,11 +30,11 @@ func (g TemplateData) Uuid() string {
 	return uuid.String()
 }
 
-func Generate(data TemplateData) {
+func Generate(data TemplateData) error {
 	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Slug)
 	currentDirectory := ""
 
-	filepath.WalkDir(data.TemplateDir, func(path string, info fs.DirEntry, err error) error {
+	err := filepath.WalkDir(data.TemplateDir, func(path string, info fs.DirEntry, err error) error {
 
 		if info.IsDir() {
 			if isRootPath(path, data.TemplateDir) {
@@ -49,28 +49,34 @@ func Generate(data TemplateData) {
 		}
 
 		renderPath := fmt.Sprintf("%s/%s%s", bundleDir, currentDirectory, info.Name())
-		renderTemplate(path, renderPath, data)
+		err = renderTemplate(path, renderPath, data)
+
+		if err != nil {
+			return err
+		}
 
 		return nil
 	})
+
+	return err
 }
 
-func renderTemplate(path, renderPath string, data TemplateData) {
+func renderTemplate(path, renderPath string, data TemplateData) error {
 	tmpl, err := template.ParseFiles(path)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
-		os.Exit(1)
+		return err
 	}
 
 	fileToWrite, err := os.Create(renderPath)
 	if err != nil {
-		fmt.Printf("Error: %s", err)
-		os.Exit(1)
+		return err
 	}
 
 	tmpl.Execute(fileToWrite, data)
 
 	fileToWrite.Close()
+
+	return nil
 }
 
 func isRootPath(rootPath, currentPath string) bool {
