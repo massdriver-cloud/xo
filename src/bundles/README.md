@@ -23,8 +23,6 @@ description: AWS VPV bundle with public, private, and internal subnets
 provisioner: terraform
 # The visibility scope of this bundle on massdriver.sh
 access: public
-# bundle or architecture type
-type: bundle
 
 # YAML format of a JSON Schema for schema-params.json
 # Include everything you would include besides: $schema, title, $id, description
