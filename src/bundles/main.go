@@ -19,7 +19,7 @@ type Bundle struct {
 	Schema      string                 `json:"schema"`
 	Title       string                 `json:"title"`
 	Description string                 `json:"description"`
-	Slug        string                 `json:"slug"`
+	Type        string                 `json:"type"`
 	Artifacts   map[string]interface{} `json:"artifacts"`
 	Params      map[string]interface{} `json:"params"`
 	Connections map[string]interface{} `json:"connections"`
@@ -69,7 +69,7 @@ func ParseBundle(path string) (Bundle, error) {
 func (b *Bundle) Metadata(schemaType string) map[string]string {
 	return map[string]string{
 		"$schema":     generateSchemaUrl(b.Schema),
-		"$id":         generateIdUrl(b.Slug, schemaType),
+		"$id":         generateIdUrl(b.Type, schemaType),
 		"title":       b.Title,
 		"description": b.Description,
 	}
@@ -148,8 +148,8 @@ func mergeMaps(a map[string]interface{}, b map[string]string) map[string]interfa
 	return a
 }
 
-func generateIdUrl(slug string, schemaType string) string {
-	return fmt.Sprintf(idUrlPattern, slug, schemaType)
+func generateIdUrl(mdType string, schemaType string) string {
+	return fmt.Sprintf(idUrlPattern, mdType, schemaType)
 }
 
 func generateSchemaUrl(schema string) string {

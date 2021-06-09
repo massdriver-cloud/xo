@@ -52,7 +52,7 @@ func TestParseBundle(t *testing.T) {
 	var want = bundles.Bundle{
 		Uuid:        "FC2C7101-86A6-437B-B8C2-A2391FE8C847",
 		Schema:      "draft-07",
-		Slug:        "aws-vpc",
+		Type:        "aws-vpc",
 		Title:       "AWS VPC",
 		Description: "Something",
 		Artifacts:   map[string]interface{}{},
