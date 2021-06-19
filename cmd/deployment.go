@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"xo/src/massdriver"
@@ -38,7 +39,7 @@ var deploymentGetCmd = &cobra.Command{
 	Short:                 "Fetch deployment from Massdriver",
 	Long:                  deploymentGetLong,
 	Example:               deploymentGetExamples,
-	Run:                   RunDeploymentGet,
+	RunE:                  RunDeploymentGet,
 	DisableFlagsInUseLine: true,
 }
 
@@ -50,29 +51,31 @@ func init() {
 	deploymentGetCmd.Flags().StringP("dest", "d", ".", "Destination path to write deployment json files. Defaults to current directory")
 }
 
-func RunDeploymentGet(cmd *cobra.Command, args []string) {
+func RunDeploymentGet(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
 	dest, _ := cmd.Flags().GetString("dest")
 
 	if id == "" || token == "" {
 		cmd.Help()
-		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
-		os.Exit(1)
+		fmt.Println("both deployment-id and token must be set (by flags or environment variable)")
+		return errors.New("ERROR: Both deployment-id and token must be set (by flags or environment variable)")
 	}
 
 	logger.Info("getting deployment from Massdriver", zap.String("deployment", id))
 	dep, err := massdriver.GetDeployment(id, token)
 	if err != nil {
 		logger.Error("an error occurred while getting deployment from Massdriver", zap.String("deployment", id), zap.Error(err))
-		os.Exit(1)
+		return err
 	}
 
 	logger.Info("writing deployment to file", zap.String("deployment", id))
 	err = massdriver.WriteDeploymentToFile(dep, dest)
 	if err != nil {
 		logger.Error("an error occurred while writing deployment files", zap.String("deployment", id), zap.Error(err))
-		os.Exit(1)
+		return err
 	}
 	logger.Info("deployment get complete")
+
+	return nil
 }

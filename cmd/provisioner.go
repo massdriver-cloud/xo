@@ -1,18 +1,3 @@
-/*
-Copyright © 2021 NAME HERE <EMAIL ADDRESS>
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
 package cmd
 
 import (
@@ -24,13 +9,31 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// converts at schema.inputs.json into terraform variables.tf file
+
 var provisionerCmd = &cobra.Command{
 	Use:   "provisioner",
 	Short: "Manage provisioners",
 	Long:  ``,
-	// Run: func(cmd *cobra.Command, args []string) {
-	// 	fmt.Println("provisioner called")
-	// },
+}
+
+var provisionerTerraformCmd = &cobra.Command{
+	Use:   "terraform",
+	Short: "Commands specific to terraform provisioner",
+	Long:  ``,
+}
+
+var provisionerTerraformBackendCmd = &cobra.Command{
+	Use:   "backend",
+	Short: "Generate a terraform backend config",
+	Long:  ``,
+}
+
+var provisionerTerraformBackendS3Cmd = &cobra.Command{
+	Use:   "s3",
+	Short: "Generate a terraform s3 backend config",
+	Long:  ``,
+	RunE:  runProvisionerTerraformBackendS3,
 }
 
 var provisionerCompileCmd = &cobra.Command{
@@ -42,7 +45,21 @@ var provisionerCompileCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(provisionerCmd)
-	provisionerCmd.AddCommand(provisionerCompileCmd)
+	provisionerCmd.AddCommand(provisionerTerraformCmd)
+
+	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
+	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
+	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
+	provisionerTerraformBackendS3Cmd.Flags().StringP("bucket", "b", "", "S3 bucket (required)")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("mrn", "m", "", "Massdriver MRN (required)")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("region", "r", "us-west-2", "AWS Region")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("dynamodb-table", "d", "xo-terraform-lock-table", "DynamoDB state lock table")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "/secrets/xo.aws.creds", "Shared credentials file path")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "xo-iac", "Name of AWS profile")
+	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
+	provisionerTerraformBackendS3Cmd.MarkFlagRequired("mrn")
+
+	provisionerTerraformCmd.AddCommand(provisionerCompileCmd)
 	provisionerCompileCmd.Flags().StringP("schema", "s", "./schema.json", "Path to JSON Schema")
 	provisionerCompileCmd.Flags().StringP("output", "o", "./variables.tf.json", "Output path. Use - for STDOUT")
 }
@@ -51,7 +68,7 @@ func runProvisionerCompile(cmd *cobra.Command, args []string) error {
 	var compiled string
 	var err error
 
-	provisioner := args[0]
+	provisioner := cmd.Parent().Use
 	schema, _ := cmd.Flags().GetString("schema")
 	outputPath, _ := cmd.Flags().GetString("output")
 
@@ -84,4 +101,27 @@ func writeVariableFile(compiled string, outPath string) error {
 		err := ioutil.WriteFile(outPath, data, 0644)
 		return err
 	}
+}
+
+func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
+
+	output, _ := cmd.Flags().GetString("output")
+	bucket, _ := cmd.Flags().GetString("bucket")
+	mrn, _ := cmd.Flags().GetString("mrn")
+	region, _ := cmd.Flags().GetString("region")
+	dynamoDbTable, _ := cmd.Flags().GetString("dynamodb-table")
+	sharedCredentialsFile, _ := cmd.Flags().GetString("shared-credentials-file")
+	profile, _ := cmd.Flags().GetString("profile")
+
+	log.Debug().
+		Str("provisioner", "terraform").
+		Str("output", output).
+		Str("bucket", bucket).
+		Str("mrn", mrn).
+		Str("region", region).
+		Str("dynamodb-table", dynamoDbTable).
+		Str("shared-credentials-file", sharedCredentialsFile).
+		Str("profile", profile).Msg("Generating state file")
+
+	return tfdef.GenerateBackendS3File(output, bucket, mrn, region, dynamoDbTable, sharedCredentialsFile, profile)
 }
