@@ -10,7 +10,7 @@ test:
 	go test ./src/tfdef
 	go build
 	./xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
-	./xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.json -o -
+	./xo provisioner terraform compile -s examples/compiling-schemas/variables.schema.json -o -
 	./xo bundle build ./src/bundles/testdata/bundle.Build/bundle.yaml -o /tmp/test-bundle-build	
 
 .PHONY: setup

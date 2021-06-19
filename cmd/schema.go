@@ -14,9 +14,6 @@ var schemaCmd = &cobra.Command{
 	Use:   "schema",
 	Short: "Manage JSON Schemas",
 	Long:  ``,
-	// Run: func(cmd *cobra.Command, args []string) {
-	// 	fmt.Println("schema called")
-	// },
 }
 
 var schemaValidateCmd = &cobra.Command{
