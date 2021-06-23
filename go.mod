@@ -4,7 +4,9 @@ go 1.15
 
 require (
 	github.com/golang/protobuf v1.5.1 // indirect
+	github.com/google/uuid v1.2.0 // indirect
 	github.com/kelseyhightower/envconfig v1.4.0 // indirect
+	github.com/manifoldco/promptui v0.8.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/pkg/errors v0.9.1 // indirect

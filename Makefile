@@ -8,6 +8,7 @@ test:
 	go test ./src/massdriver
 	go test ./src/schemaloader
 	go test ./src/tfdef
+	go test ./src/generator
 	go build
 	./xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
 	./xo provisioner terraform compile -s examples/compiling-schemas/variables.schema.json -o -
