@@ -52,6 +52,6 @@ COPY --from=base /etc/passwd /etc/passwd
 COPY --from=base /etc/group /etc/group
 USER appuser:appuser
 
-COPY --from=compile /out/api-gateway /usr/bin/xo
+COPY --from=compile /usr/bin/xo /usr/bin/xo
 
 ENTRYPOINT ["/usr/bin/xo"]
