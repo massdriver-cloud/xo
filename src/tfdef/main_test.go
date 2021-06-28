@@ -28,7 +28,7 @@ func TestCompile(t *testing.T) {
 				"type": "integer"
 			},
 			"active": {
-				"type": "boolean"
+				"type": "bool"
 			},
 			"height": {
 				"type": "number"

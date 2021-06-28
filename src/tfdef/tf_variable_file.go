@@ -64,5 +64,11 @@ func convertObject(pProperties PropertiesMap) string {
 }
 
 func convertScalar(pType string) string {
-	return pType
+	switch pType {
+	// json-schema calls it boolean, terraform calls it bool
+	case "boolean":
+		return "bool"
+	default:
+		return pType
+	}
 }
