@@ -35,7 +35,6 @@ func (s *massdriverMockServer) UploadArtifacts(context.Context, *UploadArtifacts
 	}, nil
 }
 
-// Run the implementation in a local server
 func RunMockServer(port string) error {
 	mdMock := NewWorkflowServer(&massdriverMockServer{})
 	mux := http.NewServeMux()
