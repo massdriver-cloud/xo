@@ -5,10 +5,10 @@ MASSDRIVER_PROTOS=${MASSDRIVER_PATH}/protos
 test:
 	go test ./cmd
 	go test ./src/bundles
-	go test ./src/massdriver
-	go test ./src/schemaloader
-	go test ./src/tfdef
 	go test ./src/generator
+	go test ./src/jsonschema
+	go test ./src/massdriver
+	go test ./src/provisioners/terraform
 	go build
 	./xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
 	./xo provisioner terraform compile -s examples/compiling-schemas/variables.schema.json -o -

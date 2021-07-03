@@ -1,9 +1,11 @@
-package tfdef
+package terraform
 
 import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"xo/src/jsonschema"
 )
 
 // TFVariableFile is a representation of a variables.tf file in JSON format
@@ -17,12 +19,12 @@ type TFVariable struct {
 }
 
 // NewTFVariable creates a new TFVariable from a JSON Schema Property
-func NewTFVariable(p Property) TFVariable {
+func NewTFVariable(p jsonschema.Property) TFVariable {
 	t := convertPropertyToType(p.Type, p.Properties, p.Items)
 	return TFVariable{Type: t}
 }
 
-func convertPropertyToType(pType string, pProperties PropertiesMap, pItems PropertyItemsType) string {
+func convertPropertyToType(pType string, pProperties jsonschema.PropertiesMap, pItems jsonschema.PropertyItemsType) string {
 	switch pType {
 	case "array":
 		var t string
@@ -51,7 +53,7 @@ func convertArray() string {
 	return "convertArray - not implemented"
 }
 
-func convertObject(pProperties PropertiesMap) string {
+func convertObject(pProperties jsonschema.PropertiesMap) string {
 	var types []string
 	for name, prop := range pProperties {
 		subType := convertPropertyToType(prop.Type, prop.Properties, prop.Items)

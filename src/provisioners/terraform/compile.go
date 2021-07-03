@@ -1,8 +1,8 @@
-package tfdef
+package terraform
 
 import (
 	"encoding/json"
-	"xo/src/schemaloader"
+	"xo/src/jsonschema"
 )
 
 // Compile a JSON Schema to Terraform Variable Definition JSON
@@ -36,9 +36,9 @@ func getVars(path string) (map[string]TFVariable, error) {
 	return variables, nil
 }
 
-func getJSONSchema(path string) (Schema, error) {
-	schema := Schema{}
-	sl := schemaloader.Load(path)
+func getJSONSchema(path string) (jsonschema.Schema, error) {
+	schema := jsonschema.Schema{}
+	sl := jsonschema.Load(path)
 
 	schemaSrc, err := sl.LoadJSON()
 	if err != nil {

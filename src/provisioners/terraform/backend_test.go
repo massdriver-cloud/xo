@@ -1,4 +1,4 @@
-package tfdef
+package terraform
 
 import (
 	"testing"

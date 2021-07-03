@@ -1,14 +1,15 @@
-package tfdef
+package terraform
 
 import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"xo/src/jsonschema"
 )
 
 type test struct {
 	name  string
-	input Property
+	input jsonschema.Property
 	want  TFVariable
 }
 
@@ -16,36 +17,36 @@ func TestNewTFVariable(t *testing.T) {
 	tests := []test{
 		{
 			name:  "scalars",
-			input: Property{Type: "number"},
+			input: jsonschema.Property{Type: "number"},
 			want:  TFVariable{Type: "number"},
 		},
 		{
 			name:  "list of scalars",
-			input: Property{Type: "array", Items: PropertyItemsType{Type: "string"}},
+			input: jsonschema.Property{Type: "array", Items: jsonschema.PropertyItemsType{Type: "string"}},
 			want:  TFVariable{Type: "list(string)"},
 		},
 		{
 			name:  "list of any",
-			input: Property{Type: "array"},
+			input: jsonschema.Property{Type: "array"},
 			want:  TFVariable{Type: "list(any)"},
 		},
 		{
 			name:  "object w/ scalars",
-			input: Property{Type: "object", Properties: PropertiesMap{"street_number": Property{Type: "number"}, "street_name": Property{Type: "string"}}},
+			input: jsonschema.Property{Type: "object", Properties: jsonschema.PropertiesMap{"street_number": jsonschema.Property{Type: "number"}, "street_name": jsonschema.Property{Type: "string"}}},
 			want:  TFVariable{Type: "object({street_name = string, street_number = number})"},
 		},
 		{
 			name: "complex objects",
-			input: Property{
+			input: jsonschema.Property{
 				Type: "object",
-				Properties: PropertiesMap{
-					"name": Property{Type: "string"},
-					"children": Property{
+				Properties: jsonschema.PropertiesMap{
+					"name": jsonschema.Property{Type: "string"},
+					"children": jsonschema.Property{
 						Type: "array",
-						Items: PropertyItemsType{
+						Items: jsonschema.PropertyItemsType{
 							Type: "object",
-							Properties: PropertiesMap{
-								"name": Property{Type: "string"},
+							Properties: jsonschema.PropertiesMap{
+								"name": jsonschema.Property{Type: "string"},
 							},
 						},
 					},

@@ -3,7 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"xo/src/schemaloader"
+	"xo/src/jsonschema"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -43,8 +43,8 @@ func Validate(schemaPath string, documentPath string) (bool, error) {
 		Str("schemaPath", schemaPath).
 		Str("documentPath", documentPath).Msg("Validating schema.")
 
-	sl := schemaloader.Load(schemaPath)
-	dl := schemaloader.Load(documentPath)
+	sl := jsonschema.Load(schemaPath)
+	dl := jsonschema.Load(documentPath)
 
 	result, err := gojsonschema.Validate(sl, dl)
 	if err != nil {

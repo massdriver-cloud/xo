@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"xo/src/tfdef"
+	tf "xo/src/provisioners/terraform"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -78,7 +78,7 @@ func runProvisionerCompile(cmd *cobra.Command, args []string) error {
 
 	switch provisioner {
 	case "terraform":
-		compiled, err = tfdef.Compile(schema)
+		compiled, err = tf.Compile(schema)
 		if err != nil {
 			return err
 		}
@@ -123,5 +123,5 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 		Str("shared-credentials-file", sharedCredentialsFile).
 		Str("profile", profile).Msg("Generating state file")
 
-	return tfdef.GenerateBackendS3File(output, bucket, mrn, region, dynamoDbTable, sharedCredentialsFile, profile)
+	return tf.GenerateBackendS3File(output, bucket, mrn, region, dynamoDbTable, sharedCredentialsFile, profile)
 }

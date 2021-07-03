@@ -1,4 +1,4 @@
-package tfdef
+package jsonschema
 
 // PropertiesMap is a named map of Property
 type PropertiesMap map[string]Property

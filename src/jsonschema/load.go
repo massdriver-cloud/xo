@@ -1,4 +1,4 @@
-package schemaloader
+package jsonschema
 
 import (
 	"regexp"
