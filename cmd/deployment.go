@@ -48,13 +48,13 @@ func init() {
 	deploymentCmd.AddCommand(deploymentGetCmd)
 	deploymentGetCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
 	deploymentGetCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
-	deploymentGetCmd.Flags().StringP("dest", "d", ".", "Destination path to write deployment json files. Defaults to current directory")
+	deploymentGetCmd.Flags().StringP("out", "o", ".", "Destination path to write deployment json files. Defaults to current directory")
 }
 
 func RunDeploymentGet(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
-	dest, _ := cmd.Flags().GetString("dest")
+	out, _ := cmd.Flags().GetString("out")
 
 	if id == "" || token == "" {
 		cmd.Help()
@@ -70,7 +70,7 @@ func RunDeploymentGet(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Info("writing deployment to file", zap.String("deployment", id))
-	err = massdriver.WriteDeploymentToFile(dep, dest)
+	err = massdriver.WriteDeploymentToFile(dep, out)
 	if err != nil {
 		logger.Error("an error occurred while writing deployment files", zap.String("deployment", id), zap.Error(err))
 		return err

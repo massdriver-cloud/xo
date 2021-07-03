@@ -15,11 +15,11 @@ func GetDeployment(id string, token string) (*Deployment, error) {
 }
 
 func WriteDeploymentToFile(dep *Deployment, dest string) error {
-	inputHandle, err := os.OpenFile(dest+"/params.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
+	inputHandle, err := os.OpenFile(dest+"/params.auto.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
-	connHandle, err := os.OpenFile(dest+"/connections.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
+	connHandle, err := os.OpenFile(dest+"/connections.auto.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

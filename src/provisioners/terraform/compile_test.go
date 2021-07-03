@@ -17,29 +17,40 @@ func doc(str string) string {
 }
 
 func TestCompile(t *testing.T) {
-	got, _ := Compile("file://./testdata/local-schema.json")
-	want := doc(`
-	{
-		"variable": {
-			"name": {
-				"type": "string"
-			},
-			"age": {
-				"type": "integer"
-			},
-			"active": {
-				"type": "bool"
-			},
-			"height": {
-				"type": "number"
+	t.Run("populated schema", func(t *testing.T) {
+		got, _ := Compile("file://./testdata/local-schema.json")
+		want := doc(`
+		{
+			"variable": {
+				"name": {
+					"type": "string"
+				},
+				"age": {
+					"type": "integer"
+				},
+				"active": {
+					"type": "bool"
+				},
+				"height": {
+					"type": "number"
+				}
 			}
 		}
-	}
-`)
+	`)
 
-	if got != want {
-		t.Errorf("got %s want %s", got, want)
-	}
+		if got != want {
+			t.Errorf("got %s want %s", got, want)
+		}
+	})
+
+	t.Run("populated schema", func(t *testing.T) {
+		got, _ := Compile("file://./testdata/empty-schema.json")
+		want := doc("")
+
+		if got != want {
+			t.Errorf("got %s want %s", got, want)
+		}
+	})
 }
 
 // https://github.com/xeipuuv/gojsonschema#loading-local-schemas

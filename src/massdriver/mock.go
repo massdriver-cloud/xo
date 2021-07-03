@@ -11,7 +11,7 @@ type massdriverMockServer struct{}
 
 func (s *massdriverMockServer) GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error) {
 	mockParams, _ := structpb.NewStruct(map[string]interface{}{
-		"some_key": "some_value",
+		"name": "value",
 	})
 	mockConnections, _ := structpb.NewStruct(map[string]interface{}{
 		"default": map[string]interface{}{
