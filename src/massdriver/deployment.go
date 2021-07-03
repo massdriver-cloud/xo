@@ -2,6 +2,7 @@ package massdriver
 
 import (
 	"context"
+	json "encoding/json"
 	"io"
 	"os"
 
@@ -14,23 +15,25 @@ func GetDeployment(id string, token string) (*Deployment, error) {
 }
 
 func WriteDeploymentToFile(dep *Deployment, dest string) error {
-	inputHandle, err := os.OpenFile(dest+"/params.tfvars.json", os.O_CREATE, 0644)
+	inputHandle, err := os.OpenFile(dest+"/params.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
-	connHandle, err := os.OpenFile(dest+"/connections.tfvars.json", os.O_CREATE, 0644)
+	connHandle, err := os.OpenFile(dest+"/connections.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 
-	writeSchema(dep.Params, inputHandle)
-	writeSchema(dep.Connections, connHandle)
-
+	err = writeSchema(dep.Params, inputHandle)
+	if err != nil {
+		return err
+	}
+	err = writeSchema(dep.Connections, connHandle)
 	return err
 }
 
 func writeSchema(schema *structpb.Struct, file io.Writer) error {
-	jsonString, err := schema.MarshalJSON()
+	jsonString, err := json.MarshalIndent(schema, "", "  ")
 	if err != nil {
 		return err
 	}

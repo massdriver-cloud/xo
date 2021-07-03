@@ -21,6 +21,10 @@ setup: ## Install CLI/editor deps
 	go get google.golang.org/protobuf/reflect/protoreflect@v1.26.0
 	go get google.golang.org/protobuf/runtime/protoimpl@v1.26.0
 
+.PHONY: docker.build
+docker.build:
+	docker build -t massdriver/xo .
+
 clean:
 	rm -rf massdriver/*.{pb,twirp}.go
 
