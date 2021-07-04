@@ -10,7 +10,7 @@ test:
 	go test ./src/massdriver
 	go test ./src/provisioners/terraform
 	go build
-	./xo schema validate --schema=cmd/testdata/valid-schema.json --document=cmd/testdata/valid-document.json
+	./xo schema validate --schema=src/jsonschema/testdata/valid-schema.json --document=src/jsonschema/testdata/valid-document.json
 	./xo provisioner terraform compile -s examples/compiling-schemas/variables.schema.json -o -
 	./xo bundle build ./src/bundles/testdata/bundle.Build/bundle.yaml -o /tmp/test-bundle-build	
 

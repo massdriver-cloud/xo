@@ -1,13 +1,9 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
 	"xo/src/jsonschema"
 
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/xeipuuv/gojsonschema"
 )
 
 var schemaCmd = &cobra.Command{
@@ -33,35 +29,6 @@ func init() {
 func runSchemaValidate(cmd *cobra.Command, args []string) error {
 	schema, _ := cmd.Flags().GetString("schema")
 	document, _ := cmd.Flags().GetString("document")
-	_, err := Validate(schema, document)
+	_, err := jsonschema.Validate(schema, document)
 	return err
-}
-
-// Validate the input object against the schema
-func Validate(schemaPath string, documentPath string) (bool, error) {
-	log.Debug().
-		Str("schemaPath", schemaPath).
-		Str("documentPath", documentPath).Msg("Validating schema.")
-
-	sl := jsonschema.Load(schemaPath)
-	dl := jsonschema.Load(documentPath)
-
-	result, err := gojsonschema.Validate(sl, dl)
-	if err != nil {
-		log.Error().Err(err).Msg("Validator failed.")
-		return false, err
-	}
-
-	if !result.Valid() {
-		msg := "The document is not valid. see errors :\n"
-		for _, desc := range result.Errors() {
-			msg = msg + fmt.Sprintf("- %s\n", desc)
-		}
-
-		err = errors.New(msg)
-		log.Error().Err(err).Msg("Validation failed.")
-		return false, err
-	}
-
-	return true, nil
 }

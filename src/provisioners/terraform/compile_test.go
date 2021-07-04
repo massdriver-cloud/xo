@@ -43,7 +43,7 @@ func TestCompile(t *testing.T) {
 		}
 	})
 
-	t.Run("populated schema", func(t *testing.T) {
+	t.Run("empty schema", func(t *testing.T) {
 		got, _ := Compile("file://./testdata/empty-schema.json")
 		want := doc("")
 

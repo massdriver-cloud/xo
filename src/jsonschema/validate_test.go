@@ -1,14 +1,12 @@
-package cmd
+package jsonschema
 
 import (
-	"os"
-	"path"
 	"testing"
 )
 
 func TestValidateJSONDocument(t *testing.T) {
-	cwd, _ := os.Getwd()
-	schema := path.Join(cwd, "testdata/valid-schema.json")
+	//cwd, _ := os.Getwd()
+	schema := "./testdata/schema.json"
 	got, _ := Validate(schema, "testdata/valid-document.json")
 	want := true
 
