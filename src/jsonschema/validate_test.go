@@ -5,9 +5,7 @@ import (
 )
 
 func TestValidateJSONDocument(t *testing.T) {
-	//cwd, _ := os.Getwd()
-	schema := "./testdata/schema.json"
-	got, _ := Validate(schema, "testdata/valid-document.json")
+	got, _ := Validate("testdata/schema.json", "testdata/valid-document.json")
 	want := true
 
 	if got != want {

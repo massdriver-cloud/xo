@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	tf "xo/src/provisioners/terraform"
+	tfauth "xo/src/provisioners/terraform/auth"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -21,6 +22,13 @@ var provisionerTerraformCmd = &cobra.Command{
 	Use:   "terraform",
 	Short: "Commands specific to terraform provisioner",
 	Long:  ``,
+}
+
+var provisionerTerraformAuthCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Generate auth file(s) for terraform providers",
+	Long:  ``,
+	RunE:  runProvisionerTerraformAuth,
 }
 
 var provisionerTerraformBackendCmd = &cobra.Command{
@@ -47,6 +55,9 @@ func init() {
 	rootCmd.AddCommand(provisionerCmd)
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
+	provisionerTerraformCmd.AddCommand(provisionerTerraformAuthCmd)
+	provisionerTerraformAuthCmd.PersistentFlags().StringP("connections", "c", "connections.tf.json", "Connections json file")
+	provisionerTerraformAuthCmd.PersistentFlags().StringP("output", "o", "./credentials", "Output dir path")
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
@@ -103,8 +114,16 @@ func writeVariableFile(compiled string, outPath string) error {
 	}
 }
 
-func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
+func runProvisionerTerraformAuth(cmd *cobra.Command, args []string) error {
+	connections, _ := cmd.Flags().GetString("connections")
+	output, _ := cmd.Flags().GetString("output")
 
+	log.Debug().Msg("Generating auth files")
+
+	return tfauth.GenerateAuthFiles(connections, output)
+}
+
+func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 	output, _ := cmd.Flags().GetString("output")
 	bucket, _ := cmd.Flags().GetString("bucket")
 	mrn, _ := cmd.Flags().GetString("mrn")
