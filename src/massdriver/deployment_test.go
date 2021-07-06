@@ -13,7 +13,7 @@ import (
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
-func TestGetDeployment(t *testing.T) {
+func TestStartDeployment(t *testing.T) {
 	testParams, _ := structpb.NewStruct(map[string]interface{}{
 		"aws_region": "us-east-1",
 		"some_key":   true,
@@ -45,7 +45,7 @@ func TestGetDeployment(t *testing.T) {
 		}, nil
 	}
 
-	got, _ := GetDeployment("id", "token")
+	got, _ := StartDeployment("id", "token")
 
 	if !proto.Equal(got, &testDeployment) {
 		t.Fatalf("expected: %+v, got: %+v", got.String(), testDeployment.String())

@@ -10,14 +10,14 @@ import (
 	"go.uber.org/zap"
 )
 
-var deploymentGetLong = `
+var deploymentStartLong = `
 	Fetches metadata about a Massdriver deployment and writes the data to files.
 
 	Specifically this is fetching the params and connections and writing them to
 	params.tfvars.json and connections.tfvars.json, respectively. This is intended
 	to be used as a step in workflow execution to gather resources for the provisioner.
 	`
-var deploymentGetExamples = `
+var deploymentStartExamples = `
 	# Get deployment (deployment-id and token in environment)
 	xo deployment get
 
@@ -34,24 +34,24 @@ var deploymentCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var deploymentGetCmd = &cobra.Command{
-	Use:                   "get",
-	Short:                 "Fetch deployment from Massdriver",
-	Long:                  deploymentGetLong,
-	Example:               deploymentGetExamples,
-	RunE:                  RunDeploymentGet,
+var deploymentStartCmd = &cobra.Command{
+	Use:                   "start",
+	Short:                 "Start deployment from Massdriver",
+	Long:                  deploymentStartLong,
+	Example:               deploymentStartExamples,
+	RunE:                  RunDeploymentStart,
 	DisableFlagsInUseLine: true,
 }
 
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
-	deploymentCmd.AddCommand(deploymentGetCmd)
-	deploymentGetCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
-	deploymentGetCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
-	deploymentGetCmd.Flags().StringP("out", "o", ".", "Destination path to write deployment json files. Defaults to current directory")
+	deploymentCmd.AddCommand(deploymentStartCmd)
+	deploymentStartCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
+	deploymentStartCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
+	deploymentStartCmd.Flags().StringP("out", "o", ".", "Destination path to write deployment json files. Defaults to current directory")
 }
 
-func RunDeploymentGet(cmd *cobra.Command, args []string) error {
+func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
 	out, _ := cmd.Flags().GetString("out")
@@ -63,7 +63,7 @@ func RunDeploymentGet(cmd *cobra.Command, args []string) error {
 	}
 
 	logger.Info("getting deployment from Massdriver", zap.String("deployment", id))
-	dep, err := massdriver.GetDeployment(id, token)
+	dep, err := massdriver.StartDeployment(id, token)
 	if err != nil {
 		logger.Error("an error occurred while getting deployment from Massdriver", zap.String("deployment", id), zap.Error(err))
 		return err

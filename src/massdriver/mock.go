@@ -9,7 +9,7 @@ import (
 
 type massdriverMockServer struct{}
 
-func (s *massdriverMockServer) GetDeployment(context.Context, *GetDeploymentRequest) (*Deployment, error) {
+func (s *massdriverMockServer) StartDeployment(context.Context, *StartDeploymentRequest) (*Deployment, error) {
 	mockParams, _ := structpb.NewStruct(map[string]interface{}{
 		"name": "value",
 	})

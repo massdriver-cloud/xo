@@ -9,9 +9,9 @@ import (
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
-func GetDeployment(id string, token string) (*Deployment, error) {
+func StartDeployment(id string, token string) (*Deployment, error) {
 	md := NewWorkflowProtobufClient(s.URL, Client)
-	return md.GetDeployment(context.Background(), &GetDeploymentRequest{Id: id, Token: token})
+	return md.StartDeployment(context.Background(), &StartDeploymentRequest{Id: id, Token: token})
 }
 
 func WriteDeploymentToFile(dep *Deployment, dest string) error {
