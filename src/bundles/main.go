@@ -6,23 +6,22 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
-	Uuid        string                 `json:"uuid"`
-	Schema      string                 `json:"schema"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Type        string                 `json:"type"`
-	Artifacts   map[string]interface{} `json:"artifacts"`
-	Params      map[string]interface{} `json:"params"`
-	Connections map[string]interface{} `json:"connections"`
+	Uuid        string      `json:"uuid"`
+	Schema      string      `json:"schema"`
+	Title       string      `json:"title"`
+	Description string      `json:"description"`
+	Type        string      `json:"type"`
+	Artifacts   OrderedJSON `json:"artifacts"`
+	Params      OrderedJSON `json:"params"`
+	Connections OrderedJSON `json:"connections"`
 }
 
 // ParseBundle parses a bundle from a YAML file
@@ -31,7 +30,7 @@ type Bundle struct {
 // bundle.Build(".")
 func ParseBundle(path string) (Bundle, error) {
 	bundle := Bundle{}
-	cwd := filepath.Dir(path)
+	//cwd := filepath.Dir(path)
 
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -43,24 +42,24 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 
-	hydratedArtifacts, err := Hydrate(bundle.Artifacts, cwd)
-	if err != nil {
-		return bundle, err
-	}
+	// hydratedArtifacts, err := Hydrate(bundle.Artifacts, cwd)
+	// if err != nil {
+	// 	return bundle, err
+	// }
 
-	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
+	// bundle.Artifacts = OrderedJSON(hydratedArtifacts.([]OrderedJSONElement))
 
-	hydratedParams, err := Hydrate(bundle.Params, cwd)
-	if err != nil {
-		return bundle, err
-	}
-	bundle.Params = hydratedParams.(map[string]interface{})
+	// hydratedParams, err := Hydrate(bundle.Params, cwd)
+	// if err != nil {
+	// 	return bundle, err
+	// }
+	// bundle.Params = hydratedParams.(yaml.MapSlice)
 
-	hydratedConnections, err := Hydrate(bundle.Connections, cwd)
-	if err != nil {
-		return bundle, err
-	}
-	bundle.Connections = hydratedConnections.(map[string]interface{})
+	// hydratedConnections, err := Hydrate(bundle.Connections, cwd)
+	// if err != nil {
+	// 	return bundle, err
+	// }
+	// bundle.Connections = hydratedConnections.(yaml.MapSlice)
 
 	return bundle, nil
 }
@@ -123,7 +122,7 @@ func (b *Bundle) Build(dir string) error {
 }
 
 // BuildSchema generates schema-*.json files
-func BuildSchema(schema map[string]interface{}, metadata map[string]string, buffer io.Writer) error {
+func BuildSchema(schema OrderedJSON, metadata map[string]string, buffer io.Writer) error {
 	var err error
 	var mergedSchema = mergeMaps(schema, metadata)
 
@@ -140,12 +139,16 @@ func BuildSchema(schema map[string]interface{}, metadata map[string]string, buff
 	return nil
 }
 
-func mergeMaps(a map[string]interface{}, b map[string]string) map[string]interface{} {
-	for k, v := range b {
-		a[k] = v
-	}
+func mergeMaps(a OrderedJSON, b map[string]string) OrderedJSON {
+	out := OrderedJSON{}
 
-	return a
+	// for k, v := range b {
+	// 	out = append(out, yaml.MapItem{Key: k, Value: v})
+	// }
+
+	// out = append(out, a...)
+
+	return out
 }
 
 func generateIdUrl(mdType string, schemaType string) string {
