@@ -27,9 +27,9 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 			if err != nil {
 				return hydratedList, err
 			}
-			// if we hydrated a the, we need some special logic. What comes back is an array,
-			// which we need to extract the fields and promote them to the current level. We
-			// also need to check for keys
+			// if we hydrated something then we need some special logic. What comes back is a custom array type
+			// (hydratedOrderedJSON), but we don't want to embed the array. We want to extract the elements and
+			// place them alongside the current level. We also need to check for duplicate keys and ignore them
 			if reflect.TypeOf(hydratedVal) == reflect.TypeOf(hydratedOrderedJSON{}) {
 				keys := getKeys(val)
 				hoj := hydratedVal.(hydratedOrderedJSON)
@@ -129,6 +129,7 @@ func readJsonFile(filepath string) (OrderedJSON, error) {
 	return result, err
 }
 
+// utility function to extract the "keys" from an OrderedJSONElement Array
 func getKeys(val reflect.Value) []string {
 	var keys []string
 	for i := 0; i < val.Len(); i++ {

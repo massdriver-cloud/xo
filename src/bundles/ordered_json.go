@@ -15,39 +15,11 @@ type OrderedJSONElement struct {
 	index      uint64
 }
 
-func (oje OrderedJSONElement) EqualSansIndex(cmp OrderedJSONElement) bool {
-	if oje.Key != cmp.Key {
-		return false
-	}
-	if reflect.TypeOf(oje.Value) != reflect.TypeOf(cmp.Value) {
-		return false
-	}
-	if reflect.TypeOf(oje.Value) == reflect.TypeOf(OrderedJSON{}) {
-		oj := oje.Value.(OrderedJSON)
-		return oj.EqualSansIndex(cmp.Value.(OrderedJSON))
-	} else if oje.Value != cmp.Value {
-		return false
-	}
-	return true
-}
-
 type OrderedJSON []OrderedJSONElement
 
 func (oj OrderedJSON) Len() int           { return len(oj) }
 func (oj OrderedJSON) Less(i, j int) bool { return oj[i].index < oj[j].index }
 func (oj OrderedJSON) Swap(i, j int)      { oj[i], oj[j] = oj[j], oj[i] }
-
-func (oje OrderedJSON) EqualSansIndex(cmp OrderedJSON) bool {
-	if len(oje) != len(cmp) {
-		return false
-	}
-	for i := 0; i < len(oje); i++ {
-		if !oje[i].EqualSansIndex(cmp[i]) {
-			return false
-		}
-	}
-	return true
-}
 
 var indexCounter uint64
 
@@ -114,13 +86,13 @@ func (oj *OrderedJSON) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		println(err)
 	}
 
-	err = oj.IngestYamlMapSlice(&y)
+	err = oj.ingestYamlMapSlice(&y)
 	return err
 }
 
-func (oj *OrderedJSON) IngestYamlMapSlice(y *yaml.MapSlice) error {
+func (oj *OrderedJSON) ingestYamlMapSlice(y *yaml.MapSlice) error {
 	for _, ymi := range *y {
-		oje, err := ConvertYamlMapItem(&ymi)
+		oje, err := convertYamlMapItem(&ymi)
 		if err != nil {
 			return err
 		}
@@ -129,7 +101,7 @@ func (oj *OrderedJSON) IngestYamlMapSlice(y *yaml.MapSlice) error {
 	return nil
 }
 
-func ConvertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
+func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	oje := OrderedJSONElement{}
 	var err error
 
@@ -138,11 +110,24 @@ func ConvertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	if reflect.TypeOf(y.Value) == reflect.TypeOf(yaml.MapSlice{}) {
 		yms := y.Value.(yaml.MapSlice)
 		oj := OrderedJSON{}
-		oj.IngestYamlMapSlice(&yms)
+		oj.ingestYamlMapSlice(&yms)
 		oje.Value = oj
 		if err != nil {
 			return oje, err
 		}
+	} else if reflect.TypeOf(y.Value) == reflect.TypeOf([]interface{}{}) {
+		arr := y.Value.([]interface{})
+		for i, v := range arr {
+			j := reflect.TypeOf(v)
+			_ = j
+			if reflect.TypeOf(v) == reflect.TypeOf(yaml.MapSlice{}) {
+				yms := v.(yaml.MapSlice)
+				oj := OrderedJSON{}
+				oj.ingestYamlMapSlice(&yms)
+				arr[i] = oj
+			}
+		}
+		oje.Value = arr
 	} else {
 		oje.Value = y.Value
 	}
@@ -151,6 +136,7 @@ func ConvertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	return oje, err
 }
 
+// utlity function for JSON unmarshaling to unconvert any value that could be an OrderedJSON object
 func upconvert(b []byte, any interface{}) (interface{}, error) {
 	val := getValue(any)
 	switch val.Kind() {

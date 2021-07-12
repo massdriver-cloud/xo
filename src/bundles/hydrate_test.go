@@ -94,7 +94,6 @@ func TestHydrate(t *testing.T) {
 			if fmt.Sprint(got) != fmt.Sprint(test.Expected) {
 				t.Errorf("got %v, want %v", got, test.Expected)
 			}
-
 		})
 	}
 }
