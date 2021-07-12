@@ -55,33 +55,29 @@ func TestParseBundle(t *testing.T) {
 		Type:        "aws-vpc",
 		Title:       "AWS VPC",
 		Description: "Something",
-		Artifacts:   map[string]interface{}{},
-		Params: map[string]interface{}{
-			"properties": map[string]interface{}{
-				"name": map[string]interface{}{
-					"type":  "string",
-					"title": "Name",
-				},
-				"age": map[string]interface{}{
-					"type":  "integer",
-					"title": "Age",
-				},
-			},
-			"required": []interface{}{
-				"name",
-			},
-		},
-		Connections: map[string]interface{}{
-			"required": []interface{}{
-				"default",
-			},
-			"properties": map[string]interface{}{
-				"default": map[string]interface{}{
-					"type":  "string",
-					"title": "Default credential",
-				},
-			},
-		},
+		Artifacts:   bundles.OrderedJSON{},
+		Params: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			{Key: "required", Value: []interface{}{"name"}},
+			{Key: "properties", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "name", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "type", Value: "string"},
+					{Key: "title", Value: "Name"},
+				})},
+				{Key: "age", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "type", Value: "integer"},
+					{Key: "title", Value: "Age"},
+				})},
+			})},
+		}),
+		Connections: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			{Key: "required", Value: []interface{}{"default"}},
+			{Key: "properties", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "default", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "type", Value: "string"},
+					{Key: "title", Value: "Default credential"},
+				})},
+			})},
+		}),
 	}
 
 	if !reflect.DeepEqual(got, want) {
