@@ -95,18 +95,14 @@ func (oje *OrderedJSONElement) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
-	// if the Unmarshal produced a map[string]interface{} (instead of a scalar) we need to convert
+	// if the Unmarshal produced anything but a scalar we may need to convert
 	// it to an OrderedJSON object to keep it ordered. It's inefficient to Unmarshal twice but this
 	// is the easiest way to inspect the unmarshaled type, and react properly
-	if reflect.TypeOf(v) == reflect.TypeOf(map[string]interface{}{}) {
-		var oj OrderedJSON
-		if err := json.Unmarshal(b, &oj); err != nil {
-			return err
-		}
-		oje.Value = oj
-	} else {
-		oje.Value = v
+	up, err := upconvert(b, v)
+	if err != nil {
+		return nil
 	}
+	oje.Value = up
 	oje.index = nextIndex()
 	return nil
 }
@@ -153,4 +149,29 @@ func ConvertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	oje.index = 0
 
 	return oje, err
+}
+
+func upconvert(b []byte, any interface{}) (interface{}, error) {
+	val := getValue(any)
+	switch val.Kind() {
+	case reflect.Map:
+		var oj OrderedJSON
+		err := json.Unmarshal(b, &oj)
+		return oj, err
+
+	case reflect.Array, reflect.Slice:
+		// There might be a map hidden in a list, so unmarshal into an OrderedJSONElement list
+		// (instead of an interface list) so we will inspect and upconvert each element
+		ojel := []OrderedJSONElement{}
+		if err := json.Unmarshal(b, &ojel); err != nil {
+			return []interface{}{}, err
+		}
+		upconvertedList := make([]interface{}, len(ojel))
+		for k, v := range ojel {
+			upconvertedList[k] = v.Value
+		}
+		return upconvertedList, nil
+	default:
+		return any, nil
+	}
 }

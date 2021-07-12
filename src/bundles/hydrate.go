@@ -27,14 +27,34 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 			if err != nil {
 				return hydratedList, err
 			}
+			// if we hydrated a the, we need some special logic. What comes back is an array,
+			// which we need to extract the fields and promote them to the current level. We
+			// also need to check for keys
 			if reflect.TypeOf(hydratedVal) == reflect.TypeOf(hydratedOrderedJSON{}) {
+				keys := getKeys(val)
 				hoj := hydratedVal.(hydratedOrderedJSON)
 				for _, v := range hoj {
-					hydratedList = reflect.Append(hydratedList, getValue(v))
+					key := v.Key
+					collision := false
+					for _, k := range keys {
+						if key == k {
+							collision = true
+						}
+					}
+					if !collision {
+						hydratedList = reflect.Append(hydratedList, getValue(v))
+					}
 				}
 			} else {
 				hydratedList = reflect.Append(hydratedList, getValue(hydratedVal))
 			}
+		}
+		if elem == reflect.TypeOf(OrderedJSONElement{}) {
+			out := OrderedJSON{}
+			for i := 0; i < hydratedList.Len(); i++ {
+				out = append(out, hydratedList.Index(i).Interface().(OrderedJSONElement))
+			}
+			return out, nil
 		}
 		return hydratedList.Interface(), nil
 	// As of right now, the only structs we should receive are the OrderedJSONElement structs
@@ -170,4 +190,13 @@ func maybePanic(err error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func getKeys(val reflect.Value) []string {
+	var keys []string
+	for i := 0; i < val.Len(); i++ {
+		oje := val.Index(i).Interface().(OrderedJSONElement)
+		keys = append(keys, oje.Key.(string))
+	}
+	return keys
 }
