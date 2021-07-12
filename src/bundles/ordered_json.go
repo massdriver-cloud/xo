@@ -28,6 +28,8 @@ func nextIndex() uint64 {
 	return indexCounter
 }
 
+// Much of this JSON stuff is from https://play.golang.org/p/yZ5DxZLIMXC
+// which was referenced in this issue https://github.com/golang/go/issues/27179#issuecomment-587528269
 func (oj OrderedJSON) MarshalJSON() ([]byte, error) {
 	buf := &bytes.Buffer{}
 	buf.Write([]byte{'{'})
@@ -67,8 +69,8 @@ func (oje *OrderedJSONElement) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &v); err != nil {
 		return err
 	}
-	// if the Unmarshal produced anything but a scalar we may need to convert
-	// it to an OrderedJSON object to keep it ordered. It's inefficient to Unmarshal twice but this
+	// if the Unmarshal produced anything but a scalar we may need to convert it to an
+	// OrderedJSON object to keep it ordered. It's inefficient to Unmarshal twice but this
 	// is the easiest way to inspect the unmarshaled type, and react properly
 	up, err := upconvert(b, v)
 	if err != nil {
@@ -79,6 +81,8 @@ func (oje *OrderedJSONElement) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// Since the bundles are yaml files, we also need to Unmarshal yaml to this type.
+// Fortunately YAML already has an ordered Unmarshal, we just need to convert to our type
 func (oj *OrderedJSON) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	y := yaml.MapSlice{}
 	err := unmarshal(&y)
@@ -107,6 +111,7 @@ func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 
 	oje.Key = y.Key
 
+	// If the "Value" is a yaml.MapSlice, we need to convert to an OrderedJSON
 	if reflect.TypeOf(y.Value) == reflect.TypeOf(yaml.MapSlice{}) {
 		yms := y.Value.(yaml.MapSlice)
 		oj := OrderedJSON{}
@@ -115,6 +120,8 @@ func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 		if err != nil {
 			return oje, err
 		}
+		// In an array, we need to iterate over the elements to see if we need to convert
+		// any yaml.MapSlice objects to Ordered JSON objects
 	} else if reflect.TypeOf(y.Value) == reflect.TypeOf([]interface{}{}) {
 		arr := y.Value.([]interface{})
 		for i, v := range arr {
