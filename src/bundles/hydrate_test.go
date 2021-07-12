@@ -90,13 +90,6 @@ func TestHydrate(t *testing.T) {
 		t.Run(test.Name, func(t *testing.T) {
 			hydrated, _ := bundles.Hydrate(test.Input, ".")
 			got := hydrated.(bundles.OrderedJSON)
-			// te, _ := json.Marshal(got)
-			// s := string(te)
-			// _ = s
-
-			// ta, _ := json.Marshal(test.Input)
-			// si := string(ta)
-			// _ = si
 
 			if fmt.Sprint(got) != fmt.Sprint(test.Expected) {
 				t.Errorf("got %v, want %v", got, test.Expected)
