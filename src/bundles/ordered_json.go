@@ -120,19 +120,11 @@ func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 		if err != nil {
 			return oje, err
 		}
-		// In an array, we need to iterate over the elements to see if we need to convert
-		// any yaml.MapSlice objects to Ordered JSON objects
 	} else if reflect.TypeOf(y.Value) == reflect.TypeOf([]interface{}{}) {
 		arr := y.Value.([]interface{})
-		for i, v := range arr {
-			j := reflect.TypeOf(v)
-			_ = j
-			if reflect.TypeOf(v) == reflect.TypeOf(yaml.MapSlice{}) {
-				yms := v.(yaml.MapSlice)
-				oj := OrderedJSON{}
-				oj.ingestYamlMapSlice(&yms)
-				arr[i] = oj
-			}
+		err := convertYamlArray(&arr)
+		if err != nil {
+			return oje, err
 		}
 		oje.Value = arr
 	} else {
@@ -141,6 +133,27 @@ func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	oje.index = 0
 
 	return oje, err
+}
+
+// Utility function for arrays. We need to iterate over the elements to see if we need to convert
+// any yaml.MapSlice objects to Ordered JSON objects (or recursively call if its a nested array)
+func convertYamlArray(arr *[]interface{}) error {
+	for i, v := range *arr {
+		if reflect.TypeOf(v) == reflect.TypeOf(yaml.MapSlice{}) {
+			yms := v.(yaml.MapSlice)
+			oj := OrderedJSON{}
+			err := oj.ingestYamlMapSlice(&yms)
+			if err != nil {
+				return err
+			}
+			(*arr)[i] = oj
+		}
+		if reflect.TypeOf(v) == reflect.TypeOf([]interface{}{}) {
+			subArr := v.([]interface{})
+			convertYamlArray(&subArr)
+		}
+	}
+	return nil
 }
 
 // utlity function for JSON unmarshaling to unconvert any value that could be an OrderedJSON object

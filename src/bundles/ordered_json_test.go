@@ -32,9 +32,13 @@ func TestMarshalJSON(t *testing.T) {
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "key", Value: "value"},
+				})}}},
+				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
 			}),
-			want: `{"foo":"bar","name":"John Doe","address":{"street":"123 E 3rd St","city":"Denver","test":["a",[1,2],"b",{"county":"Jefferson","district":20}],"state":"CO","zip":81526},"anotherTest":[1,2,3,4]}`,
+			want: `{"foo":"bar","name":"John Doe","address":{"street":"123 E 3rd St","city":"Denver","test":["a",[1,2],"b",{"county":"Jefferson","district":20}],"state":"CO","zip":81526},"nestedArrayMap":[[{"key":"value"}]],"nestedArrayScalar":[[3]],"anotherTest":[1,2,3,4]}`,
 		},
 	}
 
@@ -72,6 +76,8 @@ func TestUnMarshalJSON(t *testing.T) {
         "state": "CO",
         "zip": 81526
 	},
+	"nestedArrayMap": [[{"key": "value"}]],
+	"nestedArrayScalar": [[3]],
     "anotherTest": [1, 2, 3, 4]
 }`,
 			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
@@ -87,6 +93,10 @@ func TestUnMarshalJSON(t *testing.T) {
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "key", Value: "value"},
+				})}}},
+				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
 			}),
 		},
@@ -127,6 +137,10 @@ address:
         district: 20
     state: CO
     zip: 81526
+nestedArrayMap:
+  - - key: value
+nestedArrayScalar:
+  - - 3
 anotherTest: [1, 2, 3, 4]`,
 			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
@@ -141,6 +155,10 @@ anotherTest: [1, 2, 3, 4]`,
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "key", Value: "value"},
+				})}}},
+				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
 			}),
 		},
