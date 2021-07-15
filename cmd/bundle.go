@@ -55,7 +55,12 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
 		return err
 	}
-	bundle.Build(output)
+
+	err = bundle.Build(output)
+	if err != nil {
+		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		return err
+	}
 
 	logger.Info("bundle built",
 		zap.String("bundle", path),
