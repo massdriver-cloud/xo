@@ -24,9 +24,9 @@ func Validate(schemaPath string, documentPath string) (bool, error) {
 	}
 
 	if !result.Valid() {
-		msg := "The document is not valid. see errors :\n"
+		msg := fmt.Sprintf("The document failed validation:\n\tDocument: %s\n\tSchema: %s\nErrors:\n", documentPath, schemaPath)
 		for _, desc := range result.Errors() {
-			msg = msg + fmt.Sprintf("- %s\n", desc)
+			msg = msg + fmt.Sprintf("\t- %s\n", desc)
 		}
 
 		err = errors.New(msg)
