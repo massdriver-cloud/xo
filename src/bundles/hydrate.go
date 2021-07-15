@@ -21,7 +21,7 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 	switch val.Kind() {
 	case reflect.Slice, reflect.Array:
 		elem := reflect.TypeOf(any).Elem()
-		hydratedList := reflect.Zero(reflect.SliceOf(elem))
+		hydratedList := []interface{}{}
 		for i := 0; i < val.Len(); i++ {
 			hydratedVal, err := Hydrate(val.Index(i).Interface(), cwd)
 			if err != nil {
@@ -31,7 +31,7 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 			// (hydratedOrderedJSON), but we don't want to embed the array. We want to extract the elements and
 			// place them alongside the current level. We also need to check for duplicate keys and ignore them
 			if reflect.TypeOf(hydratedVal) == reflect.TypeOf(hydratedOrderedJSON{}) {
-				keys := getKeys(val)
+				keys := getKeys(&val)
 				hoj := hydratedVal.(hydratedOrderedJSON)
 				for _, v := range hoj {
 					key := v.Key
@@ -42,21 +42,21 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 						}
 					}
 					if !collision {
-						hydratedList = reflect.Append(hydratedList, getValue(v))
+						hydratedList = append(hydratedList, getValue(v).Interface())
 					}
 				}
 			} else {
-				hydratedList = reflect.Append(hydratedList, getValue(hydratedVal))
+				hydratedList = append(hydratedList, getValue(hydratedVal).Interface())
 			}
 		}
 		if elem == reflect.TypeOf(OrderedJSONElement{}) {
 			out := OrderedJSON{}
-			for i := 0; i < hydratedList.Len(); i++ {
-				out = append(out, hydratedList.Index(i).Interface().(OrderedJSONElement))
+			for i := 0; i < len(hydratedList); i++ {
+				out = append(out, hydratedList[i].(OrderedJSONElement))
 			}
 			return out, nil
 		}
-		return hydratedList.Interface(), nil
+		return hydratedList, nil
 	// As of right now, the only structs we should receive are the OrderedJSONElement structs
 	// so we can make some assumptions about how to cast the object and extract data
 	case reflect.Struct:
@@ -130,10 +130,10 @@ func readJsonFile(filepath string) (OrderedJSON, error) {
 }
 
 // utility function to extract the "keys" from an OrderedJSONElement Array
-func getKeys(val reflect.Value) []string {
+func getKeys(val *reflect.Value) []string {
 	var keys []string
-	for i := 0; i < val.Len(); i++ {
-		oje := val.Index(i).Interface().(OrderedJSONElement)
+	for i := 0; i < (*val).Len(); i++ {
+		oje := (*val).Index(i).Interface().(OrderedJSONElement)
 		keys = append(keys, oje.Key.(string))
 	}
 	return keys

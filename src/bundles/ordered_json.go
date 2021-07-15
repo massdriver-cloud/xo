@@ -87,7 +87,7 @@ func (oj *OrderedJSON) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	y := yaml.MapSlice{}
 	err := unmarshal(&y)
 	if err != nil {
-		println(err)
+		return err
 	}
 
 	err = oj.ingestYamlMapSlice(&y)
@@ -107,15 +107,13 @@ func (oj *OrderedJSON) ingestYamlMapSlice(y *yaml.MapSlice) error {
 
 func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	oje := OrderedJSONElement{}
-	var err error
-
 	oje.Key = y.Key
 
 	// If the "Value" is a yaml.MapSlice, we need to convert to an OrderedJSON
 	if reflect.TypeOf(y.Value) == reflect.TypeOf(yaml.MapSlice{}) {
 		yms := y.Value.(yaml.MapSlice)
 		oj := OrderedJSON{}
-		oj.ingestYamlMapSlice(&yms)
+		err := oj.ingestYamlMapSlice(&yms)
 		oje.Value = oj
 		if err != nil {
 			return oje, err
@@ -132,7 +130,7 @@ func convertYamlMapItem(y *yaml.MapItem) (OrderedJSONElement, error) {
 	}
 	oje.index = 0
 
-	return oje, err
+	return oje, nil
 }
 
 // Utility function for arrays. We need to iterate over the elements to see if we need to convert

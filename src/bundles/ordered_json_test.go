@@ -37,8 +37,9 @@ func TestMarshalJSON(t *testing.T) {
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
+				{Key: "emptyArray", Value: []interface{}{}},
 			}),
-			want: `{"foo":"bar","name":"John Doe","address":{"street":"123 E 3rd St","city":"Denver","test":["a",[1,2],"b",{"county":"Jefferson","district":20}],"state":"CO","zip":81526},"nestedArrayMap":[[{"key":"value"}]],"nestedArrayScalar":[[3]],"anotherTest":[1,2,3,4]}`,
+			want: `{"foo":"bar","name":"John Doe","address":{"street":"123 E 3rd St","city":"Denver","test":["a",[1,2],"b",{"county":"Jefferson","district":20}],"state":"CO","zip":81526},"nestedArrayMap":[[{"key":"value"}]],"nestedArrayScalar":[[3]],"anotherTest":[1,2,3,4],"emptyArray":[]}`,
 		},
 	}
 
@@ -78,7 +79,8 @@ func TestUnMarshalJSON(t *testing.T) {
 	},
 	"nestedArrayMap": [[{"key": "value"}]],
 	"nestedArrayScalar": [[3]],
-    "anotherTest": [1, 2, 3, 4]
+    "anotherTest": [1, 2, 3, 4],
+	"emptyArray": []
 }`,
 			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
@@ -98,6 +100,7 @@ func TestUnMarshalJSON(t *testing.T) {
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
+				{Key: "emptyArray", Value: []interface{}{}},
 			}),
 		},
 	}
@@ -141,7 +144,8 @@ nestedArrayMap:
   - - key: value
 nestedArrayScalar:
   - - 3
-anotherTest: [1, 2, 3, 4]`,
+anotherTest: [1, 2, 3, 4]
+emptyArray: []`,
 			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
 				{Key: "name", Value: "John Doe"},
@@ -160,6 +164,7 @@ anotherTest: [1, 2, 3, 4]`,
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
 				{Key: "anotherTest", Value: []interface{}{1, 2, 3, 4}},
+				{Key: "emptyArray", Value: []interface{}{}},
 			}),
 		},
 	}
