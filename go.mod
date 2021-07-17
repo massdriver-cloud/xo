@@ -9,6 +9,7 @@ require (
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452
 	github.com/rs/zerolog v1.20.0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/viper v1.7.1
@@ -18,5 +19,6 @@ require (
 	go.uber.org/zap v1.16.0
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/ini.v1 v1.51.0
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
