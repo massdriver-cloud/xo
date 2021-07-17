@@ -84,6 +84,17 @@ func TestHydrate(t *testing.T) {
 				})},
 			}),
 		},
+		{
+			Name:  `Adds "additionalProperties":false to object types`,
+			Input: jsonDecode(`{"properties": {"a": "b"}, "type": "object"}`),
+			Expected: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "properties", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "a", Value: "b"},
+				})},
+				{Key: "type", Value: "object"},
+				{Key: "additionalProperties", Value: false},
+			}),
+		},
 	}
 
 	for _, test := range cases {
