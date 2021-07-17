@@ -54,6 +54,9 @@ func Hydrate(any interface{}, cwd string) (interface{}, error) {
 			for i := 0; i < len(hydratedList); i++ {
 				out = append(out, hydratedList[i].(OrderedJSONElement))
 			}
+			if addAdditionalPropertiesFalseBlock(&out) {
+				out = append(out, OrderedJSONElement{Key: "additionalProperties", Value: false})
+			}
 			return out, nil
 		}
 		return hydratedList, nil
@@ -137,4 +140,18 @@ func getKeys(val *reflect.Value) []string {
 		keys = append(keys, oje.Key.(string))
 	}
 	return keys
+}
+
+func addAdditionalPropertiesFalseBlock(oj *OrderedJSON) bool {
+	isObjectBlock := false
+	additionalPropertiesMissing := true
+	for _, v := range *oj {
+		if v.Key == "type" && v.Value == "object" {
+			isObjectBlock = true
+		}
+		if v.Key == "additionalProperties" {
+			additionalPropertiesMissing = false
+		}
+	}
+	return isObjectBlock && additionalPropertiesMissing
 }
