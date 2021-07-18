@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"os"
+	"errors"
 	"xo/src/bundles"
 	"xo/src/generator"
 
@@ -119,12 +119,12 @@ func runBundleLint(cmd *cobra.Command, args []string) error {
 
 	valid, err := bundles.LintBundle(path)
 	if err != nil {
-		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		logger.Error("an error occurred while linting bundle", zap.String("bundle", path), zap.Error(err))
 		return err
 	}
 
 	if !valid {
-		os.Exit(1)
+		return errors.New("bundle not valid")
 	}
 
 	return err
