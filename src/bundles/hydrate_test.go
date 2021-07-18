@@ -7,13 +7,12 @@ import (
 	"xo/src/bundles"
 )
 
-type TestCase struct {
-	Name     string
-	Input    bundles.OrderedJSON
-	Expected bundles.OrderedJSON
-}
-
 func TestHydrate(t *testing.T) {
+	type TestCase struct {
+		Name     string
+		Input    bundles.OrderedJSON
+		Expected bundles.OrderedJSON
+	}
 	cases := []TestCase{
 		{
 			Name:     "Hydrates a $ref",

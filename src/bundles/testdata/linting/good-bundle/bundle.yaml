@@ -1,0 +1,19 @@
+uuid: 12345678-dead-beef-0000-cafebabe1234
+type: test-bundle
+schema: draft-07
+title: Test Bundle
+description: A valid bundle.yaml file
+provisioner: terraform
+access: public
+
+params:
+  required: []
+  properties: {}
+
+connections:
+  required: []
+  properties: {}
+
+artifacts:
+  type: array
+  items: {}

@@ -1,0 +1,89 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "https://massdriver.sh/schemas/bundles/bundle/schema-bundle.json",
+    "title": "Bundle",
+    "description": "Schema for bundle.yaml files",
+    "type": "object",
+    "properties": {
+      "schema": {
+        "type": "string"
+      },
+      "uuid": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "provisioner": {
+        "type": "string"
+      },
+      "access": {
+        "type": "string"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "array",
+            "items": {}
+          },
+          "properties": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "required",
+          "properties"
+        ]
+      },
+      "connections": {
+        "type": "object",
+        "properties": {
+          "required": {
+            "type": "array",
+            "items": {}
+          },
+          "properties": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "required",
+          "properties"
+        ]
+      },
+      "artifacts": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "items": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "items"
+        ]
+      }
+    },
+    "required": [
+      "schema",
+      "uuid",
+      "type",
+      "title",
+      "description",
+      "provisioner",
+      "access",
+      "params",
+      "connections",
+      "artifacts"
+    ]
+  }

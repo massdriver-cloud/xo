@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"xo/src/bundles"
 	"xo/src/generator"
 
@@ -27,6 +28,13 @@ var bundleGenerateCmd = &cobra.Command{
 	RunE:  runBundleGenerate,
 }
 
+var bundleLintCmd = &cobra.Command{
+	Use:   "lint",
+	Short: "Lints a bundle",
+	Args:  cobra.ExactArgs(1),
+	RunE:  runBundleLint,
+}
+
 func init() {
 	rootCmd.AddCommand(bundleCmd)
 	bundleCmd.AddCommand(bundleBuildCmd)
@@ -34,6 +42,7 @@ func init() {
 	bundleCmd.AddCommand(bundleGenerateCmd)
 	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
+	bundleCmd.AddCommand(bundleLintCmd)
 }
 
 func runBundleBuild(cmd *cobra.Command, args []string) error {
@@ -99,4 +108,24 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func runBundleLint(cmd *cobra.Command, args []string) error {
+	path := args[0]
+
+	logger.Info("linting bundle",
+		zap.String("bundle", path),
+	)
+
+	valid, err := bundles.LintBundle(path)
+	if err != nil {
+		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		return err
+	}
+
+	if !valid {
+		os.Exit(1)
+	}
+
+	return err
 }

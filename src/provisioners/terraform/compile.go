@@ -43,7 +43,10 @@ func getVars(path string) (map[string]TFVariable, error) {
 
 func getJSONSchema(path string) (jsonschema.Schema, error) {
 	schema := jsonschema.Schema{}
-	sl := jsonschema.Load(path)
+	sl, err := jsonschema.Load(path)
+	if err != nil {
+		return schema, err
+	}
 
 	schemaSrc, err := sl.LoadJSON()
 	if err != nil {

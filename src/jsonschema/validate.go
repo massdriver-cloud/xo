@@ -14,8 +14,16 @@ func Validate(schemaPath string, documentPath string) (bool, error) {
 		Str("schemaPath", schemaPath).
 		Str("documentPath", documentPath).Msg("Validating schema.")
 
-	sl := Load(schemaPath)
-	dl := Load(documentPath)
+	sl, err := Load(schemaPath)
+	if err != nil {
+		log.Error().Err(err).Msg("Validator failed.")
+		return false, err
+	}
+	dl, err := Load(documentPath)
+	if err != nil {
+		log.Error().Err(err).Msg("Validator failed.")
+		return false, err
+	}
 
 	result, err := gojsonschema.Validate(sl, dl)
 	if err != nil {

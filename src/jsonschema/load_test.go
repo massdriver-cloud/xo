@@ -22,11 +22,16 @@ func TestLoad(t *testing.T) {
 			input: "file://./testdata/schema.json",
 			want:  "https://example.com/person.schema.json",
 		},
+		{
+			name:  "YAML file",
+			input: "./testdata/schema.yaml",
+			want:  "https://example.com/person.schema.json",
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			sl := Load(tc.input)
+			sl, _ := Load(tc.input)
 			schema, _ := sl.LoadJSON()
 			got := schema.(map[string]interface{})["$id"]
 
