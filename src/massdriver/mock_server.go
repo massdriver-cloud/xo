@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/twitchtv/twirp"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
@@ -36,7 +37,7 @@ func (s *massdriverMockServer) UploadArtifacts(context.Context, *UploadArtifacts
 }
 
 func RunMockServer(port string) error {
-	mdMock := NewWorkflowServer(&massdriverMockServer{})
+	mdMock := NewWorkflowServer(&massdriverMockServer{}, twirp.WithServerPathPrefix("/rpc/twirp"))
 	mux := http.NewServeMux()
 	mux.Handle(mdMock.PathPrefix(), mdMock)
 	return http.ListenAndServe(":"+port, mux)

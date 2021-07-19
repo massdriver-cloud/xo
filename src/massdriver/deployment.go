@@ -6,11 +6,12 @@ import (
 	"io"
 	"os"
 
+	"github.com/twitchtv/twirp"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 func StartDeployment(id string, token string) (*Deployment, error) {
-	md := NewWorkflowProtobufClient(s.URL, Client)
+	md := NewWorkflowProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 	return md.StartDeployment(context.Background(), &StartDeploymentRequest{Id: id, Token: token})
 }
 
