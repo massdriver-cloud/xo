@@ -30,4 +30,4 @@ clean:
 	rm -rf massdriver/*.{pb,twirp}.go
 
 massdriver/workflow.pb.go:
-	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=. $(MASSDRIVER_PROTOS)/workflow.proto
+	protoc --proto_path=$(GOPATH)/src:$(MASSDRIVER_PROTOS):. --twirp_out=. --go_out=./src $(MASSDRIVER_PROTOS)/workflow.proto

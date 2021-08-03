@@ -1,26 +1,32 @@
-[{
-  "id": "A6728066-189C-4405-9020-CCB168F28E7D",
-  "type": "aws-ec2-vpc",
-  "name": "Your new VPC",
-  "secrets": {
-    "id": "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-abc"
+[
+  {
+    "metadata": {
+      "provider_resource_id": "A6728066-189C-4405-9020-CCB168F28E7D",
+      "type": "aws-ec2-vpc",
+      "name": "Your new VPC"
+    },
+    "secrets": {
+      "id": "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-abc"
+    },
+    "specs": {
+      "aws": {
+        "region": "us-east1"
+      }
+    }
   },
-  "specs": {
-    "aws": {
-      "region": "us-east1"
+  {
+    "metadata": {
+      "provider_resource_id": "A9DA1D78-4B93-420D-9B1B-289A164A7400",
+      "type": "aws-ec2-subnet",
+      "name": "Your new Subnet"
+    },
+    "secrets": {
+      "id": "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-xyz"
+    },
+    "specs": {
+      "aws": {
+        "region": "us-east1"
+      }
     }
   }
-},
-{
-  "id": "A9DA1D78-4B93-420D-9B1B-289A164A7400",
-  "type": "aws-ec2-subnet",
-  "name": "Your new Subnet",
-  "secrets": {
-    "id": "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-xyz"
-  },
-  "specs": {
-    "aws": {
-      "region": "us-east1"
-    }
-  }
-}]
+]

@@ -21,9 +21,11 @@ func TestUploadArtifactFile(t *testing.T) {
 		},
 	})
 	artifact1 := Artifact{
-		Id:      "A6728066-189C-4405-9020-CCB168F28E7D",
-		Type:    "aws-ec2-vpc",
-		Name:    "Your new VPC",
+		Metadata: &ArtifactMetadata{
+			ProviderResourceId: "A6728066-189C-4405-9020-CCB168F28E7D",
+			Type:               "aws-ec2-vpc",
+			Name:               "Your new VPC",
+		},
 		Secrets: secrets1,
 		Specs:   specs1,
 	}
@@ -36,9 +38,11 @@ func TestUploadArtifactFile(t *testing.T) {
 		},
 	})
 	artifact2 := Artifact{
-		Id:      "A9DA1D78-4B93-420D-9B1B-289A164A7400",
-		Type:    "aws-ec2-subnet",
-		Name:    "Your new Subnet",
+		Metadata: &ArtifactMetadata{
+			ProviderResourceId: "A9DA1D78-4B93-420D-9B1B-289A164A7400",
+			Type:               "aws-ec2-subnet",
+			Name:               "Your new Subnet",
+		},
 		Secrets: secrets2,
 		Specs:   specs2,
 	}
