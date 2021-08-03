@@ -198,7 +198,7 @@ type Artifact struct {
 	unknownFields protoimpl.UnknownFields
 
 	Metadata *ArtifactMetadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
-	Secrets  *structpb.Struct  `protobuf:"bytes,4,opt,name=secrets,proto3" json:"secrets,omitempty"`
+	Data     *structpb.Struct  `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
 	Specs    *structpb.Struct  `protobuf:"bytes,5,opt,name=specs,proto3" json:"specs,omitempty"`
 }
 
@@ -241,9 +241,9 @@ func (x *Artifact) GetMetadata() *ArtifactMetadata {
 	return nil
 }
 
-func (x *Artifact) GetSecrets() *structpb.Struct {
+func (x *Artifact) GetData() *structpb.Struct {
 	if x != nil {
-		return x.Secrets
+		return x.Data
 	}
 	return nil
 }
@@ -508,7 +508,7 @@ var file_workflow_proto_goTypes = []interface{}{
 }
 var file_workflow_proto_depIdxs = []int32{
 	2,  // 0: mdtwirp.Artifact.metadata:type_name -> mdtwirp.ArtifactMetadata
-	6,  // 1: mdtwirp.Artifact.secrets:type_name -> google.protobuf.Struct
+	6,  // 1: mdtwirp.Artifact.data:type_name -> google.protobuf.Struct
 	6,  // 2: mdtwirp.Artifact.specs:type_name -> google.protobuf.Struct
 	3,  // 3: mdtwirp.UploadArtifactsRequest.artifacts:type_name -> mdtwirp.Artifact
 	0,  // 4: mdtwirp.Deployment.status:type_name -> mdtwirp.DeploymentStatus

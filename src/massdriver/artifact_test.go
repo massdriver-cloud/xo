@@ -12,7 +12,7 @@ import (
 )
 
 func TestUploadArtifactFile(t *testing.T) {
-	secrets1, _ := structpb.NewStruct(map[string]interface{}{
+	data1, _ := structpb.NewStruct(map[string]interface{}{
 		"id": "arn:aws:ec2:us-east-1:123456789012:vpc/vpc-abc",
 	})
 	specs1, _ := structpb.NewStruct(map[string]interface{}{
@@ -26,10 +26,10 @@ func TestUploadArtifactFile(t *testing.T) {
 			Type:               "aws-ec2-vpc",
 			Name:               "Your new VPC",
 		},
-		Secrets: secrets1,
-		Specs:   specs1,
+		Data:  data1,
+		Specs: specs1,
 	}
-	secrets2, _ := structpb.NewStruct(map[string]interface{}{
+	data2, _ := structpb.NewStruct(map[string]interface{}{
 		"id": "arn:aws:ec2:us-east-1:123456789012:subnet/subnet-xyz",
 	})
 	specs2, _ := structpb.NewStruct(map[string]interface{}{
@@ -43,8 +43,8 @@ func TestUploadArtifactFile(t *testing.T) {
 			Type:               "aws-ec2-subnet",
 			Name:               "Your new Subnet",
 		},
-		Secrets: secrets2,
-		Specs:   specs2,
+		Data:  data2,
+		Specs: specs2,
 	}
 	wantArtifacts := []*Artifact{
 		&artifact1,
