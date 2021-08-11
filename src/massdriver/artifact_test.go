@@ -5,7 +5,6 @@ import (
 	ioutil "io/ioutil"
 	http "net/http"
 	"testing"
-	mocks "xo/src/utils/mocks"
 
 	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
@@ -57,7 +56,7 @@ func TestUploadArtifactFile(t *testing.T) {
 	var header *http.Header
 	respBytes, _ := proto.Marshal(&mockDeployment)
 	r := ioutil.NopCloser(bytes.NewReader(respBytes))
-	mocks.MockDoFunc = func(req *http.Request) (*http.Response, error) {
+	MockDoFunc = func(req *http.Request) (*http.Response, error) {
 		reqBytes, _ := ioutil.ReadAll(req.Body)
 		header = &req.Header
 		proto.Unmarshal(reqBytes, uar)

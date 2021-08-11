@@ -7,8 +7,6 @@ import (
 	http "net/http"
 	"testing"
 
-	mocks "xo/src/utils/mocks"
-
 	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
@@ -38,7 +36,7 @@ func TestStartDeployment(t *testing.T) {
 
 	respBytes, _ := proto.Marshal(&testDeployment)
 	r := ioutil.NopCloser(bytes.NewReader(respBytes))
-	mocks.MockDoFunc = func(*http.Request) (*http.Response, error) {
+	MockDoFunc = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: 200,
 			Body:       r,
