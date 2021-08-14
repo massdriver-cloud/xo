@@ -36,6 +36,10 @@ func (s *massdriverMockServer) UploadArtifacts(context.Context, *UploadArtifacts
 	}, nil
 }
 
+func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *UpdateResourceStatusRequest) (*UpdateResourceStatusResponse, error) {
+	return &UpdateResourceStatusResponse{}, nil
+}
+
 func RunMockServer(port string) error {
 	mdMock := NewWorkflowServer(&massdriverMockServer{}, twirp.WithServerPathPrefix("/rpc/twirp"))
 	mux := http.NewServeMux()
