@@ -4,8 +4,8 @@ import (
 	"xo/src/bundles"
 	"xo/src/generator"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var bundleCmd = &cobra.Command{
@@ -42,30 +42,25 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 	output, err := cmd.Flags().GetString("output")
 
 	if err != nil {
-		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
 		return err
 	}
 
-	logger.Info("building bundle",
-		zap.String("bundle", path),
-	)
+	log.Info().Str("bundle", path).Msg("building bundle")
 
 	bundle, err := bundles.ParseBundle(path)
 	if err != nil {
-		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
 		return err
 	}
 
 	err = bundle.Build(output)
 	if err != nil {
-		logger.Error("an error occurred while building bundle", zap.String("bundle", path), zap.Error(err))
+		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
 		return err
 	}
 
-	logger.Info("bundle built",
-		zap.String("bundle", path),
-		zap.String("output", output),
-	)
+	log.Info().Str("bundle", path).Str("output", output).Msg("bundle built")
 
 	return err
 }

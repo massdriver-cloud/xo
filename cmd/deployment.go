@@ -6,8 +6,8 @@ import (
 	"os"
 	"xo/src/massdriver"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var deploymentStartLong = `
@@ -62,20 +62,20 @@ func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 		return errors.New("ERROR: Both deployment-id and token must be set (by flags or environment variable)")
 	}
 
-	logger.Info("getting deployment from Massdriver", zap.String("deployment", id))
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	dep, err := massdriver.StartDeployment(id, token)
 	if err != nil {
-		logger.Error("an error occurred while getting deployment from Massdriver", zap.String("deployment", id), zap.Error(err))
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
 
-	logger.Info("writing deployment to file", zap.String("deployment", id))
+	log.Info().Str("deployment", id).Msg("writing deployment to file")
 	err = massdriver.WriteDeploymentToFile(dep, out)
 	if err != nil {
-		logger.Error("an error occurred while writing deployment files", zap.String("deployment", id), zap.Error(err))
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while writing deployment files")
 		return err
 	}
-	logger.Info("deployment get complete")
+	log.Info().Str("deployment", id).Msg("deployment get complete")
 
 	return nil
 }

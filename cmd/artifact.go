@@ -6,8 +6,8 @@ import (
 	"os"
 	"xo/src/massdriver"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 )
 
 var artifactUploadLong = `
@@ -61,13 +61,13 @@ func RunArtifactUpload(cmd *cobra.Command, args []string) error {
 		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
 	}
 
-	logger.Info("uploading artifact file", zap.String("deployment", id))
+	log.Info().Str("deployment", id).Msg("uploading artifact file")
 	err := massdriver.UploadArtifactFile(file, id, token)
 	if err != nil {
-		logger.Error("an error occurred while uploading artifact files", zap.String("deployment", id), zap.Error(err))
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while uploading artifact files")
 		return err
 	}
-	logger.Info("artifact uploaded", zap.String("deployment", id))
+	log.Info().Str("deployment", id).Msg("artifact uploaded")
 
 	return nil
 }

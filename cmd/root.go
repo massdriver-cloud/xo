@@ -4,16 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"go.uber.org/zap"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
 var cfgFile string
-var logger *zap.Logger
+var logLevel string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -21,7 +22,7 @@ var rootCmd = &cobra.Command{
 	Short: "eXecution Orchestrator",
 	Long:  `Connective tooling for bundle provisioning.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return errors.New("A subcommand is required")
+		return errors.New("a subcommand is required")
 	},
 	SilenceUsage: true,
 }
@@ -36,10 +37,10 @@ func Execute() {
 
 func init() {
 	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(initLogging)
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.xo.yaml)")
 	rootCmd.PersistentFlags().Bool("debug", false, "Enable debugging logs")
-	setupLogging()
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -68,7 +69,15 @@ func initConfig() {
 	}
 }
 
-func setupLogging() {
-	logger, _ = zap.NewProduction()
-	defer logger.Sync()
+func initLogging() {
+	switch strings.ToUpper(logLevel) {
+	case "ERROR":
+		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
+	case "WARN":
+		zerolog.SetGlobalLevel(zerolog.WarnLevel)
+	case "DEBUG":
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	default:
+		zerolog.SetGlobalLevel(zerolog.InfoLevel)
+	}
 }
