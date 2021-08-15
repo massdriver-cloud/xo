@@ -28,7 +28,7 @@ RUN adduser \
 #############
 FROM ${BASE_IMG} as compile
 
-WORKDIR /go/src/github.com/colony-corp/xo
+WORKDIR /go/src/github.com/massdriver-cloud/xo
 COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /usr/bin/xo .
