@@ -1,0 +1,63 @@
+{
+    "type": "object",
+    "properties": {
+        "foo": {
+            "type": "string"
+        },
+        "test-json": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "json"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "foo": {
+                            "type": "string"
+                        },
+                        "hello": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "test-yaml": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "yaml"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "test": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "test-template": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "txt",
+                "template": "testdata/test.tmpl"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "var1": {
+                            "type": "string"
+                        },
+                        "var2": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

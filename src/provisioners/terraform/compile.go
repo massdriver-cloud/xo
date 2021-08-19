@@ -30,7 +30,7 @@ func Compile(path string) (string, error) {
 
 func getVars(path string) (map[string]TFVariable, error) {
 	variables := map[string]TFVariable{}
-	schema, err := getJSONSchema(path)
+	schema, err := jsonschema.GetJSONSchema(path)
 	if err != nil {
 		return variables, err
 	}
@@ -39,22 +39,4 @@ func getVars(path string) (map[string]TFVariable, error) {
 		variables[name] = NewTFVariable(prop)
 	}
 	return variables, nil
-}
-
-func getJSONSchema(path string) (jsonschema.Schema, error) {
-	schema := jsonschema.Schema{}
-	sl := jsonschema.Load(path)
-
-	schemaSrc, err := sl.LoadJSON()
-	if err != nil {
-		return schema, err
-	}
-
-	byteData, err := json.Marshal(schemaSrc)
-	if err != nil {
-		return schema, err
-	}
-
-	json.Unmarshal(byteData, &schema)
-	return schema, nil
 }
