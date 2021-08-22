@@ -3,13 +3,16 @@ package provisioners
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path"
-	"text/template"
+	"reflect"
 	"xo/src/jsonschema"
 
+	"github.com/itchyny/gojq"
+	"gopkg.in/ini.v1"
 	"gopkg.in/yaml.v2"
 )
 
@@ -50,47 +53,62 @@ func GenerateAuthFiles(schemaPath string, dataPath string, outputPath string) er
 				return err
 			}
 
+			outputData := data[name]
 			if prop.GenerateAuthFile.Template != nil {
-				err = renderTemplate(out, data[name], *prop.GenerateAuthFile.Template)
+				outputData, err = renderTemplate(data[name], *prop.GenerateAuthFile.Template)
 				if err != nil {
 					return err
 				}
-			} else {
-				switch prop.GenerateAuthFile.Format {
-				case "ini":
-					err = renderINI(out, data[name])
-					if err != nil {
-						return err
-					}
-				case "json":
-					err = renderJSON(out, data[name])
-					if err != nil {
-						return err
-					}
-				case "yaml":
-					err = renderYAML(out, data[name])
-					if err != nil {
-						return err
-					}
-				default:
-					return errors.New("unrecognized file format " + prop.GenerateAuthFile.Format)
+			}
+
+			switch prop.GenerateAuthFile.Format {
+			case "ini":
+				err = renderINI(out, outputData)
+				if err != nil {
+					return err
 				}
+			case "json":
+				err = renderJSON(out, outputData)
+				if err != nil {
+					return err
+				}
+			case "yaml":
+				err = renderYAML(out, outputData)
+				if err != nil {
+					return err
+				}
+			default:
+				return errors.New("unrecognized file format " + prop.GenerateAuthFile.Format)
 			}
 		}
 	}
 	return nil
 }
 
-func renderTemplate(out io.Writer, data interface{}, templateFile string) error {
-	tmpl, err := template.ParseFiles(templateFile)
+func renderTemplate(data interface{}, template string) (interface{}, error) {
+	query, err := gojq.Parse(template)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return tmpl.ExecuteTemplate(out, path.Base(templateFile), data)
+	iter := query.Run(data)
+	v, _ := iter.Next()
+	if err, ok := v.(error); ok {
+		return nil, err
+	}
+	return v, nil
 }
 
 func renderINI(out io.Writer, data interface{}) error {
-	return errors.New("not implemented yet")
+	cfg := ini.Empty()
+
+	err := generateIni(cfg, data, ini.DefaultSection)
+	if err != nil {
+		return err
+	}
+
+	ini.PrettyFormat = false
+	_, err = cfg.WriteTo(out)
+	return err
 }
 
 func renderJSON(out io.Writer, data interface{}) error {
@@ -109,4 +127,32 @@ func renderYAML(out io.Writer, data interface{}) error {
 	}
 	_, err = out.Write(bytes)
 	return err
+}
+
+// The ini package we are using doesn't currently have the ability to Marshal/Unmarshal
+// ini files to/from map[string]interface{}. There is a github issue:
+// https://github.com/go-ini/ini/issues/275 but it isn't getting much traction. For now,
+// our use-case is simple enough we can write our own "marshaler".
+func generateIni(cfg *ini.File, data interface{}, sectionName string) error {
+	d := data.(map[string]interface{})
+	for k, v := range d {
+		switch reflect.ValueOf(v).Kind() {
+		case reflect.Map:
+			var newSectionName string
+			if sectionName == ini.DefaultSection {
+				newSectionName = k
+			} else {
+				newSectionName = sectionName + "." + k
+			}
+			cfg.NewSection(newSectionName)
+			return generateIni(cfg, v, newSectionName)
+		default:
+			section, err := cfg.GetSection(sectionName)
+			if err != nil {
+				return err
+			}
+			section.Key(k).SetValue(fmt.Sprintf("%v", v))
+		}
+	}
+	return nil
 }

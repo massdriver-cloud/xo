@@ -39,11 +39,27 @@
                 }
             }
         },
+        "test-ini": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "ini"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "lol": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "test-template": {
             "type": "object",
             "md.generateAuthFile": {
-                "format": "txt",
-                "template": "testdata/test.tmpl"
+                "format": "json",
+                "template": "{ new1: .var1, new2: .var2 }"
             },
             "properties": {
                 "data": {

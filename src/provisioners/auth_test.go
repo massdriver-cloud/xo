@@ -31,7 +31,40 @@ func TestGenerateAuthFiles(t *testing.T) {
 				"path/test-json.json": `{"foo":"bar","hello":"world"}`,
 				"path/test-yaml.yaml": `test: yaml
 `,
-				"path/test-template.txt": `testing the template one and two`,
+				"path/test-ini.ini": `lol=rofl
+
+`,
+				"path/test-template.json": `{"new1":"one","new2":"two"}`,
+			},
+		},
+		{
+			name:       "Test real auth files",
+			schemaPath: "testdata/schema-real.json",
+			dataPath:   "testdata/data-real.json",
+			expected: map[string]string{
+				"path/aws-creds.ini": `[default]
+aws_secret_access_key=lolroflnopasswordherefbi
+aws_access_key_id=FAKEFAKEFAKEFAKE
+
+`,
+				"path/k8s-authentication.yaml": `apiVersion: v1
+clusters:
+- cluster:
+    certificate-authority-data: notarealcertificateherejimmy
+    server: https://my.dumb.k8s
+  name: default
+contexts:
+- context:
+    cluster: default
+    user: default
+  name: default
+current-context: default
+kind: Config
+users:
+- name: default
+  user:
+    token: goaheadandtrythistokenandseeifitworks
+`,
 			},
 		},
 	}

@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/golang/protobuf v1.5.1
 	github.com/google/uuid v1.2.0
+	github.com/itchyny/gojq v0.12.4
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/manifoldco/promptui v0.8.0
 	github.com/mitchellh/go-homedir v1.1.0

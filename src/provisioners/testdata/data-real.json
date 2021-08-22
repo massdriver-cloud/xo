@@ -1,0 +1,15 @@
+{
+    "aws-creds": {
+        "aws_access_key_id": "FAKEFAKEFAKEFAKE",
+        "aws_secret_access_key": "lolroflnopasswordherefbi"
+    },
+    "k8s-authentication": {
+        "cluster": {
+            "certificate-authority-data": "notarealcertificateherejimmy",
+            "server": "https://my.dumb.k8s"
+        },
+        "user": {
+            "token": "goaheadandtrythistokenandseeifitworks"
+        }
+    }
+}

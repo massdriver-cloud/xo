@@ -1,0 +1,53 @@
+{
+    "type": "object",
+    "properties": {
+        "aws-creds": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "ini",
+                "template": "{\"default\": {aws_access_key_id: .aws_access_key_id, aws_secret_access_key: .aws_secret_access_key}}"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "aws_access_key_id": {
+                            "type": "string"
+                        },
+                        "aws_secret_access_key": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "k8s-authentication": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "yaml",
+                "template": "{apiVersion:\"v1\",kind:\"Config\",contexts:[{context:{cluster:\"default\",user:\"default\"},name:\"default\"}],\"current-context\":\"default\",clusters:[{cluster:.cluster,name:\"default\"}],users:[{name:\"default\",user:.user}]}"
+            },
+            "properties": {
+                "cluster": {
+                    "type": "object",
+                    "properties": {
+                        "server": {
+                            "type": "string"
+                        },
+                        "certificate-authority-data": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "user": {
+                    "type": "object",
+                    "properties": {
+                        "token": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

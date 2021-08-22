@@ -6,6 +6,9 @@
     "test-yaml": {
         "test": "yaml"
     },
+    "test-ini": {
+        "lol": "rofl"
+    },
     "test-template": {
         "var1": "one",
         "var2": "two"
