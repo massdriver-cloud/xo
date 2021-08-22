@@ -91,6 +91,12 @@ func renderTemplate(data interface{}, template string) (interface{}, error) {
 		return nil, err
 	}
 	iter := query.Run(data)
+	// this iterator object is strange. I think its for iterating through the results
+	// of complex manipulations (like turning a map into an array, and iterating through
+	// the array elements). Since we're just doing simple transformations for now, I'm
+	// making the assumption that everything we need is in the first iterator element.
+	// This logic **PROBABLY** will fall apart if we start doing complex jq queries,
+	// and we'll have to revisit it then.
 	v, _ := iter.Next()
 	if err, ok := v.(error); ok {
 		return nil, err
