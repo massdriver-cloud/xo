@@ -1,16 +1,16 @@
-package jsonschema
+package jsonschema_test
 
 import (
 	"testing"
+	"xo/src/jsonschema"
 )
 
-type test struct {
-	name  string
-	input string
-	want  string
-}
-
 func TestLoad(t *testing.T) {
+	type test struct {
+		name  string
+		input string
+		want  string
+	}
 	tests := []test{
 		{
 			name:  "Without prefix",
@@ -26,7 +26,7 @@ func TestLoad(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			sl := Load(tc.input)
+			sl := jsonschema.Load(tc.input)
 			schema, _ := sl.LoadJSON()
 			got := schema.(map[string]interface{})["$id"]
 

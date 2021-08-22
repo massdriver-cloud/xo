@@ -1,11 +1,12 @@
-package jsonschema
+package jsonschema_test
 
 import (
 	"testing"
+	"xo/src/jsonschema"
 )
 
 func TestValidateJSONDocument(t *testing.T) {
-	got, _ := Validate("testdata/schema.json", "testdata/valid-document.json")
+	got, _ := jsonschema.Validate("testdata/schema.json", "testdata/valid-document.json")
 	want := true
 
 	if got != want {
@@ -14,7 +15,7 @@ func TestValidateJSONDocument(t *testing.T) {
 }
 
 func TestInvalidateJSONDocument(t *testing.T) {
-	got, _ := Validate("testdata/valid-schema.json", "testdata/invalid-document.json")
+	got, _ := jsonschema.Validate("testdata/valid-schema.json", "testdata/invalid-document.json")
 	want := false
 
 	if got != want {
