@@ -10,17 +10,20 @@ import (
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
+var ParamsFileName = "params.auto.tfvars.json"
+var ConnectionsFileName = "connections.auto.tfvars.json"
+
 func StartDeployment(id string, token string) (*Deployment, error) {
 	md := NewWorkflowProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 	return md.StartDeployment(context.Background(), &StartDeploymentRequest{Id: id, Token: token})
 }
 
 func WriteDeploymentToFile(dep *Deployment, dest string) error {
-	inputHandle, err := os.OpenFile(dest+"/params.auto.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
+	inputHandle, err := os.OpenFile(dest+"/"+ParamsFileName, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
-	connHandle, err := os.OpenFile(dest+"/connections.auto.tfvars.json", os.O_CREATE|os.O_WRONLY, 0644)
+	connHandle, err := os.OpenFile(dest+"/"+ConnectionsFileName, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
