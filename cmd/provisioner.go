@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
+	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
-	tfauth "xo/src/provisioners/terraform/auth"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -18,17 +18,17 @@ var provisionerCmd = &cobra.Command{
 	Long:  ``,
 }
 
+var provisionerAuthCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Generate auth file(s) for provisioners",
+	Long:  ``,
+	RunE:  runProvisionerAuth,
+}
+
 var provisionerTerraformCmd = &cobra.Command{
 	Use:   "terraform",
 	Short: "Commands specific to terraform provisioner",
 	Long:  ``,
-}
-
-var provisionerTerraformAuthCmd = &cobra.Command{
-	Use:   "auth",
-	Short: "Generate auth file(s) for terraform providers",
-	Long:  ``,
-	RunE:  runProvisionerTerraformAuth,
 }
 
 var provisionerTerraformBackendCmd = &cobra.Command{
@@ -53,11 +53,13 @@ var provisionerCompileCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(provisionerCmd)
-	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
-	provisionerTerraformCmd.AddCommand(provisionerTerraformAuthCmd)
-	provisionerTerraformAuthCmd.PersistentFlags().StringP("connections", "c", "connections.tf.json", "Connections json file")
-	provisionerTerraformAuthCmd.PersistentFlags().StringP("output", "o", "./credentials", "Output dir path")
+	provisionerCmd.AddCommand(provisionerAuthCmd)
+	provisionerAuthCmd.PersistentFlags().StringP("schema", "s", "schema-connections.json", "Connections schema file")
+	provisionerAuthCmd.PersistentFlags().StringP("connections", "c", "connections.tf.json", "Connections json file")
+	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "./auth", "Output dir path")
+
+	provisionerCmd.AddCommand(provisionerTerraformCmd)
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
@@ -114,13 +116,14 @@ func writeVariableFile(compiled string, outPath string) error {
 	}
 }
 
-func runProvisionerTerraformAuth(cmd *cobra.Command, args []string) error {
+func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	connections, _ := cmd.Flags().GetString("connections")
+	schema, _ := cmd.Flags().GetString("schema")
 	output, _ := cmd.Flags().GetString("output")
 
 	log.Debug().Msg("Generating auth files")
 
-	return tfauth.GenerateAuthFiles(connections, output)
+	return provisioners.GenerateAuthFiles(schema, connections, output)
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
