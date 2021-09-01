@@ -11,7 +11,7 @@ import (
 var bundleNameFormat = regexp.MustCompile(`^[a-z0-9-]{5,}`)
 
 var prompts = []func(t *TemplateData) error{
-	getSlug,
+	getType,
 	getName,
 	getAccessLevel,
 	getProvisioner,
@@ -33,7 +33,7 @@ func RunPrompt(t *TemplateData) error {
 	return nil
 }
 
-func getSlug(t *TemplateData) error {
+func getType(t *TemplateData) error {
 	validate := func(input string) error {
 		if !bundleNameFormat.MatchString(input) {
 			return errors.New("name must be greater than 4 characters and can only include lowercase letters and dashes")
@@ -42,7 +42,7 @@ func getSlug(t *TemplateData) error {
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "Slug",
+		Label:    "Type",
 		Validate: validate,
 	}
 
@@ -51,7 +51,7 @@ func getSlug(t *TemplateData) error {
 		return err
 	}
 
-	t.Slug = result
+	t.Type = result
 	return nil
 }
 

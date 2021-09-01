@@ -15,7 +15,7 @@ func TestGenerate(t *testing.T) {
 	//for the broader application.
 	bundleData := generator.TemplateData{
 		Name:        "AWS VPC",
-		Slug:        "aws-vpc",
+		Type:        "aws-vpc",
 		Access:      "Private",
 		Description: "a vpc",
 		TemplateDir: "./testdata/templates",
@@ -40,7 +40,7 @@ func TestGenerate(t *testing.T) {
 
 	generator.Generate(bundleData)
 
-	templatePath := fmt.Sprintf("%s/%s", bundleData.BundleDir, bundleData.Slug)
+	templatePath := fmt.Sprintf("%s/%s", bundleData.BundleDir, bundleData.Type)
 
 	bundleYamlPath := fmt.Sprintf("%s/bundle.yaml", templatePath)
 	expectedContent := "title: AWS VPC"

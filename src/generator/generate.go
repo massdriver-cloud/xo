@@ -11,7 +11,7 @@ import (
 )
 
 type TemplateData struct {
-	Slug        string
+	Type        string
 	Description string
 	Provisioner string
 	Access      string
@@ -31,7 +31,7 @@ func (g TemplateData) Uuid() string {
 }
 
 func Generate(data TemplateData) error {
-	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Slug)
+	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Type)
 	currentDirectory := ""
 
 	err := filepath.WalkDir(data.TemplateDir, func(path string, info fs.DirEntry, err error) error {
