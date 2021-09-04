@@ -19,7 +19,7 @@ setup: ## Install CLI/editor deps
 
 .PHONY: docker.build
 docker.build:
-	docker build -t massdriver/xo .
+	DOCKER_BUILDKIT=1 docker build --ssh default -t massdriver/xo .
 
 clean:
 	rm -rf massdriver/*.{pb,twirp}.go
