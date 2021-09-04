@@ -4,13 +4,14 @@ import (
 	"context"
 	"net/http"
 
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	"github.com/twitchtv/twirp"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 type massdriverMockServer struct{}
 
-func (s *massdriverMockServer) StartDeployment(context.Context, *StartDeploymentRequest) (*Deployment, error) {
+func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
 	mockParams, _ := structpb.NewStruct(map[string]interface{}{
 		"name": "value",
 	})
@@ -21,27 +22,26 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *StartDeployment
 		},
 	})
 
-	return &Deployment{
-		Id:          "FAKEID",
-		Status:      DeploymentStatus_PENDING,
-		Params:      mockParams,
-		Connections: mockConnections,
+	return &mdproto.StartDeploymentResponse{
+		Deployment: &mdproto.Deployment{
+			Id:          "FAKEID",
+			Status:      mdproto.DeploymentStatus_PENDING,
+			Params:      mockParams,
+			Connections: mockConnections,
+		},
 	}, nil
 }
 
-func (s *massdriverMockServer) UploadArtifacts(context.Context, *UploadArtifactsRequest) (*Deployment, error) {
-	return &Deployment{
-		Id:     "FAKEID",
-		Status: DeploymentStatus_COMPLETED,
-	}, nil
+func (s *massdriverMockServer) UploadArtifacts(context.Context, *mdproto.UploadArtifactsRequest) (*mdproto.UploadArtifactsResponse, error) {
+	return &mdproto.UploadArtifactsResponse{}, nil
 }
 
-func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *UpdateResourceStatusRequest) (*UpdateResourceStatusResponse, error) {
-	return &UpdateResourceStatusResponse{}, nil
+func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *mdproto.UpdateResourceStatusRequest) (*mdproto.UpdateResourceStatusResponse, error) {
+	return &mdproto.UpdateResourceStatusResponse{}, nil
 }
 
 func RunMockServer(port string) error {
-	mdMock := NewWorkflowServer(&massdriverMockServer{}, twirp.WithServerPathPrefix("/rpc/twirp"))
+	mdMock := mdproto.NewWorkflowServiceServer(&massdriverMockServer{}, twirp.WithServerPathPrefix("/rpc/twirp"))
 	mux := http.NewServeMux()
 	mux.Handle(mdMock.PathPrefix(), mdMock)
 	return http.ListenAndServe(":"+port, mux)

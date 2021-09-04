@@ -3,8 +3,8 @@ package massdriver
 import (
 	"context"
 	fmt "fmt"
-	http "net/http"
 
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	"github.com/twitchtv/twirp"
 )
 
@@ -14,34 +14,26 @@ func UpdateResource(deploymentId, token, resourceId, resourceType, resourceStatu
 		return err
 	}
 
-	request := UpdateResourceStatusRequest{
-		DeploymentId:   deploymentId,
-		ResourceId:     resourceId,
-		ResourceType:   resourceType,
-		ResourceStatus: status,
+	request := mdproto.UpdateResourceStatusRequest{
+		DeploymentId:    deploymentId,
+		DeploymentToken: token,
+		ResourceId:      resourceId,
+		ResourceType:    resourceType,
+		ResourceStatus:  status,
 	}
 
-	header := make(http.Header)
-	header.Set("Authorization", "Bearer "+token)
-
-	ctx := context.Background()
-	ctx, err = twirp.WithHTTPRequestHeaders(ctx, header)
-	if err != nil {
-		return err
-	}
-
-	md := NewWorkflowProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
-	_, err = md.UpdateResourceStatus(ctx, &request)
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+	_, err = md.UpdateResourceStatus(context.Background(), &request)
 	return err
 }
 
-func convertStatus(statusString string) (ResourceStatus, error) {
+func convertStatus(statusString string) (mdproto.ResourceStatus, error) {
 	switch statusString {
 	case "provisioned":
-		return ResourceStatus_PROVISIONED, nil
+		return mdproto.ResourceStatus_PROVISIONED, nil
 	case "deleted":
-		return ResourceStatus_DELETED, nil
+		return mdproto.ResourceStatus_DELETED, nil
 	default:
-		return ResourceStatus_DELETED, fmt.Errorf("unknown resource status: %v", statusString)
+		return mdproto.ResourceStatus_DELETED, fmt.Errorf("unknown resource status: %v", statusString)
 	}
 }
