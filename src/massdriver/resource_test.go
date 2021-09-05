@@ -7,6 +7,7 @@ import (
 	"testing"
 	"xo/src/massdriver"
 
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	proto "google.golang.org/protobuf/proto"
 )
 
@@ -18,14 +19,11 @@ func TestUpdateResource(t *testing.T) {
 		resourceType   string
 		resourceStatus string
 	}
-	type testWant struct {
-		request    *massdriver.UpdateResourceStatusRequest
-		authHeader string
-	}
+
 	type test struct {
 		name  string
 		input testInput
-		want  testWant
+		want  mdproto.UpdateResourceStatusRequest
 	}
 	tests := []test{
 		{
@@ -37,14 +35,12 @@ func TestUpdateResource(t *testing.T) {
 				resourceType:   "resType",
 				resourceStatus: "provisioned",
 			},
-			want: testWant{
-				request: &massdriver.UpdateResourceStatusRequest{
-					DeploymentId:   "depId",
-					ResourceId:     "resId",
-					ResourceType:   "resType",
-					ResourceStatus: massdriver.ResourceStatus_PROVISIONED,
-				},
-				authHeader: "Bearer token123",
+			want: mdproto.UpdateResourceStatusRequest{
+				DeploymentId:    "depId",
+				DeploymentToken: "token123",
+				ResourceId:      "resId",
+				ResourceType:    "resType",
+				ResourceStatus:  mdproto.ResourceStatus_PROVISIONED,
 			},
 		},
 		{
@@ -56,27 +52,23 @@ func TestUpdateResource(t *testing.T) {
 				resourceType:   "resType",
 				resourceStatus: "deleted",
 			},
-			want: testWant{
-				request: &massdriver.UpdateResourceStatusRequest{
-					DeploymentId:   "depId",
-					ResourceId:     "resId",
-					ResourceType:   "resType",
-					ResourceStatus: massdriver.ResourceStatus_DELETED,
-				},
-				authHeader: "Bearer token123",
+			want: mdproto.UpdateResourceStatusRequest{
+				DeploymentId:    "depId",
+				DeploymentToken: "token123",
+				ResourceId:      "resId",
+				ResourceType:    "resType",
+				ResourceStatus:  mdproto.ResourceStatus_DELETED,
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := new(massdriver.UpdateResourceStatusRequest)
-			var header *http.Header
-			respBytes, _ := proto.Marshal(&massdriver.UpdateResourceStatusResponse{})
+			got := new(mdproto.UpdateResourceStatusRequest)
+			respBytes, _ := proto.Marshal(&mdproto.UpdateResourceStatusResponse{})
 			r := ioutil.NopCloser(bytes.NewReader(respBytes))
 			massdriver.MockDoFunc = func(req *http.Request) (*http.Response, error) {
 				reqBytes, _ := ioutil.ReadAll(req.Body)
-				header = &req.Header
 				proto.Unmarshal(reqBytes, got)
 				return &http.Response{
 					StatusCode: 200,
@@ -92,11 +84,8 @@ func TestUpdateResource(t *testing.T) {
 				test.input.resourceStatus,
 			)
 
-			if !proto.Equal(got, test.want.request) {
-				t.Fatalf("got: %+v, want: %+v", got, &test.want.request)
-			}
-			if header.Get("Authorization") != test.want.authHeader {
-				t.Errorf("got %s want %s", header.Get("Authorization"), test.want.authHeader)
+			if !proto.Equal(got, &test.want) {
+				t.Fatalf("got: %+v, want: %+v", got, test.want)
 			}
 		})
 	}

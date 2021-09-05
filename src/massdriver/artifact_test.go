@@ -1,11 +1,13 @@
-package massdriver
+package massdriver_test
 
 import (
 	bytes "bytes"
 	ioutil "io/ioutil"
 	http "net/http"
 	"testing"
+	"xo/src/massdriver"
 
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
@@ -19,8 +21,8 @@ func TestUploadArtifactFile(t *testing.T) {
 			"region": "us-east1",
 		},
 	})
-	artifact1 := Artifact{
-		Metadata: &ArtifactMetadata{
+	artifact1 := mdproto.Artifact{
+		Metadata: &mdproto.ArtifactMetadata{
 			ProviderResourceId: "A6728066-189C-4405-9020-CCB168F28E7D",
 			Type:               "aws-ec2-vpc",
 			Name:               "Your new VPC",
@@ -36,8 +38,8 @@ func TestUploadArtifactFile(t *testing.T) {
 			"region": "us-east1",
 		},
 	})
-	artifact2 := Artifact{
-		Metadata: &ArtifactMetadata{
+	artifact2 := mdproto.Artifact{
+		Metadata: &mdproto.ArtifactMetadata{
 			ProviderResourceId: "A9DA1D78-4B93-420D-9B1B-289A164A7400",
 			Type:               "aws-ec2-subnet",
 			Name:               "Your new Subnet",
@@ -45,20 +47,18 @@ func TestUploadArtifactFile(t *testing.T) {
 		Data:  data2,
 		Specs: specs2,
 	}
-	wantArtifacts := []*Artifact{
+	wantArtifacts := []*mdproto.Artifact{
 		&artifact1,
 		&artifact2,
 	}
 
-	mockDeployment := Deployment{}
+	mockDeployment := mdproto.Deployment{}
 
-	uar := new(UploadArtifactsRequest)
-	var header *http.Header
+	uar := new(mdproto.UploadArtifactsRequest)
 	respBytes, _ := proto.Marshal(&mockDeployment)
 	r := ioutil.NopCloser(bytes.NewReader(respBytes))
-	MockDoFunc = func(req *http.Request) (*http.Response, error) {
+	massdriver.MockDoFunc = func(req *http.Request) (*http.Response, error) {
 		reqBytes, _ := ioutil.ReadAll(req.Body)
-		header = &req.Header
 		proto.Unmarshal(reqBytes, uar)
 		return &http.Response{
 			StatusCode: 200,
@@ -67,8 +67,10 @@ func TestUploadArtifactFile(t *testing.T) {
 	}
 	wantId := "fakeid"
 	token := "faketoken"
-	wantHeader := "Bearer " + token
-	UploadArtifactFile("testdata/artifacts.json", wantId, token)
+	err := massdriver.UploadArtifactFile("testdata/artifacts.json", wantId, token)
+	if err != nil {
+		t.Fatalf("%d, unexpected error", err)
+	}
 
 	gotArtifacts := uar.GetArtifacts()
 	if len(gotArtifacts) != len(wantArtifacts) {
@@ -81,8 +83,5 @@ func TestUploadArtifactFile(t *testing.T) {
 	}
 	if uar.GetDeploymentId() != wantId {
 		t.Errorf("got %s want %s", uar.GetDeploymentId(), wantId)
-	}
-	if header.Get("Authorization") != wantHeader {
-		t.Errorf("got %s want %s", header.Get("Authorization"), wantHeader)
 	}
 }

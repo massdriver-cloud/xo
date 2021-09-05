@@ -4,10 +4,11 @@ import (
 	http "net/http"
 
 	"github.com/kelseyhightower/envconfig"
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 )
 
 var (
-	Client HTTPClient
+	Client mdproto.HTTPClient
 	s      Specification
 )
 

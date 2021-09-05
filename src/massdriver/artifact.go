@@ -4,10 +4,9 @@ import (
 	"context"
 	json "encoding/json"
 	ioutil "io/ioutil"
-	http "net/http"
 	"os"
 
-	"github.com/twitchtv/twirp"
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 )
 
 func UploadArtifactFile(file string, id string, token string) error {
@@ -18,7 +17,7 @@ func UploadArtifactFile(file string, id string, token string) error {
 	defer artifactHandle.Close()
 
 	bytes, _ := ioutil.ReadAll(artifactHandle)
-	var artifacts []*Artifact
+	var artifacts []*mdproto.Artifact
 	err = json.Unmarshal(bytes, &artifacts)
 	if err != nil {
 		return err
@@ -28,21 +27,9 @@ func UploadArtifactFile(file string, id string, token string) error {
 	return err
 }
 
-func UploadArtifact(artifacts []*Artifact, id string, token string) error {
-	md := NewWorkflowProtobufClient(s.URL, Client)
+func UploadArtifact(artifacts []*mdproto.Artifact, id string, token string) error {
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client)
 
-	header := make(http.Header)
-	header.Set("Authorization", "Bearer "+token)
-
-	ctx := context.Background()
-	ctx, err := twirp.WithHTTPRequestHeaders(ctx, header)
-	if err != nil {
-		return err
-	}
-
-	_, err = md.UploadArtifacts(ctx, &UploadArtifactsRequest{DeploymentId: id, Artifacts: artifacts})
-	if err != nil {
-		return err
-	}
+	_, err := md.UploadArtifacts(context.Background(), &mdproto.UploadArtifactsRequest{DeploymentId: id, DeploymentToken: token, Artifacts: artifacts})
 	return err
 }

@@ -7,6 +7,7 @@ import (
 	http "net/http"
 	"testing"
 
+	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	proto "google.golang.org/protobuf/proto"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
@@ -27,14 +28,16 @@ func TestStartDeployment(t *testing.T) {
 			"aws_secret_access_key": "8ba0u90uwe9fuq90j3490tj0q923u12093u09gj90u130",
 		},
 	})
-	testDeployment := Deployment{
-		Id:          "1234",
-		Status:      DeploymentStatus_PENDING,
-		Params:      testParams,
-		Connections: testConnections,
+	testResponse := mdproto.StartDeploymentResponse{
+		Deployment: &mdproto.Deployment{
+			Id:          "1234",
+			Status:      mdproto.DeploymentStatus_PENDING,
+			Params:      testParams,
+			Connections: testConnections,
+		},
 	}
 
-	respBytes, _ := proto.Marshal(&testDeployment)
+	respBytes, _ := proto.Marshal(&testResponse)
 	r := ioutil.NopCloser(bytes.NewReader(respBytes))
 	MockDoFunc = func(*http.Request) (*http.Response, error) {
 		return &http.Response{
@@ -43,10 +46,13 @@ func TestStartDeployment(t *testing.T) {
 		}, nil
 	}
 
-	got, _ := StartDeployment("id", "token")
+	got, err := StartDeployment("id", "token")
+	if err != nil {
+		t.Fatalf("%d, unexpected error", err)
+	}
 
-	if !proto.Equal(got, &testDeployment) {
-		t.Fatalf("expected: %+v, got: %+v", got.String(), testDeployment.String())
+	if !proto.Equal(got, testResponse.Deployment) {
+		t.Fatalf("expected: %+v, got: %+v", got.String(), testResponse.Deployment.String())
 	}
 }
 
