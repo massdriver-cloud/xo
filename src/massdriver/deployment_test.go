@@ -31,6 +31,15 @@ func TestStartDeployment(t *testing.T) {
 	})
 	testResponse := mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
+			Organization: &mdproto.Organization{
+				Id: "org-id",
+			},
+			Project: &mdproto.Project{
+				Id: "project-id",
+			},
+			Target: &mdproto.Target{
+				Id: "target-id",
+			},
 			Bundle: &mdproto.Bundle{
 				Type: "test-bundle",
 			},
@@ -50,7 +59,10 @@ func TestStartDeployment(t *testing.T) {
     "foo": "bar"
   }
 }`,
-		"out/bundle.txt": "test-bundle",
+		"out/organization.txt": "org-id",
+		"out/project.txt":      "project-id",
+		"out/target.txt":       "target-id",
+		"out/bundle.txt":       "test-bundle",
 	}
 
 	respBytes, _ := proto.Marshal(&testResponse)
