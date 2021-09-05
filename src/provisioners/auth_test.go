@@ -71,7 +71,7 @@ users:
 	provisioners.OutputGenerator = outputToTestBuffer
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			testAuthOutput = map[string]*bytes.Buffer{}
+			testAuthOutput = make(map[string]*bytes.Buffer)
 
 			err := provisioners.GenerateAuthFiles(tc.schemaPath, tc.dataPath, "path")
 			if err != nil {

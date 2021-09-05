@@ -69,23 +69,15 @@ func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
-	dep, err := massdriver.StartDeployment(id, token)
+	dep, err := massdriver.StartDeployment(id, token, out)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("writing deployment to file")
-	err = massdriver.WriteDeploymentToFile(dep, out)
-	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while writing deployment files")
-		return err
-	}
-
 	log.Info().Str("deployment", id).Msg("generating auth files")
 	if schemaPath == "" {
-		//schemaPath = path.Join(dep.BundleName, "/schema-connections.json")
-		schemaPath = "/schema-connections.json"
+		schemaPath = path.Join(dep.Bundle.Type, "/schema-connections.json")
 	}
 	connectionsPath := path.Join(out, massdriver.ConnectionsFileName)
 	authPath := path.Join(out, authDirName)
