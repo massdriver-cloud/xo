@@ -16,7 +16,7 @@ var (
 )
 
 func outputToFile(path string) (io.Writer, error) {
-	return os.OpenFile(path, os.O_WRONLY, 0644)
+	return os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0644)
 }
 
 func init() {

@@ -7,6 +7,7 @@ import (
 	"os"
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
+	"github.com/twitchtv/twirp"
 )
 
 func UploadArtifactFile(file string, id string, token string) error {
@@ -28,7 +29,7 @@ func UploadArtifactFile(file string, id string, token string) error {
 }
 
 func UploadArtifact(artifacts []*mdproto.Artifact, id string, token string) error {
-	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client)
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 
 	_, err := md.UploadArtifacts(context.Background(), &mdproto.UploadArtifactsRequest{DeploymentId: id, DeploymentToken: token, Artifacts: artifacts})
 	return err
