@@ -76,12 +76,12 @@ func TestTFVariableFileJSONEncoding(t *testing.T) {
 	tests := []test{
 		{
 			name:  "A single variable",
-			input: TFVariableFile{Variable: map[string]TFVariable{"name": TFVariable{Type: "string"}}},
+			input: TFVariableFile{Variable: map[string]TFVariable{"name": {Type: "string"}}},
 			want:  `{"variable":{"name":{"type":"string"}}}`,
 		},
 		{
 			name:  "Multiple variables",
-			input: TFVariableFile{Variable: map[string]TFVariable{"name": TFVariable{Type: "string"}, "age": TFVariable{Type: "number"}}},
+			input: TFVariableFile{Variable: map[string]TFVariable{"name": {Type: "string"}, "age": {Type: "number"}}},
 			want:  `{"variable":{"age":{"type":"number"},"name":{"type":"string"}}}`,
 		},
 	}
