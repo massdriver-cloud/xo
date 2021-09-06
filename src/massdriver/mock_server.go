@@ -26,6 +26,15 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDe
 		Deployment: &mdproto.Deployment{
 			Id:     "FAKEID",
 			Status: mdproto.DeploymentStatus_PENDING,
+			Organization: &mdproto.Organization{
+				Id: "organization",
+			},
+			Project: &mdproto.Project{
+				Id: "project",
+			},
+			Target: &mdproto.Target{
+				Id: "target",
+			},
 			Bundle: &mdproto.Bundle{
 				Type: "test-bundle",
 			},
