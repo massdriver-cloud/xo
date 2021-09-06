@@ -28,13 +28,13 @@ type S3BackendBlock struct {
 	SharedCredentialsFile string `json:"shared_credentials_file,omitempty"`
 }
 
-func GenerateBackendS3File(output string, bucket string, mrn string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
-	outputHandle, err := os.OpenFile(output, os.O_CREATE, 0644)
+func GenerateBackendS3File(output string, bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
+	outputHandle, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}
 
-	config, err := GenerateJSONBackendS3Config(bucket, mrn, region, dynamoDbTable, sharedCredFile, profile)
+	config, err := GenerateJSONBackendS3Config(bucket, key, region, dynamoDbTable, sharedCredFile, profile)
 	if err != nil {
 		return err
 	}
@@ -42,10 +42,10 @@ func GenerateBackendS3File(output string, bucket string, mrn string, region stri
 	return writeBackend(config, outputHandle)
 }
 
-func GenerateJSONBackendS3Config(bucket string, mrn string, region string, dynamoDbTable string, sharedCredFile string, profile string) ([]byte, error) {
+func GenerateJSONBackendS3Config(bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) ([]byte, error) {
 	s3bb := new(S3BackendBlock)
 	s3bb.Bucket = bucket
-	s3bb.Key = mrn
+	s3bb.Key = key
 	s3bb.Region = region
 	s3bb.DynamoDBTable = dynamoDbTable
 	s3bb.SharedCredentialsFile = sharedCredFile

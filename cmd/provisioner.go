@@ -64,11 +64,11 @@ func init() {
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
 	provisionerTerraformBackendS3Cmd.Flags().StringP("bucket", "b", "", "S3 bucket (required)")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("mrn", "m", "", "Massdriver MRN (required)")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("key", "k", "", "Path to the state file inside the S3 Bucket (required)")
 	provisionerTerraformBackendS3Cmd.Flags().StringP("region", "r", "us-west-2", "AWS Region")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("dynamodb-table", "d", "xo-terraform-lock-table", "DynamoDB state lock table")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "/secrets/xo.aws.creds", "Shared credentials file path")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "xo-iac", "Name of AWS profile")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("dynamodb-table", "d", "", "DynamoDB state lock table")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "", "Shared credentials file path")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "", "Name of AWS profile")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("mrn")
 
@@ -129,21 +129,21 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 	output, _ := cmd.Flags().GetString("output")
 	bucket, _ := cmd.Flags().GetString("bucket")
-	mrn, _ := cmd.Flags().GetString("mrn")
+	key, _ := cmd.Flags().GetString("key")
 	region, _ := cmd.Flags().GetString("region")
 	dynamoDbTable, _ := cmd.Flags().GetString("dynamodb-table")
 	sharedCredentialsFile, _ := cmd.Flags().GetString("shared-credentials-file")
 	profile, _ := cmd.Flags().GetString("profile")
 
-	log.Debug().
+	log.Info().
 		Str("provisioner", "terraform").
 		Str("output", output).
 		Str("bucket", bucket).
-		Str("mrn", mrn).
+		Str("key", key).
 		Str("region", region).
 		Str("dynamodb-table", dynamoDbTable).
 		Str("shared-credentials-file", sharedCredentialsFile).
 		Str("profile", profile).Msg("Generating state file")
 
-	return tf.GenerateBackendS3File(output, bucket, mrn, region, dynamoDbTable, sharedCredentialsFile, profile)
+	return tf.GenerateBackendS3File(output, bucket, key, region, dynamoDbTable, sharedCredentialsFile, profile)
 }
