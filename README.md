@@ -37,6 +37,21 @@ xo provisioner compile terraform -s examples/compiling-schemas/variables.schema.
 
 ## Development
 
+### Building
+
+XO is built using go:
+
+```shell
+go build
+```
+
+If you encounter an error: `fatal: could not read Username for 'https://github.com': terminal prompts disabled`, you can globally configure git:
+
+```shell
+git config --global --add url."git@github.com:".insteadOf "https://github.com/"
+go build
+```
+
 ### Adding Commands
 
 Add commands using the [Cobra Generator](https://github.com/spf13/cobra/blob/master/cobra/README.md).
