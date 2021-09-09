@@ -4,15 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/manifoldco/promptui"
 )
 
-var bundleNameFormat = regexp.MustCompile(`^[a-z0-9-]{5,}`)
+var bundleTypeFormat = regexp.MustCompile(`^[a-z0-9-]{5,}`)
 
 var prompts = []func(t *TemplateData) error{
-	getType,
 	getName,
+	getType,
 	getAccessLevel,
 	getProvisioner,
 	getDescription,
@@ -35,15 +36,18 @@ func RunPrompt(t *TemplateData) error {
 
 func getType(t *TemplateData) error {
 	validate := func(input string) error {
-		if !bundleNameFormat.MatchString(input) {
+		if !bundleTypeFormat.MatchString(input) {
 			return errors.New("name must be greater than 4 characters and can only include lowercase letters and dashes")
 		}
 		return nil
 	}
 
+	defaultValue := strings.Replace(strings.ToLower(t.Name), " ", "-", -1)
+
 	prompt := promptui.Prompt{
 		Label:    "Type",
 		Validate: validate,
+		Default:  defaultValue,
 	}
 
 	result, err := prompt.Run()
