@@ -70,7 +70,7 @@ func init() {
 	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "", "Shared credentials file path")
 	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "", "Name of AWS profile")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
-	provisionerTerraformBackendS3Cmd.MarkFlagRequired("mrn")
+	provisionerTerraformBackendS3Cmd.MarkFlagRequired("key")
 
 	provisionerTerraformCmd.AddCommand(provisionerCompileCmd)
 	provisionerCompileCmd.Flags().StringP("schema", "s", "./schema.json", "Path to JSON Schema")
