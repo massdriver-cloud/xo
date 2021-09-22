@@ -16,10 +16,11 @@ type GenerateAuthFile struct {
 
 // Property is a single JSON Schema property field
 type Property struct {
-	Type             string            `json:"type"`
-	Items            PropertyItemsType `json:"items,omitempty"`
-	Properties       PropertiesMap     `json:"properties,omitempty"`
-	GenerateAuthFile *GenerateAuthFile `json:"md.generateAuthFile,omitempty"`
+	AdditionalProperties bool              `json:"additionalProperties"`
+	Type                 string            `json:"type"`
+	Items                PropertyItemsType `json:"items,omitempty"`
+	Properties           PropertiesMap     `json:"properties,omitempty"`
+	GenerateAuthFile     *GenerateAuthFile `json:"md.generateAuthFile,omitempty"`
 }
 
 // Schema is a flimsy representation of a JSON Schema.

@@ -21,11 +21,15 @@ type TFVariable struct {
 
 // NewTFVariable creates a new TFVariable from a JSON Schema Property
 func NewTFVariable(p jsonschema.Property) TFVariable {
-	t := convertPropertyToType(p.Type, p.Properties, p.Items)
+	t := convertPropertyToType(p)
 	return TFVariable{Type: t}
 }
 
-func convertPropertyToType(pType string, pProperties jsonschema.PropertiesMap, pItems jsonschema.PropertyItemsType) string {
+func convertPropertyToType(p jsonschema.Property) string {
+	pType := p.Type
+	pProperties := p.Properties
+	pItems := p.Items
+
 	switch pType {
 	case "array":
 		var t string
@@ -53,9 +57,10 @@ func convertPropertyToType(pType string, pProperties jsonschema.PropertiesMap, p
 
 func convertObject(pProperties jsonschema.PropertiesMap) string {
 	// TODO: if additionalProperties are set, return "map" instead
+
 	var types []string
 	for name, prop := range pProperties {
-		subType := convertPropertyToType(prop.Type, prop.Properties, prop.Items)
+		subType := convertPropertyToType(prop)
 		subTypeDeclaration := fmt.Sprintf("%s = %s", name, subType)
 		types = append(types, subTypeDeclaration)
 	}
