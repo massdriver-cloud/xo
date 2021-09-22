@@ -1,6 +1,7 @@
 package terraform
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -32,7 +33,10 @@ func convertPropertyToType(pType string, pProperties jsonschema.PropertiesMap, p
 		case "":
 			t = "any"
 		case "array":
-			t = convertArray()
+			// Haven't seen a case of arrays of arrays, not sure what we'd be doing there...
+			err := errors.New("convertArray - not implemented.")
+			panic(err)
+
 		case "object":
 			t = convertObject(pItems.Properties)
 		default:
@@ -47,13 +51,8 @@ func convertPropertyToType(pType string, pProperties jsonschema.PropertiesMap, p
 	}
 }
 
-func convertArray() string {
-	// t = convertPropertyToType(pItems.Type, pItems.Properties, PropertyItemsType{})
-	//TODO
-	return "convertArray - not implemented"
-}
-
 func convertObject(pProperties jsonschema.PropertiesMap) string {
+	// TODO: if additionalProperties are set, return "map" instead
 	var types []string
 	for name, prop := range pProperties {
 		subType := convertPropertyToType(prop.Type, prop.Properties, prop.Items)
