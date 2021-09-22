@@ -37,31 +37,33 @@ func convertPropertyToType(p jsonschema.Property) string {
 			err := errors.New("convertArray - not implemented.")
 			panic(err)
 		case "object":
-			t = convertObject(p.Items.Properties)
+			t = convertObject(p.AdditionalProperties, p.Items.Properties)
 		default:
 			t = p.Items.Type
 		}
 
 		return fmt.Sprintf("list(%s)", t)
 	case "object":
-		return convertObject(p.Properties)
+		return convertObject(p.AdditionalProperties, p.Properties)
 	default:
 		return convertScalar(p.Type)
 	}
 }
 
-func convertObject(pProperties jsonschema.PropertiesMap) string {
-	// TODO: if additionalProperties are set, return "map" instead
-
-	var types []string
-	for name, prop := range pProperties {
-		subType := convertPropertyToType(prop)
-		subTypeDeclaration := fmt.Sprintf("%s = %s", name, subType)
-		types = append(types, subTypeDeclaration)
+func convertObject(addlProps bool, pProperties jsonschema.PropertiesMap) string {
+	if addlProps == true {
+		return "map"
+	} else {
+		var types []string
+		for name, prop := range pProperties {
+			subType := convertPropertyToType(prop)
+			subTypeDeclaration := fmt.Sprintf("%s = %s", name, subType)
+			types = append(types, subTypeDeclaration)
+		}
+		sort.Strings(types)
+		strTypes := strings.Join(types, ", ")
+		return fmt.Sprintf("object({%s})", strTypes)
 	}
-	sort.Strings(types)
-	strTypes := strings.Join(types, ", ")
-	return fmt.Sprintf("object({%s})", strTypes)
 }
 
 func convertScalar(pType string) string {

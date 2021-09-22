@@ -31,6 +31,11 @@ func TestNewTFVariable(t *testing.T) {
 			want:  TFVariable{Type: "list(any)"},
 		},
 		{
+			name:  "maps",
+			input: jsonschema.Property{Type: "object", AdditionalProperties: true},
+			want:  TFVariable{Type: "map"},
+		},
+		{
 			name:  "object w/ scalars",
 			input: jsonschema.Property{Type: "object", Properties: jsonschema.PropertiesMap{"street_number": jsonschema.Property{Type: "number"}, "street_name": jsonschema.Property{Type: "string"}}},
 			want:  TFVariable{Type: "object({street_name = string, street_number = number})"},
