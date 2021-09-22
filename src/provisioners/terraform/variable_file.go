@@ -26,32 +26,27 @@ func NewTFVariable(p jsonschema.Property) TFVariable {
 }
 
 func convertPropertyToType(p jsonschema.Property) string {
-	pType := p.Type
-	pProperties := p.Properties
-	pItems := p.Items
-
-	switch pType {
+	switch p.Type {
 	case "array":
 		var t string
-		switch pItems.Type {
+		switch p.Items.Type {
 		case "":
 			t = "any"
 		case "array":
 			// Haven't seen a case of arrays of arrays, not sure what we'd be doing there...
 			err := errors.New("convertArray - not implemented.")
 			panic(err)
-
 		case "object":
-			t = convertObject(pItems.Properties)
+			t = convertObject(p.Items.Properties)
 		default:
-			t = pItems.Type
+			t = p.Items.Type
 		}
 
 		return fmt.Sprintf("list(%s)", t)
 	case "object":
-		return convertObject(pProperties)
+		return convertObject(p.Properties)
 	default:
-		return convertScalar(pType)
+		return convertScalar(p.Type)
 	}
 }
 

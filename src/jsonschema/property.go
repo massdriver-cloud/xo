@@ -3,12 +3,6 @@ package jsonschema
 // PropertiesMap is a named map of Property
 type PropertiesMap map[string]Property
 
-// PropertyItemsType is the type for JSON Schema arrays
-type PropertyItemsType struct {
-	Type       string        `json:"type"`
-	Properties PropertiesMap `json:"properties,omitempty"`
-}
-
 type GenerateAuthFile struct {
 	Format   string  `json:"format"`
 	Template *string `json:"template,omitempty"`
@@ -18,7 +12,7 @@ type GenerateAuthFile struct {
 type Property struct {
 	AdditionalProperties bool              `json:"additionalProperties"`
 	Type                 string            `json:"type"`
-	Items                PropertyItemsType `json:"items,omitempty"`
+	Items                *Property         `json:"items"`
 	Properties           PropertiesMap     `json:"properties,omitempty"`
 	GenerateAuthFile     *GenerateAuthFile `json:"md.generateAuthFile,omitempty"`
 }

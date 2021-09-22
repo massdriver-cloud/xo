@@ -22,12 +22,12 @@ func TestNewTFVariable(t *testing.T) {
 		},
 		{
 			name:  "list of scalars",
-			input: jsonschema.Property{Type: "array", Items: jsonschema.PropertyItemsType{Type: "string"}},
+			input: jsonschema.Property{Type: "array", Items: &jsonschema.Property{Type: "string"}},
 			want:  TFVariable{Type: "list(string)"},
 		},
 		{
 			name:  "list of any",
-			input: jsonschema.Property{Type: "array"},
+			input: jsonschema.Property{Type: "array", Items: &jsonschema.Property{}},
 			want:  TFVariable{Type: "list(any)"},
 		},
 		{
@@ -43,7 +43,7 @@ func TestNewTFVariable(t *testing.T) {
 					"name": jsonschema.Property{Type: "string"},
 					"children": jsonschema.Property{
 						Type: "array",
-						Items: jsonschema.PropertyItemsType{
+						Items: &jsonschema.Property{
 							Type: "object",
 							Properties: jsonschema.PropertiesMap{
 								"name": jsonschema.Property{Type: "string"},
