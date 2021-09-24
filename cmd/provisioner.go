@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"fmt"
-	"io/ioutil"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
-
-// converts at schema.inputs.json into terraform variables.tf file
 
 var provisionerCmd = &cobra.Command{
 	Use:   "provisioner",
@@ -44,13 +40,6 @@ var provisionerTerraformBackendS3Cmd = &cobra.Command{
 	RunE:  runProvisionerTerraformBackendS3,
 }
 
-var provisionerCompileCmd = &cobra.Command{
-	Use:   "compile",
-	Short: "Compile JSON Schema to provisioner variable definition file.",
-	Long:  ``,
-	RunE:  runProvisionerCompile,
-}
-
 func init() {
 	rootCmd.AddCommand(provisionerCmd)
 
@@ -71,49 +60,6 @@ func init() {
 	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "", "Name of AWS profile")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("key")
-
-	provisionerTerraformCmd.AddCommand(provisionerCompileCmd)
-	provisionerCompileCmd.Flags().StringP("schema", "s", "./schema.json", "Path to JSON Schema")
-	provisionerCompileCmd.Flags().StringP("output", "o", "./variables.tf.json", "Output path. Use - for STDOUT")
-}
-
-func runProvisionerCompile(cmd *cobra.Command, args []string) error {
-	var compiled string
-	var err error
-
-	provisioner := cmd.Parent().Use
-	schema, _ := cmd.Flags().GetString("schema")
-	outputPath, _ := cmd.Flags().GetString("output")
-
-	log.Debug().
-		Str("provisioner", provisioner).
-		Str("schemaPath", schema).Msg("Compiling schema.")
-
-	switch provisioner {
-	case "terraform":
-		compiled, err = tf.Compile(schema)
-		if err != nil {
-			return err
-		}
-	default:
-		err := fmt.Errorf("unsupported argument %s the single argument 'terraform' is supported", provisioner)
-		log.Error().Err(err).Msg("Compilation failed.")
-		return err
-	}
-
-	return writeVariableFile(compiled, outputPath)
-}
-
-func writeVariableFile(compiled string, outPath string) error {
-	switch outPath {
-	case "-":
-		fmt.Println(compiled)
-		return nil
-	default:
-		data := []byte(compiled)
-		err := ioutil.WriteFile(outPath, data, 0644)
-		return err
-	}
 }
 
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {

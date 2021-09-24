@@ -6,10 +6,15 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 
 	"gopkg.in/yaml.v2"
 )
+
+const ArtifactsSchemaFilename = "schema-artifacts.json"
+const ConnectionsSchemaFilename = "schema-connections.json"
+const ParamsSchemaFilename = "schema-params.json"
 
 const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
@@ -19,6 +24,7 @@ type Bundle struct {
 	Schema      string      `json:"schema"`
 	Title       string      `json:"title"`
 	Description string      `json:"description"`
+	Provisioner string      `json:"provisioner"`
 	Type        string      `json:"type"`
 	Artifacts   OrderedJSON `json:"artifacts"`
 	Params      OrderedJSON `json:"params"`
@@ -76,54 +82,62 @@ func (b *Bundle) Metadata(schemaType string) OrderedJSON {
 }
 
 func createFile(dir string, fileName string) (*os.File, error) {
-	filePath := fmt.Sprintf("%s/schema-%s.json", dir, fileName)
-	return os.Create(filePath)
+	return os.Create(path.Join(dir, fileName))
 }
 
-// Build generates all bundle files in the given directory
-func (b *Bundle) Build(dir string) error {
+// Build generates all bundle files in the given bundle
+func (b *Bundle) GenerateSchemas(dir string) error {
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		return err
 	}
 
-	paramsSchemaFile, err := createFile(dir, "params")
+	paramsSchemaFile, err := createFile(dir, ParamsSchemaFilename)
 	if err != nil {
 		return err
 	}
 
-	connectionsSchemaFile, err := createFile(dir, "connections")
+	connectionsSchemaFile, err := createFile(dir, ConnectionsSchemaFilename)
 	if err != nil {
 		return err
 	}
 
-	artifactsSchemaFile, err := createFile(dir, "artifacts")
+	artifactsSchemaFile, err := createFile(dir, ArtifactsSchemaFilename)
 	if err != nil {
 		return err
 	}
 
-	err = BuildSchema(b.Params, b.Metadata("params"), paramsSchemaFile)
+	err = GenerateSchema(b.Params, b.Metadata("params"), paramsSchemaFile)
 	if err != nil {
 		return err
 	}
-	err = BuildSchema(b.Connections, b.Metadata("connections"), connectionsSchemaFile)
+	err = GenerateSchema(b.Connections, b.Metadata("connections"), connectionsSchemaFile)
 	if err != nil {
 		return err
 	}
-	err = BuildSchema(b.Artifacts, b.Metadata("artifacts"), artifactsSchemaFile)
+	err = GenerateSchema(b.Artifacts, b.Metadata("artifacts"), artifactsSchemaFile)
 	if err != nil {
 		return err
 	}
 
-	defer paramsSchemaFile.Close()
-	defer connectionsSchemaFile.Close()
-	defer artifactsSchemaFile.Close()
+	err = paramsSchemaFile.Close()
+	if err != nil {
+		return err
+	}
+	err = connectionsSchemaFile.Close()
+	if err != nil {
+		return err
+	}
+	err = artifactsSchemaFile.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
-// BuildSchema generates schema-*.json files
-func BuildSchema(schema OrderedJSON, metadata OrderedJSON, buffer io.Writer) error {
+// generateSchema generates a specific schema-*.json file
+func GenerateSchema(schema OrderedJSON, metadata OrderedJSON, buffer io.Writer) error {
 	var err error
 	var mergedSchema = OrderedJSON(append(metadata, schema...))
 

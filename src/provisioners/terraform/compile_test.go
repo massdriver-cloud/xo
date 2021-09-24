@@ -1,7 +1,10 @@
 package terraform
 
 import (
+	"bytes"
 	"encoding/json"
+	"os"
+	"path"
 	"testing"
 )
 
@@ -16,41 +19,117 @@ func doc(str string) string {
 	return string(outBytes)
 }
 
-func TestCompile(t *testing.T) {
-	t.Run("populated schema", func(t *testing.T) {
-		got, _ := Compile("file://./testdata/local-schema.json")
-		want := doc(`
+func TestGenerateFiles(t *testing.T) {
+	type testData struct {
+		name       string
+		bundlePath string
+		expected   map[string]string
+	}
+	tests := []testData{
 		{
-			"variable": {
-				"name": {
-					"type": "string"
-				},
-				"age": {
-					"type": "integer"
-				},
-				"active": {
-					"type": "bool"
-				},
-				"height": {
-					"type": "number"
+			name:       "standard",
+			bundlePath: "testdata/testbundle/",
+			expected: map[string]string{
+				"_connections_variables.tf.json": `{
+  "variable": {
+    "foo": {
+      "type": "string"
+    }
+  }
+}`,
+				"_params_variables.tf.json": `{
+  "variable": {
+    "age": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    }
+  }
+}`,
+				"_md_variables.tf.json": `{
+  "variable": {
+    "md_default_tags": {
+      "type": "map"
+    },
+    "md_name_prefix": {
+      "type": "string"
+    }
+  }
+}`,
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := GenerateFiles(tc.bundlePath)
+			if err != nil {
+				t.Fatalf("%d, unexpected error", err)
+			}
+
+			for file, want := range tc.expected {
+				got, err := os.ReadFile(path.Join(tc.bundlePath, "src", file))
+				if err != nil {
+					t.Fatalf("%d, unexpected error", err)
+				}
+
+				if string(got) != want {
+					t.Errorf("got %s want %s", string(got), want)
 				}
 			}
+		})
+	}
+}
+func TestCompile(t *testing.T) {
+	type testData struct {
+		name       string
+		schemaPath string
+		expected   string
+	}
+	tests := []testData{
+		{
+			name:       "populated schema",
+			schemaPath: "file://./testdata/local-schema.json",
+			expected: doc(`
+{
+	"variable": {
+		"name": {
+			"type": "string"
+		},
+		"age": {
+			"type": "integer"
+		},
+		"active": {
+			"type": "bool"
+		},
+		"height": {
+			"type": "number"
 		}
-	`)
+	}
+}
+		`)},
+		{
+			name:       "empty schema",
+			schemaPath: "file://./testdata/empty-schema.json",
+			expected:   doc(""),
+		},
+	}
 
-		if got != want {
-			t.Errorf("got %s want %s", got, want)
-		}
-	})
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var got bytes.Buffer
+			err := Compile(tc.schemaPath, &got)
+			if err != nil {
+				t.Fatalf("%d, unexpected error", err)
+			}
+			want := tc.expected
 
-	t.Run("empty schema", func(t *testing.T) {
-		got, _ := Compile("file://./testdata/empty-schema.json")
-		want := doc("")
-
-		if got != want {
-			t.Errorf("got %s want %s", got, want)
-		}
-	})
+			if got.String() != want {
+				t.Errorf("got %s want %s", got.String(), want)
+			}
+		})
+	}
 }
 
 // https://github.com/xeipuuv/gojsonschema#loading-local-schemas
