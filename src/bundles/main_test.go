@@ -10,9 +10,9 @@ import (
 	"xo/src/bundles"
 )
 
-func TestBuild(t *testing.T) {
+func TestGenerateSchemas(t *testing.T) {
 	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
-	_ = bundle.Build("./tmp/")
+	_ = bundle.GenerateSchemas("./tmp/")
 
 	gotDir, _ := os.ReadDir("./tmp")
 	got := []string{}
@@ -30,11 +30,11 @@ func TestBuild(t *testing.T) {
 	defer os.RemoveAll("./tmp")
 }
 
-func TestBuildSchema(t *testing.T) {
+func TestGenerateSchema(t *testing.T) {
 	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
-	bundles.BuildSchema(bundle.Params, bundle.Metadata("params"), &inputIo)
+	bundles.GenerateSchema(bundle.Params, bundle.Metadata("params"), &inputIo)
 	var gotJson = &map[string]interface{}{}
 	_ = json.Unmarshal(inputIo.Bytes(), gotJson)
 
@@ -55,6 +55,7 @@ func TestParseBundle(t *testing.T) {
 		Type:        "aws-vpc",
 		Title:       "AWS VPC",
 		Description: "Something",
+		Provisioner: "terraform",
 		Artifacts:   bundles.OrderedJSON{},
 		Params: bundles.OrderedJSON([]bundles.OrderedJSONElement{
 			{Key: "required", Value: []interface{}{"name"}},

@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
 	"xo/src/bundles"
 	"xo/src/generator"
+	"xo/src/provisioners/terraform"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -54,10 +56,22 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = bundle.Build(output)
+	err = bundle.GenerateSchemas(output)
 	if err != nil {
-		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
+		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while generating bundle schema files")
 		return err
+	}
+
+	switch bundle.Provisioner {
+	case "terraform":
+		err = terraform.GenerateFiles(output)
+		if err != nil {
+			log.Error().Err(err).Str("bundle", path).Str("provisioner", bundle.Provisioner).Msg("an error occurred while generating provisioner files")
+			return err
+		}
+	default:
+		log.Error().Str("bundle", path).Msg("unknown provisioner: " + bundle.Provisioner)
+		return fmt.Errorf("unknown provisioner: %v", bundle.Provisioner)
 	}
 
 	log.Info().Str("bundle", path).Str("output", output).Msg("bundle built")

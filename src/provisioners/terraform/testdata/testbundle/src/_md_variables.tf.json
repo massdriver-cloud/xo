@@ -1,0 +1,10 @@
+{
+  "variable": {
+    "md_default_tags": {
+      "type": "map"
+    },
+    "md_name_prefix": {
+      "type": "string"
+    }
+  }
+}

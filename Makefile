@@ -4,7 +4,6 @@ test:
 	go test ./src/...
 	go build
 	./xo schema validate --schema=src/jsonschema/testdata/valid-schema.json --document=src/jsonschema/testdata/valid-document.json
-	./xo provisioner terraform compile -s examples/compiling-schemas/variables.schema.json -o -
 	./xo bundle build ./src/bundles/testdata/bundle.Build/bundle.yaml -o /tmp/test-bundle-build	
 
 .PHONY: docker.build
