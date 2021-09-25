@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path/filepath"
 	"xo/src/bundles"
 	"xo/src/generator"
 	"xo/src/provisioners/terraform"
@@ -32,7 +33,7 @@ var bundleGenerateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(bundleCmd)
 	bundleCmd.AddCommand(bundleBuildCmd)
-	bundleBuildCmd.Flags().StringP("output", "o", ".", "Path to output directory.")
+	bundleBuildCmd.Flags().StringP("output", "o", "", "Path to output directory (default is bundle.yaml directory)")
 	bundleCmd.AddCommand(bundleGenerateCmd)
 	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
@@ -41,11 +42,15 @@ func init() {
 func runBundleBuild(cmd *cobra.Command, args []string) error {
 	var err error
 	path := args[0]
-	output, err := cmd.Flags().GetString("output")
 
+	// default the output to the path of the bundle.yaml file
+	output, err := cmd.Flags().GetString("output")
 	if err != nil {
 		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
 		return err
+	}
+	if output == "" {
+		output = filepath.Dir(path)
 	}
 
 	log.Info().Str("bundle", path).Msg("building bundle")
