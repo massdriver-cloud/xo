@@ -4,6 +4,7 @@
     "deployments",
     "new",
     "protobuf",
-    "tfdef"
+    "tfdef",
+    "tfvars"
   ]
 }
