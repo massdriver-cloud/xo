@@ -40,7 +40,7 @@ func TestGenerateFiles(t *testing.T) {
 				"_params_variables.tf.json": `{
   "variable": {
     "age": {
-      "type": "integer"
+      "type": "number"
     },
     "name": {
       "type": "string"
@@ -98,7 +98,7 @@ func TestCompile(t *testing.T) {
 			"type": "string"
 		},
 		"age": {
-			"type": "integer"
+			"type": "number"
 		},
 		"active": {
 			"type": "bool"

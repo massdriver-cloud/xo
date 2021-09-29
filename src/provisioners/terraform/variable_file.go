@@ -71,6 +71,8 @@ func convertScalar(pType string) string {
 	// json-schema calls it boolean, terraform calls it bool
 	case "boolean":
 		return "bool"
+	case "integer":
+		return "number"
 	default:
 		return pType
 	}
