@@ -1,11 +1,6 @@
 package terraform
 
 import (
-	"errors"
-	"fmt"
-	"sort"
-	"strings"
-
 	"xo/src/jsonschema"
 )
 
@@ -28,47 +23,28 @@ func NewTFVariable(p jsonschema.Property) TFVariable {
 func convertPropertyToType(p jsonschema.Property) string {
 	switch p.Type {
 	case "array":
-		var t string
-		switch p.Items.Type {
-		case "":
-			t = "any"
-		case "array":
-			// Haven't seen a case of arrays of arrays, not sure what we'd be doing there...
-			err := errors.New("convertArray - not implemented.")
-			panic(err)
-		case "object":
-			t = convertObject(p.AdditionalProperties, p.Items.Properties)
-		default:
-			t = p.Items.Type
-		}
-
-		return fmt.Sprintf("list(%s)", t)
+		return convertArray(p)
 	case "object":
-		return convertObject(p.AdditionalProperties, p.Properties)
+		return convertObject(p)
 	default:
 		return convertScalar(p.Type)
 	}
 }
 
-func convertObject(addlProps bool, pProperties jsonschema.PropertiesMap) string {
-	if addlProps == true {
-		return "map"
-	} else {
-		var types []string
-		for name, prop := range pProperties {
-			subType := convertPropertyToType(prop)
-			subTypeDeclaration := fmt.Sprintf("%s = %s", name, subType)
-			types = append(types, subTypeDeclaration)
-		}
-		sort.Strings(types)
-		strTypes := strings.Join(types, ", ")
-		return fmt.Sprintf("object({%s})", strTypes)
-	}
+func convertObject(prop jsonschema.Property) string {
+	_ = prop
+	// See: https://github.com/massdriver-cloud/xo/issues/44
+	return "any"
+}
+
+func convertArray(prop jsonschema.Property) string {
+	_ = prop
+	// See: https://github.com/massdriver-cloud/xo/issues/44
+	return "any"
 }
 
 func convertScalar(pType string) string {
 	switch pType {
-	// json-schema calls it boolean, terraform calls it bool
 	case "boolean":
 		return "bool"
 	case "integer":
