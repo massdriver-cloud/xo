@@ -17,7 +17,7 @@ const ArtifactsSchemaFilename = "schema-artifacts.json"
 const ConnectionsSchemaFilename = "schema-connections.json"
 const ParamsSchemaFilename = "schema-params.json"
 
-const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-%s.json"
+const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
