@@ -23,7 +23,7 @@ func TestWriteDereferencedSchema(t *testing.T) {
 		got = append(got, dirEntry.Name())
 	}
 
-	want := []string{"aws-authentication.compiled.json"}
+	want := []string{"aws-authentication.dereferenced.json"}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)

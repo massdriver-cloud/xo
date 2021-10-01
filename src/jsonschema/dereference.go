@@ -41,7 +41,7 @@ func WriteDereferencedSchema(schemaFilePath string, outDir string) error {
 		}
 	}
 
-	schemaFileName := fmt.Sprintf("%s.compiled.json", dereferencedSchema.Type())
+	schemaFileName := fmt.Sprintf("%s.dereferenced.json", dereferencedSchema.Type())
 	path := path.Join(outDir, schemaFileName)
 
 	file, err := os.Create(path)
