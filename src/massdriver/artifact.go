@@ -31,6 +31,6 @@ func UploadArtifactFile(file string, id string, token string) error {
 func UploadArtifact(artifacts []*mdproto.Artifact, id string, token string) error {
 	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 
-	_, err := md.UploadArtifacts(context.Background(), &mdproto.UploadArtifactsRequest{DeploymentId: id, DeploymentToken: token, Artifacts: artifacts})
+	_, err := md.CompleteDeployment(context.Background(), &mdproto.CompleteDeploymentRequest{DeploymentId: id, DeploymentToken: token, Artifacts: artifacts})
 	return err
 }

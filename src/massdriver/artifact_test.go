@@ -54,7 +54,7 @@ func TestUploadArtifactFile(t *testing.T) {
 
 	mockDeployment := mdproto.Deployment{}
 
-	uar := new(mdproto.UploadArtifactsRequest)
+	uar := new(mdproto.CompleteDeploymentRequest)
 	respBytes, _ := proto.Marshal(&mockDeployment)
 	r := ioutil.NopCloser(bytes.NewReader(respBytes))
 	massdriver.MockDoFunc = func(req *http.Request) (*http.Response, error) {

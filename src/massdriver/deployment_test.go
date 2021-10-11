@@ -34,15 +34,6 @@ func TestStartDeployment(t *testing.T) {
 			Organization: &mdproto.Organization{
 				Id: "org-id",
 			},
-			Project: &mdproto.Project{
-				Id: "project-id",
-			},
-			Target: &mdproto.Target{
-				Id: "target-id",
-			},
-			Bundle: &mdproto.Bundle{
-				Type: "test-bundle",
-			},
 			Params:      testParams,
 			Connections: testConnections,
 		},
@@ -59,10 +50,6 @@ func TestStartDeployment(t *testing.T) {
     "foo": "bar"
   }
 }`,
-		"out/organization.txt": "org-id",
-		"out/project.txt":      "project-id",
-		"out/target.txt":       "target-id",
-		"out/bundle.txt":       "test-bundle",
 	}
 
 	respBytes, _ := proto.Marshal(&testResponse)
@@ -74,7 +61,7 @@ func TestStartDeployment(t *testing.T) {
 		}, nil
 	}
 
-	_, err := massdriver.StartDeployment("id", "token", "out")
+	err := massdriver.StartDeployment("id", "token", "out")
 	if err != nil {
 		t.Fatalf("%d, unexpected error", err)
 	}

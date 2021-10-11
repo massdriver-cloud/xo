@@ -29,23 +29,14 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDe
 			Organization: &mdproto.Organization{
 				Id: "organization",
 			},
-			Project: &mdproto.Project{
-				Id: "project",
-			},
-			Target: &mdproto.Target{
-				Id: "target",
-			},
-			Bundle: &mdproto.Bundle{
-				Type: "test-bundle",
-			},
 			Params:      mockParams,
 			Connections: mockConnections,
 		},
 	}, nil
 }
 
-func (s *massdriverMockServer) UploadArtifacts(context.Context, *mdproto.UploadArtifactsRequest) (*mdproto.UploadArtifactsResponse, error) {
-	return &mdproto.UploadArtifactsResponse{}, nil
+func (s *massdriverMockServer) CompleteDeployment(context.Context, *mdproto.CompleteDeploymentRequest) (*mdproto.CompleteDeploymentResponse, error) {
+	return &mdproto.CompleteDeploymentResponse{}, nil
 }
 
 func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *mdproto.UpdateResourceStatusRequest) (*mdproto.UpdateResourceStatusResponse, error) {
