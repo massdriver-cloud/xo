@@ -1,4 +1,4 @@
-package bundles
+package jsonschema
 
 import (
 	"encoding/json"

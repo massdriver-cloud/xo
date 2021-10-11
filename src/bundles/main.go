@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"xo/src/jsonschema"
 
 	"gopkg.in/yaml.v2"
 )
@@ -16,7 +17,7 @@ const ArtifactsSchemaFilename = "schema-artifacts.json"
 const ConnectionsSchemaFilename = "schema-connections.json"
 const ParamsSchemaFilename = "schema-params.json"
 
-const idUrlPattern = "https://massdriver.sh/schemas/bundles/%s/schema-%s.json"
+const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
@@ -26,9 +27,9 @@ type Bundle struct {
 	Description string      `json:"description"`
 	Provisioner string      `json:"provisioner"`
 	Type        string      `json:"type"`
-	Artifacts   OrderedJSON `json:"artifacts"`
-	Params      OrderedJSON `json:"params"`
-	Connections OrderedJSON `json:"connections"`
+	Artifacts   jsonschema.OrderedJSON `json:"artifacts"`
+	Params      jsonschema.OrderedJSON `json:"params"`
+	Connections jsonschema.OrderedJSON `json:"connections"`
 }
 
 // ParseBundle parses a bundle from a YAML file
@@ -49,31 +50,31 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 
-	hydratedArtifacts, err := Hydrate(bundle.Artifacts, cwd)
+	hydratedArtifacts, err := jsonschema.Hydrate(bundle.Artifacts, cwd)
 	if err != nil {
 		return bundle, err
 	}
 
-	bundle.Artifacts = hydratedArtifacts.(OrderedJSON)
+	bundle.Artifacts = hydratedArtifacts.(jsonschema.OrderedJSON)
 
-	hydratedParams, err := Hydrate(bundle.Params, cwd)
+	hydratedParams, err := jsonschema.Hydrate(bundle.Params, cwd)
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Params = hydratedParams.(OrderedJSON)
+	bundle.Params = hydratedParams.(jsonschema.OrderedJSON)
 
-	hydratedConnections, err := Hydrate(bundle.Connections, cwd)
+	hydratedConnections, err := jsonschema.Hydrate(bundle.Connections, cwd)
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Connections = hydratedConnections.(OrderedJSON)
+	bundle.Connections = hydratedConnections.(jsonschema.OrderedJSON)
 
 	return bundle, nil
 }
 
 // Metadata returns common metadata fields for each JSON Schema
-func (b *Bundle) Metadata(schemaType string) OrderedJSON {
-	return OrderedJSON([]OrderedJSONElement{
+func (b *Bundle) Metadata(schemaType string) jsonschema.OrderedJSON {
+	return jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 		{Key: "$schema", Value: generateSchemaUrl(b.Schema)},
 		{Key: "$id", Value: generateIdUrl(b.Type, schemaType)},
 		{Key: "title", Value: b.Title},
@@ -137,9 +138,9 @@ func (b *Bundle) GenerateSchemas(dir string) error {
 }
 
 // generateSchema generates a specific schema-*.json file
-func GenerateSchema(schema OrderedJSON, metadata OrderedJSON, buffer io.Writer) error {
+func GenerateSchema(schema jsonschema.OrderedJSON, metadata jsonschema.OrderedJSON, buffer io.Writer) error {
 	var err error
-	var mergedSchema = OrderedJSON(append(metadata, schema...))
+	var mergedSchema = jsonschema.OrderedJSON(append(metadata, schema...))
 
 	json, err := json.Marshal(mergedSchema)
 	if err != nil {

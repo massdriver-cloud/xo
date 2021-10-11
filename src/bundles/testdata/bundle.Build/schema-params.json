@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://massdriver.sh/schemas/bundles/aws-vpc/schema-params.json",
+  "$id": "https://schemas.massdriver.cloud/schemas/bundles/aws-vpc/schema-params.json",
   "title": "AWS VPC",
   "description": "Something",
   "required": [

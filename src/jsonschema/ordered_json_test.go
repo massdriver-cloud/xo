@@ -1,10 +1,10 @@
-package bundles_test
+package jsonschema_test
 
 import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"xo/src/bundles"
+	"xo/src/jsonschema"
 
 	"gopkg.in/yaml.v2"
 )
@@ -12,27 +12,27 @@ import (
 func TestMarshalJSON(t *testing.T) {
 	type test struct {
 		name  string
-		input bundles.OrderedJSON
+		input jsonschema.OrderedJSON
 		want  string
 	}
 
 	tests := []test{
 		{
 			name: "normal test",
-			input: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			input: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
 				{Key: "name", Value: "John Doe"},
-				{Key: "address", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "address", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "street", Value: "123 E 3rd St"},
 					{Key: "city", Value: "Denver"},
-					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 						{Key: "county", Value: "Jefferson"},
 						{Key: "district", Value: 20},
 					})}},
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
-				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "key", Value: "value"},
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
@@ -58,7 +58,7 @@ func TestUnMarshalJSON(t *testing.T) {
 	type test struct {
 		name  string
 		input string
-		want  bundles.OrderedJSON
+		want  jsonschema.OrderedJSON
 	}
 
 	tests := []test{
@@ -82,20 +82,20 @@ func TestUnMarshalJSON(t *testing.T) {
     "anotherTest": [1, 2, 3, 4],
 	"emptyArray": []
 }`,
-			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			want: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
 				{Key: "name", Value: "John Doe"},
-				{Key: "address", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "address", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "street", Value: "123 E 3rd St"},
 					{Key: "city", Value: "Denver"},
-					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 						{Key: "county", Value: "Jefferson"},
 						{Key: "district", Value: 20},
 					})}},
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
-				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "key", Value: "value"},
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
@@ -107,7 +107,7 @@ func TestUnMarshalJSON(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := bundles.OrderedJSON{}
+			got := jsonschema.OrderedJSON{}
 			json.Unmarshal([]byte(tc.input), &got)
 
 			if fmt.Sprint(got) != fmt.Sprint(tc.want) {
@@ -121,7 +121,7 @@ func TestUnMarshalYAML(t *testing.T) {
 	type test struct {
 		name  string
 		input string
-		want  bundles.OrderedJSON
+		want  jsonschema.OrderedJSON
 	}
 
 	tests := []test{
@@ -146,20 +146,20 @@ nestedArrayScalar:
   - - 3
 anotherTest: [1, 2, 3, 4]
 emptyArray: []`,
-			want: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			want: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 				{Key: "foo", Value: "bar"},
 				{Key: "name", Value: "John Doe"},
-				{Key: "address", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "address", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "street", Value: "123 E 3rd St"},
 					{Key: "city", Value: "Denver"},
-					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", bundles.OrderedJSON([]bundles.OrderedJSONElement{
+					{Key: "test", Value: []interface{}{"a", []interface{}{1, 2}, "b", jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 						{Key: "county", Value: "Jefferson"},
 						{Key: "district", Value: 20},
 					})}},
 					{Key: "state", Value: "CO"},
 					{Key: "zip", Value: 81526},
 				})},
-				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "nestedArrayMap", Value: []interface{}{[]interface{}{jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "key", Value: "value"},
 				})}}},
 				{Key: "nestedArrayScalar", Value: []interface{}{[]interface{}{3}}},
@@ -171,7 +171,7 @@ emptyArray: []`,
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got := bundles.OrderedJSON{}
+			got := jsonschema.OrderedJSON{}
 			yaml.Unmarshal([]byte(tc.input), &got)
 
 			if fmt.Sprint(got) != fmt.Sprint(tc.want) {

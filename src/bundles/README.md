@@ -21,7 +21,7 @@ title: AWS VPC
 description: AWS VPV bundle with public, private, and internal subnets
 # The provisioner this bundle runs
 provisioner: terraform
-# The visibility scope of this bundle on massdriver.sh
+# The visibility scope of this bundle on massdriver.cloud
 access: public
 
 # YAML format of a JSON Schema for schema-params.json

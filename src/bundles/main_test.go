@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"testing"
 	"xo/src/bundles"
+	"xo/src/jsonschema"
 )
 
 func TestGenerateSchemas(t *testing.T) {
@@ -56,24 +57,24 @@ func TestParseBundle(t *testing.T) {
 		Title:       "AWS VPC",
 		Description: "Something",
 		Provisioner: "terraform",
-		Artifacts:   bundles.OrderedJSON{},
-		Params: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+		Artifacts:   jsonschema.OrderedJSON{},
+		Params: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 			{Key: "required", Value: []interface{}{"name"}},
-			{Key: "properties", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
-				{Key: "name", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
+				{Key: "name", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "type", Value: "string"},
 					{Key: "title", Value: "Name"},
 				})},
-				{Key: "age", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+				{Key: "age", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "type", Value: "integer"},
 					{Key: "title", Value: "Age"},
 				})},
 			})},
 		}),
-		Connections: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+		Connections: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 			{Key: "required", Value: []interface{}{"default"}},
-			{Key: "properties", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
-				{Key: "default", Value: bundles.OrderedJSON([]bundles.OrderedJSONElement{
+			{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
+				{Key: "default", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
 					{Key: "type", Value: "string"},
 					{Key: "title", Value: "Default credential"},
 				})},

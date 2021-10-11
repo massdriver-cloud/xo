@@ -23,22 +23,22 @@ func TestNewTFVariable(t *testing.T) {
 		{
 			name:  "list of scalars",
 			input: jsonschema.Property{Type: "array", Items: &jsonschema.Property{Type: "string"}},
-			want:  TFVariable{Type: "list(string)"},
+			want:  TFVariable{Type: "any"},
 		},
 		{
 			name:  "list of any",
 			input: jsonschema.Property{Type: "array", Items: &jsonschema.Property{}},
-			want:  TFVariable{Type: "list(any)"},
+			want:  TFVariable{Type: "any"},
 		},
 		{
 			name:  "maps",
 			input: jsonschema.Property{Type: "object", AdditionalProperties: true},
-			want:  TFVariable{Type: "map"},
+			want:  TFVariable{Type: "any"},
 		},
 		{
 			name:  "object w/ scalars",
 			input: jsonschema.Property{Type: "object", Properties: jsonschema.PropertiesMap{"street_number": jsonschema.Property{Type: "number"}, "street_name": jsonschema.Property{Type: "string"}}},
-			want:  TFVariable{Type: "object({street_name = string, street_number = number})"},
+			want:  TFVariable{Type: "any"},
 		},
 		{
 			name: "complex objects",
@@ -57,7 +57,7 @@ func TestNewTFVariable(t *testing.T) {
 					},
 				},
 			},
-			want: TFVariable{Type: "object({children = list(object({name = string})), name = string})"},
+			want: TFVariable{Type: "any"},
 		},
 	}
 
