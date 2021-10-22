@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"io"
+	"os"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
 
@@ -27,6 +29,13 @@ var provisionerTerraformCmd = &cobra.Command{
 	Long:  ``,
 }
 
+var provisionerTerraformExtractCmd = &cobra.Command{
+	Use:   "extract",
+	Short: "Extract relevant data from terraform output",
+	Long:  ``,
+	RunE:  runProvisionerTerraformExtract,
+}
+
 var provisionerTerraformBackendCmd = &cobra.Command{
 	Use:   "backend",
 	Short: "Generate a terraform backend config",
@@ -49,6 +58,11 @@ func init() {
 	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "./auth", "Output dir path")
 
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
+
+	provisionerTerraformCmd.AddCommand(provisionerTerraformExtractCmd)
+	provisionerTerraformExtractCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
+	provisionerTerraformExtractCmd.MarkFlagRequired("file")
+
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
@@ -70,6 +84,28 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	log.Debug().Msg("Generating auth files")
 
 	return provisioners.GenerateAuthFiles(schema, connections, output)
+}
+
+func runProvisionerTerraformExtract(cmd *cobra.Command, args []string) error {
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return err
+	}
+
+	var input io.Reader
+	if file == "-" {
+		input = os.Stdin
+	} else {
+		inputFile, err := os.Open(file)
+		if err != nil {
+			log.Error().Err(err).Msg("an error occurred while opening file")
+			return err
+		}
+		defer inputFile.Close()
+		input = inputFile
+	}
+
+	return tf.Extract(input)
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
