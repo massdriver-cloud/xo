@@ -23,7 +23,7 @@ func init() {
 }
 
 func outputToFile(dir, name, ext string) (io.Writer, error) {
-	return os.OpenFile(path.Join(dir, name+"."+ext), os.O_WRONLY, 0644)
+	return os.OpenFile(path.Join(dir, name+"."+ext), os.O_WRONLY|os.O_CREATE, 0644)
 }
 
 func GenerateAuthFiles(schemaPath string, dataPath string, outputPath string) error {
@@ -142,6 +142,8 @@ func renderYAML(out io.Writer, data interface{}) error {
 func generateIni(cfg *ini.File, data interface{}, sectionName string) error {
 	d := data.(map[string]interface{})
 	for k, v := range d {
+		t := reflect.ValueOf(v).Kind()
+		_ = t
 		switch reflect.ValueOf(v).Kind() {
 		case reflect.Map:
 			var newSectionName string
@@ -151,7 +153,7 @@ func generateIni(cfg *ini.File, data interface{}, sectionName string) error {
 				newSectionName = sectionName + "." + k
 			}
 			cfg.NewSection(newSectionName)
-			return generateIni(cfg, v, newSectionName)
+			generateIni(cfg, v, newSectionName)
 		default:
 			section, err := cfg.GetSection(sectionName)
 			if err != nil {

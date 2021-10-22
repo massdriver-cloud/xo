@@ -9,18 +9,14 @@ import (
 	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
-type massdriverMockServer struct{}
+type massdriverMockServer struct {
+	params      *map[string]interface{}
+	connections *map[string]interface{}
+}
 
 func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
-	mockParams, _ := structpb.NewStruct(map[string]interface{}{
-		"name": "value",
-	})
-	mockConnections, _ := structpb.NewStruct(map[string]interface{}{
-		"default": map[string]interface{}{
-			"aws_access_key_id":     "ACOVIBUOISKLWJEFKJL",
-			"aws_secret_access_key": "8ba0u90uwe9fuq90j3490tj0q923u12093u09gj90u130",
-		},
-	})
+	mockParams, _ := structpb.NewStruct(*s.params)
+	mockConnections, _ := structpb.NewStruct(*s.connections)
 
 	return &mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
@@ -43,8 +39,12 @@ func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *mdproto.Up
 	return &mdproto.UpdateResourceStatusResponse{}, nil
 }
 
-func RunMockServer(port string) error {
-	mdMock := mdproto.NewWorkflowServiceServer(&massdriverMockServer{}, twirp.WithServerPathPrefix("/rpc/twirp"))
+func RunMockServer(port string, params *map[string]interface{}, connections *map[string]interface{}) error {
+	mockServer := massdriverMockServer{}
+	mockServer.params = params
+	mockServer.connections = connections
+
+	mdMock := mdproto.NewWorkflowServiceServer(&mockServer, twirp.WithServerPathPrefix("/rpc/twirp"))
 	mux := http.NewServeMux()
 	mux.Handle(mdMock.PathPrefix(), mdMock)
 	return http.ListenAndServe(":"+port, mux)

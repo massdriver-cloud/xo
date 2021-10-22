@@ -21,6 +21,23 @@
                 }
             }
         },
+        "aws-role": {
+            "type": "object",
+            "md.generateAuthFile": {
+                "format": "ini",
+                "template": "{\"eks\": {}, \"default\": {role_arn: .role_arn, \"source_profile\": \"eks\"}}"
+            },
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "role_arn": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "k8s-authentication": {
             "type": "object",
             "md.generateAuthFile": {

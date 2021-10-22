@@ -90,7 +90,6 @@ func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 	bundle, _ := cmd.Flags().GetString("bundle")
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
-	schemaPath, _ := cmd.Flags().GetString("schema")
 	out, _ := cmd.Flags().GetString("out")
 
 	if id == "" || token == "" {
@@ -107,9 +106,7 @@ func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Str("deployment", id).Msg("generating auth files")
-	if schemaPath == "" {
-		schemaPath = path.Join(bundle, "/schema-connections.json")
-	}
+	schemaPath := path.Join(bundle, "/schema-connections.json")
 	connectionsPath := path.Join(out, massdriver.ConnectionsFileName)
 	authPath := path.Join(out, "auth")
 	if _, err := os.Stat(authPath); os.IsNotExist(err) {
