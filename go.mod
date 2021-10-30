@@ -8,7 +8,7 @@ require (
 	github.com/juju/ansiterm v0.0.0-20210929141451-8b71cc96ebdc // indirect
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/manifoldco/promptui v0.8.0
-	github.com/massdriver-cloud/rpc-gen-go v0.0.0-20211011002512-46cecb0046ed
+	github.com/massdriver-cloud/rpc-gen-go v0.0.0-20211028073702-7afa76ae7a62
 	github.com/mattn/go-colorable v0.1.11 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.25.0
@@ -18,7 +18,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/zclconf/go-cty v1.9.1
-	golang.org/x/sys v0.0.0-20211007075335-d3039528d8ac // indirect
+	golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/ini.v1 v1.63.2

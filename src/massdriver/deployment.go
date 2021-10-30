@@ -19,7 +19,7 @@ var TargetFileName = "target.txt"
 var BundleFileName = "bundle.txt"
 
 func StartDeployment(id string, token string, dest string) error {
-	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+	md := mdproto.NewWorkflowServiceJSONClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 	resp, err := md.StartDeployment(context.Background(), &mdproto.StartDeploymentRequest{DeploymentId: id, DeploymentToken: token})
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func StartDeployment(id string, token string, dest string) error {
 	if err != nil {
 		return err
 	}
-	err = writeSchema(resp.Deployment.Connections, connectionsHandle)
+	err = writeSchema(resp.Deployment.ConnectionParams, connectionsHandle)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ type massdriverMockServer struct {
 
 func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
 	mockParams, _ := structpb.NewStruct(*s.params)
-	mockConnections, _ := structpb.NewStruct(*s.connections)
+	mockConnectionParams, _ := structpb.NewStruct(*s.connections)
 
 	return &mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
@@ -25,18 +25,14 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDe
 			Organization: &mdproto.Organization{
 				Id: "organization",
 			},
-			Params:      mockParams,
-			Connections: mockConnections,
+			Params:           mockParams,
+			ConnectionParams: mockConnectionParams,
 		},
 	}, nil
 }
 
 func (s *massdriverMockServer) CompleteDeployment(context.Context, *mdproto.CompleteDeploymentRequest) (*mdproto.CompleteDeploymentResponse, error) {
 	return &mdproto.CompleteDeploymentResponse{}, nil
-}
-
-func (s *massdriverMockServer) UpdateResourceStatus(context.Context, *mdproto.UpdateResourceStatusRequest) (*mdproto.UpdateResourceStatusResponse, error) {
-	return &mdproto.UpdateResourceStatusResponse{}, nil
 }
 
 func RunMockServer(port string, params *map[string]interface{}, connections *map[string]interface{}) error {

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"xo/src/massdriver"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -68,16 +67,16 @@ func RunResourceUpdate(cmd *cobra.Command, args []string) error {
 		Str("resource-type", resourceType).
 		Str("resource-status", resourceStatus).
 		Msg("sending resource update to Massdriver")
-	err := massdriver.UpdateResource(deploymentId, token, resourceId, resourceType, resourceStatus)
-	if err != nil {
-		log.Error().Err(err).
-			Str("deployment", deploymentId).
-			Str("resource-id", resourceId).
-			Str("resource-type", resourceType).
-			Str("resource-status", resourceStatus).
-			Msg("an error occurred while sending resource update to Massdriver")
-		return err
-	}
+	// err := massdriver.UpdateResource(deploymentId, token, resourceId, resourceType, resourceStatus)
+	// if err != nil {
+	// 	log.Error().Err(err).
+	// 		Str("deployment", deploymentId).
+	// 		Str("resource-id", resourceId).
+	// 		Str("resource-type", resourceType).
+	// 		Str("resource-status", resourceStatus).
+	// 		Msg("an error occurred while sending resource update to Massdriver")
+	// 	return err
+	// }
 	log.Info().
 		Str("deployment", deploymentId).
 		Str("resource-id", resourceId).

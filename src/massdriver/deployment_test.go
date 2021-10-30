@@ -24,7 +24,7 @@ func TestStartDeployment(t *testing.T) {
 	testParams, _ := structpb.NewStruct(map[string]interface{}{
 		"hello": "world",
 	})
-	testConnections, _ := structpb.NewStruct(map[string]interface{}{
+	testConnectionParams, _ := structpb.NewStruct(map[string]interface{}{
 		"default": map[string]interface{}{
 			"foo": "bar",
 		},
@@ -34,8 +34,8 @@ func TestStartDeployment(t *testing.T) {
 			Organization: &mdproto.Organization{
 				Id: "org-id",
 			},
-			Params:      testParams,
-			Connections: testConnections,
+			Params:           testParams,
+			ConnectionParams: testConnectionParams,
 		},
 	}
 
