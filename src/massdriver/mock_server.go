@@ -6,18 +6,14 @@ import (
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	"github.com/twitchtv/twirp"
-	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 type massdriverMockServer struct {
-	params      *map[string]interface{}
-	connections *map[string]interface{}
+	params      string
+	connections string
 }
 
 func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
-	mockParams, _ := structpb.NewStruct(*s.params)
-	mockConnectionParams, _ := structpb.NewStruct(*s.connections)
-
 	return &mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
 			Id:     "FAKEID",
@@ -25,8 +21,8 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDe
 			Organization: &mdproto.Organization{
 				Id: "organization",
 			},
-			Params:           mockParams,
-			ConnectionParams: mockConnectionParams,
+			Params:           s.params,
+			ConnectionParams: s.connections,
 		},
 	}, nil
 }
@@ -35,7 +31,7 @@ func (s *massdriverMockServer) CompleteDeployment(context.Context, *mdproto.Comp
 	return &mdproto.CompleteDeploymentResponse{}, nil
 }
 
-func RunMockServer(port string, params *map[string]interface{}, connections *map[string]interface{}) error {
+func RunMockServer(port string, params string, connections string) error {
 	mockServer := massdriverMockServer{}
 	mockServer.params = params
 	mockServer.connections = connections

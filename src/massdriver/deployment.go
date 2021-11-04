@@ -2,13 +2,11 @@ package massdriver
 
 import (
 	"context"
-	json "encoding/json"
-	"io"
 	"path"
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
+
 	"github.com/twitchtv/twirp"
-	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 var ParamsFileName = "params.auto.tfvars.json"
@@ -19,7 +17,7 @@ var TargetFileName = "target.txt"
 var BundleFileName = "bundle.txt"
 
 func StartDeployment(id string, token string, dest string) error {
-	md := mdproto.NewWorkflowServiceJSONClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 	resp, err := md.StartDeployment(context.Background(), &mdproto.StartDeploymentRequest{DeploymentId: id, DeploymentToken: token})
 	if err != nil {
 		return err
@@ -30,7 +28,7 @@ func StartDeployment(id string, token string, dest string) error {
 	if err != nil {
 		return err
 	}
-	err = writeSchema(resp.Deployment.Params, paramsHandle)
+	_, err = paramsHandle.Write([]byte(resp.Deployment.Params))
 	if err != nil {
 		return err
 	}
@@ -40,18 +38,9 @@ func StartDeployment(id string, token string, dest string) error {
 	if err != nil {
 		return err
 	}
-	err = writeSchema(resp.Deployment.ConnectionParams, connectionsHandle)
+	_, err = connectionsHandle.Write([]byte(resp.Deployment.ConnectionParams))
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func writeSchema(schema *structpb.Struct, file io.Writer) error {
-	jsonString, err := json.MarshalIndent(schema, "", "  ")
-	if err != nil {
-		return err
-	}
-	_, err = file.Write(jsonString)
-	return err
 }

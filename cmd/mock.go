@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -42,44 +41,39 @@ func RunMock(cmd *cobra.Command, args []string) error {
 	paramsPath, _ := cmd.Flags().GetString("params-file")
 	connectionsPath, _ := cmd.Flags().GetString("connections-file")
 
-	params := map[string]interface{}{}
-	connections := map[string]interface{}{}
+	paramsBytes := []byte("{}")
+	connectionsBytes := []byte("{}")
 
 	if paramsPath != "" {
-		err := readJsonFile(paramsPath, &params)
+		bytes, err := readFile(paramsPath)
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
+		paramsBytes = bytes
 	}
 	if connectionsPath != "" {
-		err := readJsonFile(connectionsPath, &connections)
+		bytes, err := readFile(connectionsPath)
 		if err != nil {
 			fmt.Println(err)
 			return err
 		}
+		connectionsBytes = bytes
 	}
 
 	fmt.Println("Starting a mock Massdriver server on port localhost:" + port + "...")
 
-	return massdriver.RunMockServer(port, &params, &connections)
+	return massdriver.RunMockServer(port, string(paramsBytes), string(connectionsBytes))
 }
 
-func readJsonFile(path string, data *map[string]interface{}) error {
-	jsonFile, err := os.Open(path)
+func readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return nil, err
 	}
-	defer jsonFile.Close()
+	defer file.Close()
 
-	bytes, _ := ioutil.ReadAll(jsonFile)
+	bytes, _ := ioutil.ReadAll(file)
 
-	err = json.Unmarshal(bytes, data)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
-
-	return nil
+	return bytes, nil
 }

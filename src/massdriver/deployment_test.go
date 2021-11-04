@@ -9,8 +9,8 @@ import (
 	"xo/src/massdriver"
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
+
 	proto "google.golang.org/protobuf/proto"
-	structpb "google.golang.org/protobuf/types/known/structpb"
 )
 
 var testDeploymentOutput map[string]*bytes.Buffer
@@ -21,35 +21,21 @@ func outputToTestBuffer(path string) (io.Writer, error) {
 }
 
 func TestStartDeployment(t *testing.T) {
-	testParams, _ := structpb.NewStruct(map[string]interface{}{
-		"hello": "world",
-	})
-	testConnectionParams, _ := structpb.NewStruct(map[string]interface{}{
-		"default": map[string]interface{}{
-			"foo": "bar",
-		},
-	})
 	testResponse := mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
 			Organization: &mdproto.Organization{
 				Id: "org-id",
 			},
-			Params:           testParams,
-			ConnectionParams: testConnectionParams,
+			Params:           `{"hello":"world"}`,
+			ConnectionParams: `{"default":{"foo":"bar"}}`,
 		},
 	}
 
 	testDeploymentOutput = make(map[string]*bytes.Buffer)
 	massdriver.OutputGenerator = outputToTestBuffer
 	expectedOutput := map[string]string{
-		"out/params.auto.tfvars.json": `{
-  "hello": "world"
-}`,
-		"out/connections.auto.tfvars.json": `{
-  "default": {
-    "foo": "bar"
-  }
-}`,
+		"out/params.auto.tfvars.json":      `{"hello":"world"}`,
+		"out/connections.auto.tfvars.json": `{"default":{"foo":"bar"}}`,
 	}
 
 	respBytes, _ := proto.Marshal(&testResponse)

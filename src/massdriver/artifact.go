@@ -2,7 +2,6 @@ package massdriver
 
 import (
 	"context"
-	json "encoding/json"
 	ioutil "io/ioutil"
 	"os"
 
@@ -17,19 +16,13 @@ func UploadArtifactFile(file string, id string, token string) error {
 	}
 	defer artifactHandle.Close()
 
-	bytes, _ := ioutil.ReadAll(artifactHandle)
-	var artifacts []*mdproto.Artifact
-	err = json.Unmarshal(bytes, &artifacts)
-	if err != nil {
-		return err
-	}
-
-	err = UploadArtifact(artifacts, id, token)
+	artifacts, _ := ioutil.ReadAll(artifactHandle)
+	err = UploadArtifact(string(artifacts), id, token)
 	return err
 }
 
-func UploadArtifact(artifacts []*mdproto.Artifact, id string, token string) error {
-	md := mdproto.NewWorkflowServiceJSONClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+func UploadArtifact(artifacts string, id string, token string) error {
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
 
 	_, err := md.CompleteDeployment(context.Background(), &mdproto.CompleteDeploymentRequest{DeploymentId: id, DeploymentToken: token, Artifacts: artifacts})
 	return err

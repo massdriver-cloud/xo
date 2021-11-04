@@ -48,8 +48,8 @@ aws_access_key_id=FAKEFAKEFAKEFAKE
 
 `,
 				"path/aws-role.ini": `[default]
-source_profile=eks
 role_arn=arn:aws:iam::123456789012:role/testrole
+source_profile=eks
 
 [eks]
 
