@@ -21,12 +21,12 @@ const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
-	Uuid        string      `json:"uuid"`
-	Schema      string      `json:"schema"`
-	Title       string      `json:"title"`
-	Description string      `json:"description"`
-	Provisioner string      `json:"provisioner"`
-	Type        string      `json:"type"`
+	Uuid        string                 `json:"uuid"`
+	Schema      string                 `json:"schema"`
+	Title       string                 `json:"title"`
+	Description string                 `json:"description"`
+	Provisioner string                 `json:"provisioner"`
+	Type        string                 `json:"type"`
 	Artifacts   jsonschema.OrderedJSON `json:"artifacts"`
 	Params      jsonschema.OrderedJSON `json:"params"`
 	Connections jsonschema.OrderedJSON `json:"connections"`
@@ -54,20 +54,31 @@ func ParseBundle(path string) (Bundle, error) {
 	if err != nil {
 		return bundle, err
 	}
-
 	bundle.Artifacts = hydratedArtifacts.(jsonschema.OrderedJSON)
+	err = applyTransformations(&bundle.Artifacts)
+	if err != nil {
+		return bundle, err
+	}
 
 	hydratedParams, err := jsonschema.Hydrate(bundle.Params, cwd)
 	if err != nil {
 		return bundle, err
 	}
 	bundle.Params = hydratedParams.(jsonschema.OrderedJSON)
+	err = applyTransformations(&bundle.Params)
+	if err != nil {
+		return bundle, err
+	}
 
 	hydratedConnections, err := jsonschema.Hydrate(bundle.Connections, cwd)
 	if err != nil {
 		return bundle, err
 	}
 	bundle.Connections = hydratedConnections.(jsonschema.OrderedJSON)
+	err = applyTransformations(&bundle.Connections)
+	if err != nil {
+		return bundle, err
+	}
 
 	return bundle, nil
 }

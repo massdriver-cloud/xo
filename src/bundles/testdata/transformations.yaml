@@ -1,0 +1,18 @@
+uuid: FC2C7101-86A6-437B-B8C2-A2391FE8C847
+type: aws-vpc
+schema: draft-07
+title: "AWS VPC"
+description: Something
+provisioner: terraform
+access: public
+params:
+  properties:
+    set_id_test:
+      type: array
+      items:
+        type: object
+        properties:
+          foo:
+            type: string
+connections:
+artifacts:
