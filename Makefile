@@ -9,3 +9,6 @@ test:
 .PHONY: docker.build
 docker.build:
 	DOCKER_BUILDKIT=1 docker build --ssh default -t massdriver/xo .
+
+hack.build-to-massdriver:
+	GOOS=linux GOARCH=amd64 go build && cp ./xo ../massdriver/xo-amd64

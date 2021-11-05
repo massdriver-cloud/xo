@@ -17,6 +17,7 @@ require (
 	github.com/twitchtv/twirp v8.1.0+incompatible
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
+	github.com/zclconf/go-cty v1.10.0 // indirect
 	golang.org/x/sys v0.0.0-20211103235746-7861aae1554b // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1
