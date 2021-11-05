@@ -20,6 +20,65 @@ type OrderedJSON []OrderedJSONElement
 func (oj OrderedJSON) Len() int           { return len(oj) }
 func (oj OrderedJSON) Less(i, j int) bool { return oj[i].index < oj[j].index }
 func (oj OrderedJSON) Swap(i, j int)      { oj[i], oj[j] = oj[j], oj[i] }
+func (oj OrderedJSON) Type() string {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "type" {
+			return oj[i].Value.(string)
+		}
+	}
+	return ""
+}
+func (oj OrderedJSON) GetItems() OrderedJSON {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "items" {
+			return oj[i].Value.(OrderedJSON)
+		}
+	}
+	return nil
+}
+func (oj OrderedJSON) GetProperties() OrderedJSON {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "properties" {
+			return oj[i].Value.(OrderedJSON)
+		}
+	}
+	return nil
+}
+func (oj OrderedJSON) GetRequired() []string {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "required" {
+			return oj[i].Value.([]string)
+		}
+	}
+	return nil
+}
+func (oj OrderedJSON) SetItems(items OrderedJSON) {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "items" {
+			oj[i].Value = items
+			return
+		}
+	}
+	oj = append(oj, OrderedJSONElement{Key: "items", Value: items})
+}
+func (oj OrderedJSON) SetProperties(properties OrderedJSON) {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "properties" {
+			oj[i].Value = properties
+			return
+		}
+	}
+	oj = append(oj, OrderedJSONElement{Key: "properties", Value: properties})
+}
+func (oj OrderedJSON) SetRequired(required []string) {
+	for i := 0; i < len(oj); i++ {
+		if oj[i].Key == "required" {
+			oj[i].Value = required
+			return
+		}
+	}
+	oj = append(oj, OrderedJSONElement{Key: "required", Value: required})
+}
 
 var indexCounter uint64
 
