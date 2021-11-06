@@ -25,7 +25,7 @@
             "type": "object",
             "md.generateAuthFile": {
                 "format": "ini",
-                "template": "{\"eks\": {}, \"default\": {role_arn: .role_arn, \"source_profile\": \"eks\"}}"
+                "template": "{\"default\": {role_arn: .role_arn}}"
             },
             "properties": {
                 "data": {
