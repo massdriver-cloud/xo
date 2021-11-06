@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"xo/src/jsonschema"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const ArtifactsSchemaFilename = "schema-artifacts.json"
@@ -27,9 +27,9 @@ type Bundle struct {
 	Description string                 `json:"description"`
 	Provisioner string                 `json:"provisioner"`
 	Type        string                 `json:"type"`
-	Artifacts   jsonschema.OrderedJSON `json:"artifacts"`
-	Params      jsonschema.OrderedJSON `json:"params"`
-	Connections jsonschema.OrderedJSON `json:"connections"`
+	Artifacts   map[string]interface{} `json:"artifacts"`
+	Params      map[string]interface{} `json:"params"`
+	Connections map[string]interface{} `json:"connections"`
 }
 
 // ParseBundle parses a bundle from a YAML file
@@ -54,8 +54,8 @@ func ParseBundle(path string) (Bundle, error) {
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Artifacts = hydratedArtifacts.(jsonschema.OrderedJSON)
-	err = applyTransformations(&bundle.Artifacts)
+	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
+	err = applyTransformations(bundle.Artifacts)
 	if err != nil {
 		return bundle, err
 	}
@@ -64,8 +64,8 @@ func ParseBundle(path string) (Bundle, error) {
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Params = hydratedParams.(jsonschema.OrderedJSON)
-	err = applyTransformations(&bundle.Params)
+	bundle.Params = hydratedParams.(map[string]interface{})
+	err = applyTransformations(bundle.Params)
 	if err != nil {
 		return bundle, err
 	}
@@ -74,8 +74,8 @@ func ParseBundle(path string) (Bundle, error) {
 	if err != nil {
 		return bundle, err
 	}
-	bundle.Connections = hydratedConnections.(jsonschema.OrderedJSON)
-	err = applyTransformations(&bundle.Connections)
+	bundle.Connections = hydratedConnections.(map[string]interface{})
+	err = applyTransformations(bundle.Connections)
 	if err != nil {
 		return bundle, err
 	}
@@ -84,13 +84,13 @@ func ParseBundle(path string) (Bundle, error) {
 }
 
 // Metadata returns common metadata fields for each JSON Schema
-func (b *Bundle) Metadata(schemaType string) jsonschema.OrderedJSON {
-	return jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-		{Key: "$schema", Value: generateSchemaUrl(b.Schema)},
-		{Key: "$id", Value: generateIdUrl(b.Type, schemaType)},
-		{Key: "title", Value: b.Title},
-		{Key: "description", Value: b.Description},
-	})
+func (b *Bundle) Metadata(schemaType string) map[string]string {
+	return map[string]string{
+		"$schema":     generateSchemaUrl(b.Schema),
+		"$id":         generateIdUrl(b.Type, schemaType),
+		"title":       b.Title,
+		"description": b.Description,
+	}
 }
 
 func createFile(dir string, fileName string) (*os.File, error) {
@@ -149,9 +149,9 @@ func (b *Bundle) GenerateSchemas(dir string) error {
 }
 
 // generateSchema generates a specific schema-*.json file
-func GenerateSchema(schema jsonschema.OrderedJSON, metadata jsonschema.OrderedJSON, buffer io.Writer) error {
+func GenerateSchema(schema map[string]interface{}, metadata map[string]string, buffer io.Writer) error {
 	var err error
-	var mergedSchema = jsonschema.OrderedJSON(append(metadata, schema...))
+	var mergedSchema = mergeMaps(schema, metadata)
 
 	json, err := json.Marshal(mergedSchema)
 	if err != nil {
@@ -164,6 +164,14 @@ func GenerateSchema(schema jsonschema.OrderedJSON, metadata jsonschema.OrderedJS
 	}
 
 	return nil
+}
+
+func mergeMaps(a map[string]interface{}, b map[string]string) map[string]interface{} {
+	for k, v := range b {
+		a[k] = v
+	}
+
+	return a
 }
 
 func generateIdUrl(mdType string, schemaType string) string {

@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"testing"
 	"xo/src/bundles"
-	"xo/src/jsonschema"
 )
 
 func TestGenerateSchemas(t *testing.T) {
@@ -57,29 +56,33 @@ func TestParseBundle(t *testing.T) {
 		Title:       "AWS VPC",
 		Description: "Something",
 		Provisioner: "terraform",
-		Artifacts:   jsonschema.OrderedJSON{},
-		Params: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-			{Key: "required", Value: []interface{}{"name"}},
-			{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-				{Key: "name", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-					{Key: "type", Value: "string"},
-					{Key: "title", Value: "Name"},
-				})},
-				{Key: "age", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-					{Key: "type", Value: "integer"},
-					{Key: "title", Value: "Age"},
-				})},
-			})},
-		}),
-		Connections: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-			{Key: "required", Value: []interface{}{"default"}},
-			{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-				{Key: "default", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-					{Key: "type", Value: "string"},
-					{Key: "title", Value: "Default credential"},
-				})},
-			})},
-		}),
+		Artifacts:   map[string]interface{}{},
+		Params: map[string]interface{}{
+			"properties": map[string]interface{}{
+				"name": map[string]interface{}{
+					"type":  "string",
+					"title": "Name",
+				},
+				"age": map[string]interface{}{
+					"type":  "integer",
+					"title": "Age",
+				},
+			},
+			"required": []interface{}{
+				"name",
+			},
+		},
+		Connections: map[string]interface{}{
+			"required": []interface{}{
+				"default",
+			},
+			"properties": map[string]interface{}{
+				"default": map[string]interface{}{
+					"type":  "string",
+					"title": "Default credential",
+				},
+			},
+		},
 	}
 
 	if !reflect.DeepEqual(got, want) {

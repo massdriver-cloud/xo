@@ -20,23 +20,23 @@ type RefdSchema struct {
 
 func WriteDereferencedSchema(schemaFilePath string, outDir string) error {
 	dereferencedSchema := RefdSchema{}
-	orderedJson := OrderedJSON{}
+	rawJson := map[string]interface{}{}
 	cwd := filepath.Dir(schemaFilePath)
 	data, err := ioutil.ReadFile(schemaFilePath)
 	if err != nil {
 		return err
 	}
 
-	json.Unmarshal(data, &orderedJson)
-	definition, err := Hydrate(orderedJson, cwd)
+	json.Unmarshal(data, &rawJson)
+	definition, err := Hydrate(rawJson, cwd)
 	if err != nil {
 		return err
 	}
 	dereferencedSchema.Definition = definition
 
-	for _, ele := range orderedJson {
-		if ele.Key == "$id" {
-			dereferencedSchema.SchemaId = ele.Value.(string)
+	for k, v := range rawJson {
+		if k == "$id" {
+			dereferencedSchema.SchemaId = v.(string)
 			break
 		}
 	}
@@ -45,11 +45,10 @@ func WriteDereferencedSchema(schemaFilePath string, outDir string) error {
 	path := path.Join(outDir, schemaFileName)
 
 	file, err := os.Create(path)
-	defer file.Close()
-
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 
 	json, err := json.Marshal(dereferencedSchema.Definition)
 	if err != nil {

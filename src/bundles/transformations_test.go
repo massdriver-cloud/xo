@@ -1,10 +1,9 @@
 package bundles_test
 
 import (
-	"reflect"
+	"fmt"
 	"testing"
 	"xo/src/bundles"
-	"xo/src/jsonschema"
 )
 
 func TestTransformations(t *testing.T) {
@@ -16,30 +15,31 @@ func TestTransformations(t *testing.T) {
 		Title:       "AWS VPC",
 		Description: "Something",
 		Provisioner: "terraform",
-		Artifacts:   jsonschema.OrderedJSON{},
-		Connections: jsonschema.OrderedJSON{},
-		Params: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-			{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-				{Key: "set_id_test", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-					{Key: "type", Value: "array"},
-					{Key: "items", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-						{Key: "type", Value: "object"},
-						{Key: "properties", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-							{Key: "foo", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-								{Key: "type", Value: "string"},
-							})},
-							{Key: "md_set_id", Value: jsonschema.OrderedJSON([]jsonschema.OrderedJSONElement{
-								{Key: "type", Value: "string"},
-							})},
-						})},
-						{Key: "additionalProperties", Value: false},
-					})},
-				})},
-			})},
-		}),
+		Artifacts:   map[string]interface{}{},
+		Connections: map[string]interface{}{},
+		Params: map[string]interface{}{
+			"properties": map[string]interface{}{
+				"set_id_test": map[string]interface{}{
+					"type": "array",
+					"items": map[string]interface{}{
+						"type":                 "object",
+						"additionalProperties": false,
+						"required":             []string{"md_set_id"},
+						"properties": map[string]interface{}{
+							"foo": map[string]interface{}{
+								"type": "string",
+							},
+							"md_set_id": map[string]interface{}{
+								"type": "string",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
-	if !reflect.DeepEqual(got, want) {
+	if fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
