@@ -49,9 +49,6 @@ aws_access_key_id=FAKEFAKEFAKEFAKE
 `,
 				"path/aws-role.ini": `[default]
 role_arn=arn:aws:iam::123456789012:role/testrole
-source_profile=eks
-
-[eks]
 
 `,
 				"path/k8s-authentication.yaml": `apiVersion: v1

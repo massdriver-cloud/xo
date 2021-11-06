@@ -10,8 +10,11 @@ import (
 
 func TestWriteDereferencedSchema(t *testing.T) {
 	dir, err := ioutil.TempDir("", "xo-artifacts")
-	err = jsonschema.WriteDereferencedSchema("./testdata/WriteDereferencedSchema/aws-authentication.json", dir)
+	if err != nil {
+		t.Errorf("%d, unexpected error", err)
+	}
 
+	err = jsonschema.WriteDereferencedSchema("./testdata/WriteDereferencedSchema/aws-authentication.json", dir)
 	if err != nil {
 		t.Errorf("Encountered error dereferencing schema: %v", err)
 	}
