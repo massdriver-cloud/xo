@@ -4,31 +4,32 @@ import (
 	"errors"
 )
 
-func applyTransformations(schema map[string]interface{}) error {
+var paramsTransformations = []func(map[string]interface{}) error{AddSetIdToObjectArrays, DisableAdditionalPropertiesInObjects}
+var connectionsTransformations = []func(map[string]interface{}) error{DisableAdditionalPropertiesInObjects}
+var artifactsTransformations = []func(map[string]interface{}) error{DisableAdditionalPropertiesInObjects}
 
-	err := addSetIdToObjectArrays(schema)
-	if err != nil {
-		return err
-	}
-	err = disableAdditionalPropertiesInObjects(schema)
-	if err != nil {
-		return err
-	}
+func ApplyTransformations(schema map[string]interface{}, transformations []func(map[string]interface{}) error) error {
 
-	for _, v := range schema {
-		_, isObject := v.(map[string]interface{})
-		if isObject {
-			err = applyTransformations(v.(map[string]interface{}))
-		}
+	for _, transformation := range transformations {
+		err := transformation(schema)
 		if err != nil {
 			return err
 		}
 	}
 
+	for _, v := range schema {
+		_, isObject := v.(map[string]interface{})
+		if isObject {
+			err := ApplyTransformations(v.(map[string]interface{}), transformations)
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
-func addSetIdToObjectArrays(schema map[string]interface{}) error {
+func AddSetIdToObjectArrays(schema map[string]interface{}) error {
 	if schema["type"] == "array" {
 		itemsInterface, found := schema["items"]
 		if !found {
@@ -41,7 +42,7 @@ func addSetIdToObjectArrays(schema map[string]interface{}) error {
 				return errors.New("found object without properties")
 			}
 			properties := propertiesInterface.(map[string]interface{})
-			properties["md_set_id"] = map[string]string{"type": "string"}
+			properties["md_set_id"] = map[string]interface{}{"type": "string"}
 
 			requiredInterface, found := items["required"]
 			if !found {
@@ -55,8 +56,14 @@ func addSetIdToObjectArrays(schema map[string]interface{}) error {
 	return nil
 }
 
-func disableAdditionalPropertiesInObjects(schema map[string]interface{}) error {
+func DisableAdditionalPropertiesInObjects(schema map[string]interface{}) error {
 	if schema["type"] == "object" {
+		_, foundAnyOf := schema["anyOf"]
+		_, foundAllOf := schema["allOf"]
+		_, foundOneOf := schema["oneOf"]
+		if foundAnyOf || foundAllOf || foundOneOf {
+			schema["additionalProperties"] = true
+		}
 		_, found := schema["additionalProperties"]
 		if !found {
 			schema["additionalProperties"] = false

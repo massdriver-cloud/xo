@@ -55,7 +55,7 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
-	err = applyTransformations(bundle.Artifacts)
+	err = ApplyTransformations(bundle.Artifacts, artifactsTransformations)
 	if err != nil {
 		return bundle, err
 	}
@@ -65,7 +65,7 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 	bundle.Params = hydratedParams.(map[string]interface{})
-	err = applyTransformations(bundle.Params)
+	err = ApplyTransformations(bundle.Params, paramsTransformations)
 	if err != nil {
 		return bundle, err
 	}
@@ -75,7 +75,7 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 	bundle.Connections = hydratedConnections.(map[string]interface{})
-	err = applyTransformations(bundle.Connections)
+	err = ApplyTransformations(bundle.Connections, connectionsTransformations)
 	if err != nil {
 		return bundle, err
 	}
