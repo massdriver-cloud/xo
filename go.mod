@@ -7,7 +7,7 @@ require (
 	github.com/itchyny/gojq v0.12.5
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/manifoldco/promptui v0.9.0
-	github.com/massdriver-cloud/rpc-gen-go v0.0.0-20211104211637-e450ffad12a9
+	github.com/massdriver-cloud/rpc-gen-go v0.0.0-20211109202157-96db27d8e4de
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.26.0
 	github.com/spf13/cobra v1.2.1
@@ -15,7 +15,8 @@ require (
 	github.com/twitchtv/twirp v8.1.0+incompatible
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/sys v0.0.0-20211105183446-c75c47738b0c // indirect
+	github.com/zclconf/go-cty v1.10.0
+	golang.org/x/sys v0.0.0-20211109184856-51b60fd695b3 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect

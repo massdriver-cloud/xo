@@ -26,5 +26,5 @@ func init() {
 }
 
 type Specification struct {
-	URL string `default:"http://localhost:4000/rpc/workflow"`
+	URL string `default:"http://localhost:4000/"`
 }
