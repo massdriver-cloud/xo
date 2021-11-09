@@ -2,6 +2,7 @@ package massdriver
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
@@ -13,11 +14,12 @@ type massdriverMockServer struct {
 	connections string
 }
 
-func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
+func (s *massdriverMockServer) StartDeployment(ctx context.Context, req *mdproto.StartDeploymentRequest) (*mdproto.StartDeploymentResponse, error) {
+	fmt.Printf("Received StartDeploymentRequest: %v\n", req)
 	return &mdproto.StartDeploymentResponse{
 		Deployment: &mdproto.Deployment{
 			Id:     "FAKEID",
-			Status: mdproto.DeploymentStatus_PENDING,
+			Status: mdproto.DeploymentStatus_DEPLOYMENT_STATUS_PENDING,
 			Organization: &mdproto.Organization{
 				Id: "organization",
 			},
@@ -27,8 +29,14 @@ func (s *massdriverMockServer) StartDeployment(context.Context, *mdproto.StartDe
 	}, nil
 }
 
-func (s *massdriverMockServer) CompleteDeployment(context.Context, *mdproto.CompleteDeploymentRequest) (*mdproto.CompleteDeploymentResponse, error) {
+func (s *massdriverMockServer) CompleteDeployment(ctx context.Context, req *mdproto.CompleteDeploymentRequest) (*mdproto.CompleteDeploymentResponse, error) {
+	fmt.Printf("Received CompleteDeploymentRequest: %v\n", req)
 	return &mdproto.CompleteDeploymentResponse{}, nil
+}
+
+func (s *massdriverMockServer) ProvisionerProgressUpdate(ctx context.Context, req *mdproto.ProvisionerProgressUpdateRequest) (*mdproto.ProvisionerProgressUpdateResponse, error) {
+	fmt.Printf("Received ProvisionerProgressUpdateRequest: %v\n", req)
+	return &mdproto.ProvisionerProgressUpdateResponse{}, nil
 }
 
 func RunMockServer(port string, params string, connections string) error {

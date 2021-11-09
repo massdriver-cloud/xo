@@ -29,11 +29,11 @@ var provisionerTerraformCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var provisionerTerraformExtractCmd = &cobra.Command{
-	Use:   "extract",
-	Short: "Extract relevant data from terraform output",
+var provisionerTerraformReportCmd = &cobra.Command{
+	Use:   "report-progress",
+	Short: "Report provisioner progress to Massdriver",
 	Long:  ``,
-	RunE:  runProvisionerTerraformExtract,
+	RunE:  runProvisionerTerraformReport,
 }
 
 var provisionerTerraformBackendCmd = &cobra.Command{
@@ -59,9 +59,9 @@ func init() {
 
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
-	provisionerTerraformCmd.AddCommand(provisionerTerraformExtractCmd)
-	provisionerTerraformExtractCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
-	provisionerTerraformExtractCmd.MarkFlagRequired("file")
+	provisionerTerraformCmd.AddCommand(provisionerTerraformReportCmd)
+	provisionerTerraformReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
+	provisionerTerraformReportCmd.MarkFlagRequired("file")
 
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
@@ -86,7 +86,7 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	return provisioners.GenerateAuthFiles(schema, connections, output)
 }
 
-func runProvisionerTerraformExtract(cmd *cobra.Command, args []string) error {
+func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func runProvisionerTerraformExtract(cmd *cobra.Command, args []string) error {
 		input = inputFile
 	}
 
-	return tf.Extract(input)
+	return tf.ReportProgressFromLogs("", "", input)
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
