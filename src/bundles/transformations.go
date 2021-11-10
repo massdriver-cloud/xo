@@ -58,6 +58,10 @@ func AddSetIdToObjectArrays(schema map[string]interface{}) error {
 
 func DisableAdditionalPropertiesInObjects(schema map[string]interface{}) error {
 	if schema["type"] == "object" {
+		// json schema has a bug where if "anyOf", "allOf" or "oneOf" are used, additionalProperties *MUST* be true
+		// we should remove this condition when the bug is fixed
+		// https://json-schema.org/understanding-json-schema/reference/combining.html#:~:text=biggest%20surprises
+		// https://github.com/massdriver-cloud/xo/issues/53
 		_, foundAnyOf := schema["anyOf"]
 		_, foundAllOf := schema["allOf"]
 		_, foundOneOf := schema["oneOf"]
