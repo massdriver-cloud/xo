@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"xo/src/massdriver"
 
@@ -71,6 +72,9 @@ func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream 
 	scanner := bufio.NewScanner(stream)
 
 	for scanner.Scan() {
+		// print the log to the console so its still visible
+		fmt.Println(scanner.Text())
+
 		var record terraformLog
 
 		err := json.Unmarshal([]byte(scanner.Text()), &record)
