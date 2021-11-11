@@ -44,3 +44,9 @@ func StartDeployment(id string, token string, dest string) error {
 	}
 	return nil
 }
+
+func FailDeployment(id string, token string) error {
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+	_, err := md.FailDeployment(context.Background(), &mdproto.FailDeploymentRequest{DeploymentId: id, DeploymentToken: token})
+	return err
+}

@@ -38,13 +38,25 @@ var deploymentCompleteLong = `
 	`
 var deploymentCompleteExamples = `
 	# Upload artifact (deployment-id and token in environment)
-	xo artifact upload
+	xo deployment complete
 
 	# Upload artifact manually specifying deployment-id and token
-	xo artifact upload -i <deployment-id> -t <token>
+	xo deployment complete -i <deployment-id> -t <token>
 
 	# Upload artifacts in custom file
-	xo artifact upload -f /tmp/custom-artifacts.json
+	xo deployment complete -f /tmp/custom-artifacts.json
+	`
+
+var deploymentFailLong = `
+	Reports the deployment has failed to Massdriver
+	`
+
+var deploymentFailExamples = `
+	# Fail deployment (deployment-id and token in environment)
+	xo deployment fail
+
+	# Fail deployment specifying deployment-id and token
+	xo deployment fail -i <deployment-id> -t <token>
 	`
 
 var deploymentCmd = &cobra.Command{
@@ -71,6 +83,15 @@ var deploymentCompleteCmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 }
 
+var deploymentFailCmd = &cobra.Command{
+	Use:                   "fail",
+	Short:                 "Report Massdriver deployment has failed",
+	Long:                  deploymentFailLong,
+	Example:               deploymentFailExamples,
+	RunE:                  RunDeploymentFail,
+	DisableFlagsInUseLine: true,
+}
+
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
@@ -84,6 +105,10 @@ func init() {
 	deploymentCompleteCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
 	deploymentCompleteCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
 	deploymentCompleteCmd.Flags().StringP("artifacts", "f", "./artifact.json", "Path to JSON formatted artifact file to upload. Defaults to ./artifact.json")
+
+	deploymentCmd.AddCommand(deploymentFailCmd)
+	deploymentFailCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
+	deploymentFailCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
 }
 
 func RunDeploymentStart(cmd *cobra.Command, args []string) error {
@@ -145,6 +170,27 @@ func RunDeploymentComplete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	log.Info().Str("deployment", id).Msg("artifact uploaded")
+
+	return nil
+}
+
+func RunDeploymentFail(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetString("deployment-id")
+	token, _ := cmd.Flags().GetString("token")
+
+	if id == "" || token == "" {
+		cmd.Help()
+		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
+		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
+	}
+
+	log.Info().Str("deployment", id).Msg("reporting deployed has failed to Massdriver")
+	err := massdriver.FailDeployment(id, token)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while reporting deployed has failed")
+		return err
+	}
+	log.Info().Str("deployment", id).Msg("failed deployment reported")
 
 	return nil
 }
