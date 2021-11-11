@@ -7,6 +7,7 @@ import (
 var paramsTransformations = []func(map[string]interface{}) error{AddSetIdToObjectArrays, DisableAdditionalPropertiesInObjects}
 var connectionsTransformations = []func(map[string]interface{}) error{DisableAdditionalPropertiesInObjects}
 var artifactsTransformations = []func(map[string]interface{}) error{DisableAdditionalPropertiesInObjects}
+var uiTransformations = []func(map[string]interface{}) error{}
 
 func ApplyTransformations(schema map[string]interface{}, transformations []func(map[string]interface{}) error) error {
 
