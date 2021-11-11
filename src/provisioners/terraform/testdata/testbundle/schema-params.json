@@ -6,5 +6,6 @@
         "age": {
             "type": "integer"
         }
-    }
+    },
+    "required": ["name"]
 }

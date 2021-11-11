@@ -89,8 +89,19 @@ func getVars(path string) (map[string]TFVariable, error) {
 		return variables, err
 	}
 
+	required := schema.Required
+
 	for name, prop := range schema.Properties {
-		variables[name] = NewTFVariable(prop)
+		variables[name] = NewTFVariable(prop, isRequired(name, required))
 	}
 	return variables, nil
+}
+
+func isRequired(name string, required []string) bool {
+	for _, elem := range required {
+		if name == elem {
+			return true
+		}
+	}
+	return false
 }

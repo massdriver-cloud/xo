@@ -13,5 +13,6 @@
     "height": {
       "type": "number"
     }
-  }
+  },
+  "required": ["name", "age", "active", "height"]
 }
