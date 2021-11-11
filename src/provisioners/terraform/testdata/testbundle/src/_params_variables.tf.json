@@ -1,7 +1,8 @@
 {
   "variable": {
     "age": {
-      "type": "number"
+      "type": "number",
+      "default": null
     },
     "name": {
       "type": "string"

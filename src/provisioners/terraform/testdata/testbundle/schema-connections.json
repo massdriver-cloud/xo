@@ -3,5 +3,6 @@
         "foo": {
             "type": "string"
         }
-    }
+    },
+    "required": ["foo"]
 }

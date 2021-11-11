@@ -9,15 +9,37 @@ type TFVariableFile struct {
 	Variable map[string]TFVariable `json:"variable"`
 }
 
-// TFVariable is a representation of a terraform HCL "variable"
-type TFVariable struct {
+// In terraform, we need to set "default: null" for non-required fields, however the "default" field should NOT
+// be set if the field is required. There isn't a good way to solve this in Golang with a single struct. Thus,
+// we need two structs: a TFRequiredVariable which *doesn't* serialize a default value (making it required by TF), and a
+// TFOptionalVariable which does serialize a default value (represented as a nil pointer, which serializes to null)
+// This interface allows us to work with them interchangably as needed
+type TFVariable interface {
+	IsTFVariable()
+}
+
+// TFRequiredVariable is a representation of a terraform HCL "variable"
+type TFRequiredVariable struct {
 	Type string `json:"type"`
 }
 
+// TFOptionalVariable is a representation of a terraform HCL "variable" with a default of null
+type TFOptionalVariable struct {
+	Type       string  `json:"type"`
+	DO_NOT_SET *string `json:"default"` // DO NOT SET THIS. The intention is to get a nil value for this
+}
+
+// Dummy functions to satisfy the interface
+func (TFRequiredVariable) IsTFVariable() {}
+func (TFOptionalVariable) IsTFVariable() {}
+
 // NewTFVariable creates a new TFVariable from a JSON Schema Property
-func NewTFVariable(p jsonschema.Property) TFVariable {
+func NewTFVariable(p jsonschema.Property, required bool) TFVariable {
 	t := convertPropertyToType(p)
-	return TFVariable{Type: t}
+	if required {
+		return TFRequiredVariable{Type: t}
+	}
+	return TFOptionalVariable{Type: t}
 }
 
 func convertPropertyToType(p jsonschema.Property) string {

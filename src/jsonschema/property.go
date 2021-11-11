@@ -21,4 +21,5 @@ type Property struct {
 // It provides just enough structure to get type information.
 type Schema struct {
 	Properties PropertiesMap `json:"properties"`
+	Required   []string      `json:"required,omitempty"`
 }
