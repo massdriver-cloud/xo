@@ -16,6 +16,7 @@ import (
 const ArtifactsSchemaFilename = "schema-artifacts.json"
 const ConnectionsSchemaFilename = "schema-connections.json"
 const ParamsSchemaFilename = "schema-params.json"
+const UiSchemaFilename = "schema-ui.json"
 
 const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
@@ -30,6 +31,7 @@ type Bundle struct {
 	Artifacts   map[string]interface{} `json:"artifacts"`
 	Params      map[string]interface{} `json:"params"`
 	Connections map[string]interface{} `json:"connections"`
+	Ui          map[string]interface{} `json:"ui"`
 }
 
 // ParseBundle parses a bundle from a YAML file
@@ -80,6 +82,16 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 
+	hydratedUi, err := jsonschema.Hydrate(bundle.Ui, cwd)
+	if err != nil {
+		return bundle, err
+	}
+	bundle.Ui = hydratedUi.(map[string]interface{})
+	err = ApplyTransformations(bundle.Ui, uiTransformations)
+	if err != nil {
+		return bundle, err
+	}
+
 	return bundle, nil
 }
 
@@ -119,6 +131,11 @@ func (b *Bundle) GenerateSchemas(dir string) error {
 		return err
 	}
 
+	uiSchemaFile, err := createFile(dir, UiSchemaFilename)
+	if err != nil {
+		return err
+	}
+
 	err = GenerateSchema(b.Params, b.Metadata("params"), paramsSchemaFile)
 	if err != nil {
 		return err
@@ -128,6 +145,12 @@ func (b *Bundle) GenerateSchemas(dir string) error {
 		return err
 	}
 	err = GenerateSchema(b.Artifacts, b.Metadata("artifacts"), artifactsSchemaFile)
+	if err != nil {
+		return err
+	}
+
+	emptyMetadata := make(map[string]string)
+	err = GenerateSchema(b.Ui, emptyMetadata, uiSchemaFile)
 	if err != nil {
 		return err
 	}

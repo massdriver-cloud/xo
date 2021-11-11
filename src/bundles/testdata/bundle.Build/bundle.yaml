@@ -16,3 +16,4 @@ params:
       title: Age
 connections: {}
 artifacts: {}
+ui: {}

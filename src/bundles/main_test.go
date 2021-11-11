@@ -21,7 +21,7 @@ func TestGenerateSchemas(t *testing.T) {
 		got = append(got, dirEntry.Name())
 	}
 
-	want := []string{"schema-artifacts.json", "schema-connections.json", "schema-params.json"}
+	want := []string{"schema-artifacts.json", "schema-connections.json", "schema-params.json", "schema-ui.json"}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -83,6 +83,7 @@ func TestParseBundle(t *testing.T) {
 				},
 			},
 		},
+		Ui: map[string]interface{}{},
 	}
 
 	if !reflect.DeepEqual(got, want) {
