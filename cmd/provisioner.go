@@ -3,7 +3,6 @@ package cmd
 import (
 	"io"
 	"os"
-	"path"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
 
@@ -80,10 +79,9 @@ func init() {
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	connectionsPath, _ := cmd.Flags().GetString("connections")
 	schemaPath, _ := cmd.Flags().GetString("schema")
-	output, _ := cmd.Flags().GetString("output")
+	authPath, _ := cmd.Flags().GetString("output")
 
 	log.Info().Msg("Generating auth files...")
-	authPath := path.Join(output, "auth")
 	if _, err := os.Stat(authPath); os.IsNotExist(err) {
 		err := os.Mkdir(authPath, 0777)
 		if err != nil {
