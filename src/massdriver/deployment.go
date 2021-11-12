@@ -11,10 +11,6 @@ import (
 
 var ParamsFileName = "params.auto.tfvars.json"
 var ConnectionsFileName = "connections.auto.tfvars.json"
-var OrganizationFileName = "organization.txt"
-var ProjectFileName = "project.txt"
-var TargetFileName = "target.txt"
-var BundleFileName = "bundle.txt"
 
 func StartDeployment(id string, token string, dest string) error {
 	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))

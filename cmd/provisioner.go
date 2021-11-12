@@ -3,6 +3,7 @@ package cmd
 import (
 	"io"
 	"os"
+	"path"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
 
@@ -77,13 +78,26 @@ func init() {
 }
 
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {
-	connections, _ := cmd.Flags().GetString("connections")
-	schema, _ := cmd.Flags().GetString("schema")
+	connectionsPath, _ := cmd.Flags().GetString("connections")
+	schemaPath, _ := cmd.Flags().GetString("schema")
 	output, _ := cmd.Flags().GetString("output")
 
-	log.Debug().Msg("Generating auth files")
-
-	return provisioners.GenerateAuthFiles(schema, connections, output)
+	log.Info().Msg("Generating auth files...")
+	authPath := path.Join(output, "auth")
+	if _, err := os.Stat(authPath); os.IsNotExist(err) {
+		err := os.Mkdir(authPath, 0777)
+		if err != nil {
+			log.Error().Err(err).Msg("an error occurred while creating auth directory")
+			return err
+		}
+	}
+	err := provisioners.GenerateAuthFiles(schemaPath, connectionsPath, authPath)
+	if err != nil {
+		log.Error().Err(err).Msg("an error occurred while generating auth files")
+		return err
+	}
+	log.Info().Msg("Auth files generated")
+	return nil
 }
 
 func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {

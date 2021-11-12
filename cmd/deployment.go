@@ -4,9 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"xo/src/massdriver"
-	"xo/src/provisioners"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -96,7 +94,6 @@ func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
 	deploymentCmd.AddCommand(deploymentStartCmd)
-	deploymentStartCmd.Flags().StringP("bundle", "b", ".", "Path to the bundle to execute. Defaults to current directory")
 	deploymentStartCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
 	deploymentStartCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
 	deploymentStartCmd.Flags().StringP("out", "o", ".", "Destination path to write deployment json files. Defaults to current directory")
@@ -112,7 +109,6 @@ func init() {
 }
 
 func RunDeploymentStart(cmd *cobra.Command, args []string) error {
-	bundle, _ := cmd.Flags().GetString("bundle")
 	id, _ := cmd.Flags().GetString("deployment-id")
 	token, _ := cmd.Flags().GetString("token")
 	out, _ := cmd.Flags().GetString("out")
@@ -127,23 +123,6 @@ func RunDeploymentStart(cmd *cobra.Command, args []string) error {
 	err := massdriver.StartDeployment(id, token, out)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
-		return err
-	}
-
-	log.Info().Str("deployment", id).Msg("generating auth files")
-	schemaPath := path.Join(bundle, "/schema-connections.json")
-	connectionsPath := path.Join(out, massdriver.ConnectionsFileName)
-	authPath := path.Join(out, "auth")
-	if _, err := os.Stat(authPath); os.IsNotExist(err) {
-		err := os.Mkdir(authPath, 0777)
-		if err != nil {
-			log.Error().Err(err).Str("deployment", id).Msg("an error occurred while creating auth directory")
-			return err
-		}
-	}
-	err = provisioners.GenerateAuthFiles(schemaPath, connectionsPath, authPath)
-	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating auth files")
 		return err
 	}
 
