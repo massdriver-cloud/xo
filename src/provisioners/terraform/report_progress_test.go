@@ -68,6 +68,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 					Timestamp: "2021-10-22T10:07:26.909862-07:00",
 					Error: &mdproto.ProvisionerError{
 						Message: "Error creating S3 bucket: AccessDenied: Access Denied\n\tstatus code: 403, request id: 8ZJF3ZKYM9QE8Y5Y, host id: PE/mhk+dO5TDoPmLw/wCuKDRUcfuvP+LFx3cFl5EOhfYe0F9fKtmdIG+lAseO2QqufTN+69ihOw=",
+						Level:   mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_ERROR,
 					},
 				},
 				{

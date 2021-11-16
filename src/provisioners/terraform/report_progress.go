@@ -163,6 +163,15 @@ func parseDiagnosticLog(record *terraformLog, request *mdproto.ProvisionerProgre
 		return errors.New("diagnostic struct missing")
 	}
 
+	switch record.Diagnostic.Severity {
+	case "error":
+		diagnostic.Level = mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_ERROR
+	case "warning":
+		diagnostic.Level = mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_WARNING
+	default:
+		return errors.New("unknown severity: " + record.Diagnostic.Severity)
+	}
+
 	request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_ERROR
 	diagnostic.Message = record.Diagnostic.Summary
 
