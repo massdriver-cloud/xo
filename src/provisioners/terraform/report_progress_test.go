@@ -196,6 +196,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 					ResourceProgress: &mdproto.ProvisionerResourceProgress{
 						ResourceType: "aws_s3_bucket",
 						ResourceName: "one",
+						ResourceKey:  "key",
 						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
 						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED,
 						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE,
@@ -213,6 +214,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 					ResourceProgress: &mdproto.ProvisionerResourceProgress{
 						ResourceType: "aws_s3_bucket",
 						ResourceName: "one",
+						ResourceKey:  "0",
 						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
 						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED,
 						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE,

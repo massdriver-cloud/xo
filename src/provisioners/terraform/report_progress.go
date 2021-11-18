@@ -9,6 +9,8 @@ import (
 	"xo/src/massdriver"
 
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
+	"github.com/zclconf/go-cty/cty"
+	ctyconvert "github.com/zclconf/go-cty/cty/convert"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 )
 
@@ -223,6 +225,14 @@ func parseResourceUpdateLog(record *terraformLog, request *mdproto.ProvisionerPr
 	progress.ResourceName = action.Resource.ResourceName
 	progress.ResourceType = action.Resource.ResourceType
 	progress.ResourceId = action.IDValue
+	// Convert ResourceKey (which can be a string or an int) into a string if the value is non-null
+	if !action.Resource.ResourceKey.IsNull() {
+		key, err := ctyconvert.Convert(action.Resource.ResourceKey.Value, cty.String)
+		if err != nil {
+			return err
+		}
+		progress.ResourceKey = key.AsString()
+	}
 
 	request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE
 	request.ResourceProgress = &progress
