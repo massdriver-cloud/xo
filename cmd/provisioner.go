@@ -105,11 +105,11 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	}
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
-		log.Warn().Msg("Deployment ID is empty (pulled from MASSDRIVER_DEPLOYMENT_ID environment variable)")
+		log.Warn().Msg("Deployment ID is empty (nothing in MASSDRIVER_DEPLOYMENT_ID environment variable)")
 	}
-	deploymentToken := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	deploymentToken := os.Getenv("MASSDRIVER_DEPLOYMENT_TOKEN")
 	if deploymentToken == "" {
-		log.Warn().Msg("Deployment token is empty (pulled from MASSDRIVER_DEPLOYMENT_TOKEN environment variable)")
+		log.Warn().Msg("Deployment token is empty (nothing in MASSDRIVER_DEPLOYMENT_TOKEN environment variable)")
 	}
 
 	var input io.Reader
@@ -125,7 +125,13 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 		input = inputFile
 	}
 
-	return tf.ReportProgressFromLogs(deploymentId, deploymentToken, input)
+	err = tf.ReportProgressFromLogs(deploymentId, deploymentToken, input)
+	if err != nil {
+		log.Error().Err(err).Msg("an error occurred while reporting progress")
+		return err
+	}
+
+	return nil
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {

@@ -8,6 +8,8 @@ import (
 	"io"
 	"xo/src/massdriver"
 
+	"github.com/rs/zerolog/log"
+
 	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	"github.com/zclconf/go-cty/cty"
 	ctyconvert "github.com/zclconf/go-cty/cty/convert"
@@ -87,7 +89,7 @@ func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream 
 
 		request, err := convertLogToProvisionerProgressUpdateRequest(&record)
 		if err != nil {
-			return err
+			log.Error().Err(err).Msg("an error occurred while parsing status message")
 		}
 
 		if request != nil {
@@ -96,7 +98,7 @@ func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream 
 
 			err = ReportProgressSender(request)
 			if err != nil {
-				return err
+				log.Error().Err(err).Msg("an error occurred while sending resource status to massdriver")
 			}
 		}
 	}
