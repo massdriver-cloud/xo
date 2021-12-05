@@ -107,9 +107,9 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	if deploymentId == "" {
 		log.Warn().Msg("Deployment ID is empty (nothing in MASSDRIVER_DEPLOYMENT_ID environment variable)")
 	}
-	deploymentToken := os.Getenv("MASSDRIVER_DEPLOYMENT_TOKEN")
+	deploymentToken := os.Getenv("MASSDRIVER_TOKEN")
 	if deploymentToken == "" {
-		log.Warn().Msg("Deployment token is empty (nothing in MASSDRIVER_DEPLOYMENT_TOKEN environment variable)")
+		log.Warn().Msg("Deployment token is empty (nothing in MASSDRIVER_TOKEN environment variable)")
 	}
 
 	var input io.Reader
