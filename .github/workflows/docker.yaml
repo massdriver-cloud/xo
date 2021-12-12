@@ -44,4 +44,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
+          ssh: default=${{ env.SSH_AUTH_SOCK }}
           tags: ${{ steps.meta.outputs.tags }}
