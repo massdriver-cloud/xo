@@ -34,6 +34,11 @@ func (s *massdriverMockServer) CompleteDeployment(ctx context.Context, req *mdpr
 	return &mdproto.CompleteDeploymentResponse{}, nil
 }
 
+func (s *massdriverMockServer) CompleteDestruction(ctx context.Context, req *mdproto.CompleteDestructionRequest) (*mdproto.CompleteDestructionResponse, error) {
+	fmt.Printf("Received CompleteDestructionRequest: %v\n", req)
+	return &mdproto.CompleteDestructionResponse{}, nil
+}
+
 func (s *massdriverMockServer) FailDeployment(ctx context.Context, req *mdproto.FailDeploymentRequest) (*mdproto.FailDeploymentResponse, error) {
 	fmt.Printf("Received CompleteDeploymentRequest: %v\n", req)
 	return &mdproto.FailDeploymentResponse{}, nil
