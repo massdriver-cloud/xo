@@ -57,6 +57,18 @@ var deploymentFailExamples = `
 	xo deployment fail -i <deployment-id> -t <token>
 	`
 
+var deploymentDestroyedLong = `
+	Reports the deployment has been destroyed to Massdriver
+	`
+
+var deploymentDestroyedExamples = `
+	# Destroyed deployment (deployment-id and token in environment)
+	xo deployment destroyed
+
+	# Destroyed deployment specifying deployment-id and token
+	xo deployment destroyed -i <deployment-id> -t <token>
+	`
+
 var deploymentCmd = &cobra.Command{
 	Use:   "deployment",
 	Short: "Manage Massdriver deployments",
@@ -90,6 +102,15 @@ var deploymentFailCmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 }
 
+var deploymentDestroyedCmd = &cobra.Command{
+	Use:                   "destroyed",
+	Short:                 "Report Massdriver deployment has been destroyed",
+	Long:                  deploymentDestroyedLong,
+	Example:               deploymentDestroyedExamples,
+	RunE:                  RunDeploymentDestroyed,
+	DisableFlagsInUseLine: true,
+}
+
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
@@ -106,6 +127,10 @@ func init() {
 	deploymentCmd.AddCommand(deploymentFailCmd)
 	deploymentFailCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
 	deploymentFailCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
+
+	deploymentCmd.AddCommand(deploymentDestroyedCmd)
+	deploymentDestroyedCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
+	deploymentDestroyedCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
 }
 
 func RunDeploymentStart(cmd *cobra.Command, args []string) error {
@@ -170,6 +195,27 @@ func RunDeploymentFail(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	log.Info().Str("deployment", id).Msg("failed deployment reported")
+
+	return nil
+}
+
+func RunDeploymentDestroyed(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetString("deployment-id")
+	token, _ := cmd.Flags().GetString("token")
+
+	if id == "" || token == "" {
+		cmd.Help()
+		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
+		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
+	}
+
+	log.Info().Str("deployment", id).Msg("reporting deployment has been destroyed to Massdriver")
+	err := massdriver.DestroyedDeployment(id, token)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while reporting deployed has been destroyed")
+		return err
+	}
+	log.Info().Str("deployment", id).Msg("destroyed deployment reported")
 
 	return nil
 }

@@ -46,3 +46,9 @@ func FailDeployment(id string, token string) error {
 	_, err := md.FailDeployment(context.Background(), &mdproto.FailDeploymentRequest{DeploymentId: id, DeploymentToken: token})
 	return err
 }
+
+func DestroyedDeployment(id string, token string) error {
+	md := mdproto.NewWorkflowServiceProtobufClient(s.URL, Client, twirp.WithClientPathPrefix("/rpc/twirp"))
+	_, err := md.CompleteDestruction(context.Background(), &mdproto.CompleteDestructionRequest{DeploymentId: id, DeploymentToken: token})
+	return err
+}

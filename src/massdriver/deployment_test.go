@@ -93,3 +93,34 @@ func TestFailDeployment(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", *got, want)
 	}
 }
+
+func TestDestroyedDeployment(t *testing.T) {
+	wantId := "fakeid"
+	token := "faketoken"
+	want := mdproto.CompleteDestructionRequest{
+		DeploymentId:    wantId,
+		DeploymentToken: token,
+	}
+
+	mockDeployment := mdproto.Deployment{}
+
+	got := new(mdproto.CompleteDestructionRequest)
+	respBytes, _ := proto.Marshal(&mockDeployment)
+	r := ioutil.NopCloser(bytes.NewReader(respBytes))
+	massdriver.MockDoFunc = func(req *http.Request) (*http.Response, error) {
+		reqBytes, _ := ioutil.ReadAll(req.Body)
+		proto.Unmarshal(reqBytes, got)
+		return &http.Response{
+			StatusCode: 200,
+			Body:       r,
+		}, nil
+	}
+	err := massdriver.DestroyedDeployment(wantId, token)
+	if err != nil {
+		t.Fatalf("%d, unexpected error", err)
+	}
+
+	if !proto.Equal(got, &want) {
+		t.Fatalf("expected: %v, got: %v", *got, want)
+	}
+}
