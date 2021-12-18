@@ -76,7 +76,7 @@ func getName(t *TemplateData) error {
 func getAccessLevel(t *TemplateData) error {
 	prompt := promptui.Select{
 		Label: "Access Level",
-		Items: []string{"Public", "Private"},
+		Items: []string{"public", "private"},
 	}
 
 	_, result, err := prompt.Run()
