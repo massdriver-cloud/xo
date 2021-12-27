@@ -90,6 +90,13 @@ var deploymentDecommissionFailCmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 }
 
+var deploymentArtifactsCmd = &cobra.Command{
+	Use:                   "artifacts",
+	Short:                 "Upload artifacts to massdriver",
+	RunE:                  RunDeploymentUploadArtifacts,
+	DisableFlagsInUseLine: true,
+}
+
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
@@ -104,6 +111,9 @@ func init() {
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionStartCmd)
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionCompleteCmd)
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionFailCmd)
+
+	deploymentCmd.AddCommand(deploymentArtifactsCmd)
+	deploymentArtifactsCmd.Flags().StringP("file", "f", "./artifacts.json", "Artifacts file")
 }
 
 func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
@@ -141,12 +151,12 @@ func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while sending provision complete event")
 		return err
 	}
 	err = mdClient.ReportProvisionCompleted(id)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while sending provision complete event")
 		return err
 	}
 
@@ -165,12 +175,12 @@ func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 	err = mdClient.ReportProvisionFailed(id)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 
@@ -189,12 +199,12 @@ func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 	err = mdClient.ReportDecommissionStarted(id)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 
@@ -213,12 +223,12 @@ func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error 
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 	err = mdClient.ReportDecommissionCompleted(id)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 
@@ -237,15 +247,35 @@ func RunDeploymentDecommissionFail(cmd *cobra.Command, args []string) error {
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 	err = mdClient.ReportDecommissionFailed(id)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
 		return err
 	}
 
 	log.Info().Str("deployment", id).Msg("deployment get complete")
+	return nil
+}
+
+func RunDeploymentUploadArtifacts(cmd *cobra.Command, args []string) error {
+	artifacts, _ := cmd.Flags().GetString("file")
+
+	id := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+
+	log.Info().Str("deployment", id).Msg("uploading artifact file to Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while uploading artifact files")
+		return err
+	}
+	err = mdClient.UploadArtifactFile(artifacts, id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while uploading artifact files")
+		return err
+	}
+	log.Info().Str("deployment", id).Msg("artifact uploaded")
 	return nil
 }
