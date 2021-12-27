@@ -33,6 +33,7 @@ func GenerateBackendS3File(output string, bucket string, key string, region stri
 	if err != nil {
 		return err
 	}
+	defer outputHandle.Close()
 
 	config, err := GenerateJSONBackendS3Config(bucket, key, region, dynamoDbTable, sharedCredFile, profile)
 	if err != nil {
@@ -56,7 +57,7 @@ func GenerateJSONBackendS3Config(bucket string, key string, region string, dynam
 	return json.MarshalIndent(topBlock, "", "  ")
 }
 
-func writeBackend(config []byte, file io.Writer) error {
-	_, err := file.Write(config)
+func writeBackend(config []byte, out io.Writer) error {
+	_, err := out.Write(config)
 	return err
 }

@@ -3,6 +3,7 @@ package cmd
 import (
 	"io"
 	"os"
+	"xo/src/massdriver"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
 
@@ -107,10 +108,6 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	if deploymentId == "" {
 		log.Warn().Msg("Deployment ID is empty (nothing in MASSDRIVER_DEPLOYMENT_ID environment variable)")
 	}
-	deploymentToken := os.Getenv("MASSDRIVER_TOKEN")
-	if deploymentToken == "" {
-		log.Warn().Msg("Deployment token is empty (nothing in MASSDRIVER_TOKEN environment variable)")
-	}
 
 	var input io.Reader
 	if file == "-" {
@@ -118,14 +115,19 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	} else {
 		inputFile, err := os.Open(file)
 		if err != nil {
-			log.Error().Err(err).Msg("an error occurred while opening file")
+			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
 			return err
 		}
 		defer inputFile.Close()
 		input = inputFile
 	}
 
-	err = tf.ReportProgressFromLogs(deploymentId, deploymentToken, input)
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+	err = tf.ReportProgressFromLogs(mdClient, deploymentId, input)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while reporting progress")
 		return err
