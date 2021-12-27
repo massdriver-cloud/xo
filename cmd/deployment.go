@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"xo/src/massdriver"
 
@@ -102,7 +101,6 @@ func init() {
 
 	deploymentCmd.AddCommand(deploymentProvisionCmd)
 	deploymentCmd.AddCommand(deploymentDecommissionCmd)
-	deploymentCmd.PersistentFlags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID")
 
 	deploymentProvisionCmd.AddCommand(deploymentProvisionStartCmd)
 	deploymentProvisionCmd.AddCommand(deploymentProvisionCompleteCmd)
@@ -117,146 +115,134 @@ func init() {
 }
 
 func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending provision_started event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_started event")
 		return err
 	}
-	err = mdClient.ReportProvisionStarted(id)
+	err = mdClient.ReportProvisionStarted(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_started event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("provision_started event sent")
 	return nil
 }
 
 func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending provision_completed event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while sending provision complete event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_completed event")
 		return err
 	}
-	err = mdClient.ReportProvisionCompleted(id)
+	err = mdClient.ReportProvisionCompleted(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while sending provision complete event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_completed event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("provision_completed event sent")
 	return nil
 }
 
 func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending provision_failed event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_failed event")
 		return err
 	}
-	err = mdClient.ReportProvisionFailed(id)
+	err = mdClient.ReportProvisionFailed(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_failed event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("provision_failed event sent")
 	return nil
 }
 
 func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending decommission_started event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_started event")
 		return err
 	}
-	err = mdClient.ReportDecommissionStarted(id)
+	err = mdClient.ReportDecommissionStarted(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_started event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("decommission_started event sent")
 	return nil
 }
 
 func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending decommission_completed event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_completed event")
 		return err
 	}
-	err = mdClient.ReportDecommissionCompleted(id)
+	err = mdClient.ReportDecommissionCompleted(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_completed event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("decommission_completed event sent")
 	return nil
 }
 
 func RunDeploymentDecommissionFail(cmd *cobra.Command, args []string) error {
-	id, _ := cmd.Flags().GetString("deployment-id")
-	if id == "" {
-		cmd.Help()
-		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
-		return errors.New("deployment-id must be set (by flags or environment variable)")
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
 	}
 
-	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	log.Info().Str("deployment", deploymentId).Msg("sending decommission_failed event")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_failed event")
 		return err
 	}
-	err = mdClient.ReportDecommissionFailed(id)
+	err = mdClient.ReportDecommissionFailed(deploymentId)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while generating event")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_failed event")
 		return err
 	}
 
-	log.Info().Str("deployment", id).Msg("deployment get complete")
+	log.Info().Str("deployment", deploymentId).Msg("decommission_failed event sent")
 	return nil
 }
 
@@ -265,7 +251,7 @@ func RunDeploymentUploadArtifacts(cmd *cobra.Command, args []string) error {
 
 	id := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 
-	log.Info().Str("deployment", id).Msg("uploading artifact file to Massdriver")
+	log.Info().Str("deployment", id).Msg("uploading artifact file")
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
 		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while uploading artifact files")
