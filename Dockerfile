@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG BASE_IMG=golang:1.16
+ARG BASE_IMG=golang:1.17
 ARG RUN_IMG=alpine:3.14
 
 #############

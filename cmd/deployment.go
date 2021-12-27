@@ -10,212 +10,242 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var deploymentStartLong = `
-	Fetches metadata about a Massdriver deployment and writes the data to files.
+var descritionLong = `
+	Publishes an event to AWS SNS, which distributes the event to SQS subscribers.
 
-	Specifically this is fetching the params and connections and writing them to
-	params.tfvars.json and connections.tfvars.json, respectively. This is intended
-	to be used as a step in workflow execution to gather resources for the provisioner.
-	`
-var deploymentStartExamples = `
-	# Get deployment (deployment-id and token in environment)
-	xo deployment get
+	This command is designed to be executed in automation, and therefore takes inputs
+	from environment variables. Specifically, the following environment variables
+	are read and used to populate event data:
 
-	# Get deployment manually specifying deployment-id and token
-	xo deployment get -i <deployment-id> -t <token>
+	MASSDRIVER_DEPLOYMENT_ID
+	MASSDRIVER_EVENT_TOPIC_ARN
+	MASSDRIVER_PROVISIONER
 
-	# Get deployment and write files to /tmp
-	xo deployment get -d /tmp
-	`
-
-var deploymentCompleteLong = `
-	Uploads artifact data about a deployment to Massdriver.
-
-	This is intended to be used as a step in workflow execution to update 
-	metadata after provisioning.
-	`
-var deploymentCompleteExamples = `
-	# Upload artifact (deployment-id and token in environment)
-	xo deployment complete
-
-	# Upload artifact manually specifying deployment-id and token
-	xo deployment complete -i <deployment-id> -t <token>
-
-	# Upload artifacts in custom file
-	xo deployment complete -f /tmp/custom-artifacts.json
-	`
-
-var deploymentFailLong = `
-	Reports the deployment has failed to Massdriver
-	`
-
-var deploymentFailExamples = `
-	# Fail deployment (deployment-id and token in environment)
-	xo deployment fail
-
-	# Fail deployment specifying deployment-id and token
-	xo deployment fail -i <deployment-id> -t <token>
-	`
-
-var deploymentDestroyedLong = `
-	Reports the deployment has been destroyed to Massdriver
-	`
-
-var deploymentDestroyedExamples = `
-	# Destroyed deployment (deployment-id and token in environment)
-	xo deployment destroyed
-
-	# Destroyed deployment specifying deployment-id and token
-	xo deployment destroyed -i <deployment-id> -t <token>
+	Be sure these environment variables are set, and you have access to the SNS topic.
 	`
 
 var deploymentCmd = &cobra.Command{
 	Use:   "deployment",
-	Short: "Manage Massdriver deployments",
+	Short: "Manage Massdriver deployment events",
 	Long:  ``,
 }
 
-var deploymentStartCmd = &cobra.Command{
+var deploymentProvisionCmd = &cobra.Command{
+	Use:   "provision",
+	Short: "Manage Massdriver provision events",
+	Long:  ``,
+}
+
+var deploymentDecommissionCmd = &cobra.Command{
+	Use:   "decommission",
+	Short: "Manage Massdriver decommission events",
+	Long:  ``,
+}
+
+var deploymentProvisionStartCmd = &cobra.Command{
 	Use:                   "start",
-	Short:                 "Start Massdriver deployment",
-	Long:                  deploymentStartLong,
-	Example:               deploymentStartExamples,
-	RunE:                  RunDeploymentStart,
+	Short:                 "Generate event notifying Massdriver the provision has started",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentProvisionStart,
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentCompleteCmd = &cobra.Command{
+var deploymentProvisionCompleteCmd = &cobra.Command{
 	Use:                   "complete",
-	Short:                 "Complete Massdriver deployment",
-	Long:                  deploymentCompleteLong,
-	Example:               deploymentCompleteExamples,
-	RunE:                  RunDeploymentComplete,
+	Short:                 "Generate event notifying Massdriver the provision has completed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentProvisionComplete,
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentFailCmd = &cobra.Command{
+var deploymentProvisionFailCmd = &cobra.Command{
 	Use:                   "fail",
-	Short:                 "Report Massdriver deployment has failed",
-	Long:                  deploymentFailLong,
-	Example:               deploymentFailExamples,
-	RunE:                  RunDeploymentFail,
+	Short:                 "Generate event notifying Massdriver the provision has failed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentProvisionFail,
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentDestroyedCmd = &cobra.Command{
-	Use:                   "destroyed",
-	Short:                 "Report Massdriver deployment has been destroyed",
-	Long:                  deploymentDestroyedLong,
-	Example:               deploymentDestroyedExamples,
-	RunE:                  RunDeploymentDestroyed,
+var deploymentDecommissionStartCmd = &cobra.Command{
+	Use:                   "start",
+	Short:                 "Generate event notifying Massdriver the decommission has started",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentDecommissionStart,
+	DisableFlagsInUseLine: true,
+}
+
+var deploymentDecommissionCompleteCmd = &cobra.Command{
+	Use:                   "complete",
+	Short:                 "Generate event notifying Massdriver the decommission has completed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentDecommissionComplete,
+	DisableFlagsInUseLine: true,
+}
+
+var deploymentDecommissionFailCmd = &cobra.Command{
+	Use:                   "fail",
+	Short:                 "Generate event notifying Massdriver the decommission has failed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentDecommissionFail,
 	DisableFlagsInUseLine: true,
 }
 
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
-	deploymentCmd.AddCommand(deploymentStartCmd)
-	deploymentStartCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
-	deploymentStartCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
-	deploymentStartCmd.Flags().StringP("out", "o", ".", "Destination path to write deployment json files. Defaults to current directory")
+	deploymentCmd.AddCommand(deploymentProvisionCmd)
+	deploymentCmd.AddCommand(deploymentDecommissionCmd)
+	deploymentCmd.PersistentFlags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID")
 
-	deploymentCmd.AddCommand(deploymentCompleteCmd)
-	deploymentCompleteCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
-	deploymentCompleteCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
-	deploymentCompleteCmd.Flags().StringP("artifacts", "f", "./artifact.json", "Path to JSON formatted artifact file to upload. Defaults to ./artifact.json")
+	deploymentProvisionCmd.AddCommand(deploymentProvisionStartCmd)
+	deploymentProvisionCmd.AddCommand(deploymentProvisionCompleteCmd)
+	deploymentProvisionCmd.AddCommand(deploymentProvisionFailCmd)
 
-	deploymentCmd.AddCommand(deploymentFailCmd)
-	deploymentFailCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
-	deploymentFailCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
-
-	deploymentCmd.AddCommand(deploymentDestroyedCmd)
-	deploymentDestroyedCmd.Flags().StringP("deployment-id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver Deployment ID. Defaults to value in MASSDRIVER_DEPLOYMENT_ID environment variable.")
-	deploymentDestroyedCmd.Flags().StringP("token", "t", os.Getenv("MASSDRIVER_TOKEN"), "Secure token to authenticate with Massdriver. Defaults to value in MASSDRIVER_TOKEN environment variable.")
+	deploymentDecommissionCmd.AddCommand(deploymentDecommissionStartCmd)
+	deploymentDecommissionCmd.AddCommand(deploymentDecommissionCompleteCmd)
+	deploymentDecommissionCmd.AddCommand(deploymentDecommissionFailCmd)
 }
 
-func RunDeploymentStart(cmd *cobra.Command, args []string) error {
+func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
-	token, _ := cmd.Flags().GetString("token")
-	out, _ := cmd.Flags().GetString("out")
-
-	if id == "" || token == "" {
+	if id == "" {
 		cmd.Help()
-		fmt.Println("both deployment-id and token must be set (by flags or environment variable)")
-		return errors.New("ERROR: Both deployment-id and token must be set (by flags or environment variable)")
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
 	}
 
 	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
-	err := massdriver.StartDeployment(id, token, out)
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+	err = mdClient.ReportProvisionStarted(id)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
 
 	log.Info().Str("deployment", id).Msg("deployment get complete")
-
 	return nil
 }
 
-func RunDeploymentComplete(cmd *cobra.Command, args []string) error {
+func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
-	token, _ := cmd.Flags().GetString("token")
-	artifacts, _ := cmd.Flags().GetString("artifacts")
-
-	if id == "" || token == "" {
+	if id == "" {
 		cmd.Help()
-		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
-		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
 	}
 
-	log.Info().Str("deployment", id).Msg("uploading artifact file to Massdriver")
-	err := massdriver.UploadArtifactFile(artifacts, id, token)
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while uploading artifact files")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
-	log.Info().Str("deployment", id).Msg("artifact uploaded")
+	err = mdClient.ReportProvisionCompleted(id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
 
+	log.Info().Str("deployment", id).Msg("deployment get complete")
 	return nil
 }
 
-func RunDeploymentFail(cmd *cobra.Command, args []string) error {
+func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
-	token, _ := cmd.Flags().GetString("token")
-
-	if id == "" || token == "" {
+	if id == "" {
 		cmd.Help()
-		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
-		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
 	}
 
-	log.Info().Str("deployment", id).Msg("reporting deployed has failed to Massdriver")
-	err := massdriver.FailDeployment(id, token)
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while reporting deployed has failed")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
-	log.Info().Str("deployment", id).Msg("failed deployment reported")
+	err = mdClient.ReportProvisionFailed(id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
 
+	log.Info().Str("deployment", id).Msg("deployment get complete")
 	return nil
 }
 
-func RunDeploymentDestroyed(cmd *cobra.Command, args []string) error {
+func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
 	id, _ := cmd.Flags().GetString("deployment-id")
-	token, _ := cmd.Flags().GetString("token")
-
-	if id == "" || token == "" {
+	if id == "" {
 		cmd.Help()
-		fmt.Println("\nERROR: Both deployment-id and token must be set (by flags or environment variable)")
-		return errors.New("both deployment-id and token must be set (by flags or environment variable)")
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
 	}
 
-	log.Info().Str("deployment", id).Msg("reporting deployment has been destroyed to Massdriver")
-	err := massdriver.DestroyedDeployment(id, token)
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while reporting deployed has been destroyed")
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
 		return err
 	}
-	log.Info().Str("deployment", id).Msg("destroyed deployment reported")
+	err = mdClient.ReportDecommissionStarted(id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
 
+	log.Info().Str("deployment", id).Msg("deployment get complete")
+	return nil
+}
+
+func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetString("deployment-id")
+	if id == "" {
+		cmd.Help()
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
+	}
+
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+	err = mdClient.ReportDecommissionCompleted(id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+
+	log.Info().Str("deployment", id).Msg("deployment get complete")
+	return nil
+}
+
+func RunDeploymentDecommissionFail(cmd *cobra.Command, args []string) error {
+	id, _ := cmd.Flags().GetString("deployment-id")
+	if id == "" {
+		cmd.Help()
+		fmt.Println("\nERROR: deployment-id must be set (by flags or environment variable)")
+		return errors.New("deployment-id must be set (by flags or environment variable)")
+	}
+
+	log.Info().Str("deployment", id).Msg("getting deployment from Massdriver")
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+	err = mdClient.ReportDecommissionFailed(id)
+	if err != nil {
+		log.Error().Err(err).Str("deployment", id).Msg("an error occurred while getting deployment from Massdriver")
+		return err
+	}
+
+	log.Info().Str("deployment", id).Msg("deployment get complete")
 	return nil
 }

@@ -10,21 +10,10 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
 	"github.com/zclconf/go-cty/cty"
 	ctyconvert "github.com/zclconf/go-cty/cty/convert"
 	ctyjson "github.com/zclconf/go-cty/cty/json"
 )
-
-var ReportProgressSender func(*mdproto.ProvisionerProgressUpdateRequest) error
-
-func sendToMassdriver(message *mdproto.ProvisionerProgressUpdateRequest) error {
-	return massdriver.SendProvisionerProgressUpdate(message)
-}
-
-func init() {
-	ReportProgressSender = sendToMassdriver
-}
 
 var terraformVersion string
 
@@ -72,7 +61,7 @@ type terraformResourceAddr struct {
 	ResourceKey     ctyjson.SimpleJSONValue `json:"resource_key"`
 }
 
-func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream io.Reader) error {
+func ReportProgressFromLogs(client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
 	scanner := bufio.NewScanner(stream)
 
 	for scanner.Scan() {
@@ -87,16 +76,13 @@ func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream 
 			continue
 		}
 
-		request, err := convertLogToProvisionerProgressUpdateRequest(&record)
+		event, err := convertLogToMassdriverEvent(&record, deploymentId)
 		if err != nil {
 			log.Error().Err(err).Msg("an error occurred while parsing status message")
 		}
 
-		if request != nil {
-			request.DeploymentId = deploymentId
-			request.DeploymentToken = deploymentToken
-
-			err = ReportProgressSender(request)
+		if event != nil {
+			err = client.PublishEventToSNS(event)
 			if err != nil {
 				log.Error().Err(err).Msg("an error occurred while sending resource status to massdriver")
 			}
@@ -106,27 +92,26 @@ func ReportProgressFromLogs(deploymentId string, deploymentToken string, stream 
 	return nil
 }
 
-func convertLogToProvisionerProgressUpdateRequest(record *terraformLog) (*mdproto.ProvisionerProgressUpdateRequest, error) {
-	var request mdproto.ProvisionerProgressUpdateRequest
-
+func convertLogToMassdriverEvent(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 	if record.Terraform != "" {
 		terraformVersion = record.Terraform
 		return nil, nil
 	}
 
+	var event *massdriver.Event
+	var err error
+
 	switch record.Type {
 	case "change_summary":
-		err := parseChangeSummaryLog(record, &request)
-		if err != nil {
-			return nil, err
-		}
+		// skipping change_summary events for now
+		return nil, nil
 	case "diagnostic":
-		err := parseDiagnosticLog(record, &request)
+		event, err = parseDiagnosticLog(record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
 	case "planned_change", "apply_start", "apply_complete", "apply_errored", "resource_drift":
-		err := parseResourceUpdateLog(record, &request)
+		event, err = parseResourceUpdateLog(record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
@@ -134,57 +119,36 @@ func convertLogToProvisionerProgressUpdateRequest(record *terraformLog) (*mdprot
 		return nil, nil
 	}
 
-	request.Timestamp = record.Timestamp
-	request.Metadata = &mdproto.ProvisionerMetadata{
-		Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-		ProvisionerVersion: terraformVersion,
-	}
+	event.Metadata.Version = terraformVersion
 
-	return &request, nil
+	return event, nil
 }
 
-func parseChangeSummaryLog(record *terraformLog, request *mdproto.ProvisionerProgressUpdateRequest) error {
-	if record.Changes == nil {
-		return errors.New("change summary without changes")
-	}
-	switch record.Changes.Operation {
-	case "plan":
-		request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_PLAN_COMPLETED
-	case "apply":
-		request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_APPLY_COMPLETED
-	case "destroy":
-		request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_DESTROY_COMPLETED
-	default:
-		return errors.New("unknown change_summary type: " + record.Changes.Operation)
-	}
-	return nil
-}
-
-func parseDiagnosticLog(record *terraformLog, request *mdproto.ProvisionerProgressUpdateRequest) error {
-	var diagnostic mdproto.ProvisionerError
-
+func parseDiagnosticLog(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 	if record.Diagnostic == nil {
-		return errors.New("diagnostic struct missing")
+		return nil, errors.New("diagnostic struct missing")
 	}
+
+	event := massdriver.NewEvent(massdriver.EVENT_TYPE_PROVISIONER_ERROR)
+	diagnostic := new(massdriver.EventPayloadDiagnostic)
+	diagnostic.DeploymentId = deploymentId
+	diagnostic.Message = record.Diagnostic.Summary
 
 	switch record.Diagnostic.Severity {
 	case "error":
-		diagnostic.Level = mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_ERROR
+		diagnostic.Level = "error"
 	case "warning":
-		diagnostic.Level = mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_WARNING
+		diagnostic.Level = "warning"
 	default:
-		return errors.New("unknown severity: " + record.Diagnostic.Severity)
+		return nil, errors.New("unknown severity: " + record.Diagnostic.Severity)
 	}
 
-	request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_ERROR
-	diagnostic.Message = record.Diagnostic.Summary
+	event.Payload = diagnostic
 
-	request.Error = &diagnostic
-
-	return nil
+	return event, nil
 }
 
-func parseResourceUpdateLog(record *terraformLog, request *mdproto.ProvisionerProgressUpdateRequest) error {
+func parseResourceUpdateLog(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 
 	var action *terraformAction
 	if record.Hook != nil {
@@ -192,38 +156,44 @@ func parseResourceUpdateLog(record *terraformLog, request *mdproto.ProvisionerPr
 	} else if record.Change != nil {
 		action = record.Change
 	} else {
-		return errors.New("resource update without resource data")
+		return nil, errors.New("resource update without resource data")
 	}
 
-	var progress mdproto.ProvisionerResourceProgress
+	var eventType string
+	// we build the event type here by combining strings. Its cleaner than a massive case statement
+	// and types are checked/enforce through tests
 	switch action.Action {
 	case "create":
-		progress.Action = mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE
+		eventType = "create_"
 	case "update":
-		progress.Action = mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE
+		eventType = "update_"
 	case "delete":
-		progress.Action = mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE
+		eventType = "delete_"
 	case "replace":
-		progress.Action = mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_RECREATE
+		eventType = "recreate_"
 	default:
-		return errors.New("unknown action: " + action.Action)
+		return nil, errors.New("unknown action: " + action.Action)
 	}
 
 	switch record.Type {
 	case "planned_change":
-		progress.Status = mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_PENDING
+		eventType += "pending"
 	case "apply_start":
-		progress.Status = mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_RUNNING
+		eventType += "running"
 	case "apply_complete":
-		progress.Status = mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED
+		eventType += "completed"
 	case "apply_errored":
-		progress.Status = mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_FAILED
+		eventType += "failed"
 	case "resource_drift":
-		progress.Status = mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_DRIFT
+		eventType = "drift_detected"
 	default:
-		return errors.New("unknown type: " + record.Type)
+		return nil, errors.New("unknown type: " + record.Type)
 	}
 
+	event := massdriver.NewEvent(eventType)
+
+	progress := new(massdriver.EventPayloadResourceProgress)
+	progress.DeploymentId = deploymentId
 	progress.ResourceName = action.Resource.ResourceName
 	progress.ResourceType = action.Resource.ResourceType
 	progress.ResourceId = action.IDValue
@@ -231,13 +201,12 @@ func parseResourceUpdateLog(record *terraformLog, request *mdproto.ProvisionerPr
 	if !action.Resource.ResourceKey.IsNull() {
 		key, err := ctyconvert.Convert(action.Resource.ResourceKey.Value, cty.String)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		progress.ResourceKey = key.AsString()
 	}
 
-	request.Status = mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE
-	request.ResourceProgress = &progress
+	event.Payload = progress
 
-	return nil
+	return event, nil
 }

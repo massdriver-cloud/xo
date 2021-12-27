@@ -1,332 +1,82 @@
 package terraform_test
 
 import (
+	"context"
 	"os"
 	"testing"
+	"xo/src/massdriver"
 	"xo/src/provisioners/terraform"
 
-	mdproto "github.com/massdriver-cloud/rpc-gen-go/massdriver"
-	"google.golang.org/protobuf/proto"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
 )
 
-var testRequests []*mdproto.ProvisionerProgressUpdateRequest
+var testRequests []string
 
-func storeInSlice(message *mdproto.ProvisionerProgressUpdateRequest) error {
-	testRequests = append(testRequests, message)
-	return nil
+type SNSTestClient struct {
+	Data *string
+}
+
+func (c *SNSTestClient) Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error) {
+	testRequests = append(testRequests, *params.Message)
+	return &sns.PublishOutput{}, nil
 }
 
 func TestReportProgressFromLogs(t *testing.T) {
 	type testData struct {
-		name     string
-		input    string
-		expected []mdproto.ProvisionerProgressUpdateRequest
+		name  string
+		input string
+		want  []string
 	}
 	tests := []testData{
 		{
 			name:  "empty schema",
 			input: "testdata/terraform-output.ndjson",
-			expected: []mdproto.ProvisionerProgressUpdateRequest{
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status:    mdproto.ProvisionerStatus_PROVISIONER_STATUS_PLAN_COMPLETED,
-					Timestamp: "2021-10-22T09:49:55.916597-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status:    mdproto.ProvisionerStatus_PROVISIONER_STATUS_APPLY_COMPLETED,
-					Timestamp: "2021-10-22T09:50:01.810341-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status:    mdproto.ProvisionerStatus_PROVISIONER_STATUS_DESTROY_COMPLETED,
-					Timestamp: "2021-10-22T09:52:28.062482-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status:    mdproto.ProvisionerStatus_PROVISIONER_STATUS_ERROR,
-					Timestamp: "2021-10-22T10:07:26.909862-07:00",
-					Error: &mdproto.ProvisionerError{
-						Message: "Error creating S3 bucket: AccessDenied: Access Denied\n\tstatus code: 403, request id: 8ZJF3ZKYM9QE8Y5Y, host id: PE/mhk+dO5TDoPmLw/wCuKDRUcfuvP+LFx3cFl5EOhfYe0F9fKtmdIG+lAseO2QqufTN+69ihOw=",
-						Level:   mdproto.ProvisionerErrorLevel_PROVISIONER_ERROR_LEVEL_ERROR,
-					},
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_PENDING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE,
-					},
-					Timestamp: "2021-10-22T10:07:25.323404-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_PENDING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE,
-					},
-					Timestamp: "2021-10-22T10:07:25.323575-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_PENDING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE,
-					},
-					Timestamp: "2021-10-22T09:55:15.644830-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_PENDING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_RECREATE,
-					},
-					Timestamp: "2021-10-22T09:56:37.437385-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_RUNNING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE,
-					},
-					Timestamp: "2021-10-22T10:07:26.509289-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_RUNNING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE,
-					},
-					Timestamp: "2021-10-22T09:54:38.720344-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_RUNNING,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE,
-					},
-					Timestamp: "2021-10-22T09:52:27.587225-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						ResourceKey:  "key",
-						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE,
-					},
-					Timestamp: "2021-10-22T09:50:01.745859-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						ResourceKey:  "0",
-						ResourceId:   "242c983b-ff05-4b81-8dd4-afbac03ea364",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE,
-					},
-					Timestamp: "2021-10-22T09:54:41.915057-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_COMPLETED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE,
-					},
-					Timestamp: "2021-10-22T09:52:28.004763-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_FAILED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_CREATE,
-					},
-					Timestamp: "2021-10-22T10:01:42.821634-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_FAILED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_UPDATE,
-					},
-					Timestamp: "2021-10-22T10:01:42.821634-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "two",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_FAILED,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE,
-					},
-					Timestamp: "2021-10-22T10:01:42.821634-07:00",
-				},
-				{
-					DeploymentId:    "id",
-					DeploymentToken: "token",
-					Metadata: &mdproto.ProvisionerMetadata{
-						Provisioner:        mdproto.Provisioner_PROVISIONER_TERRAFORM,
-						ProvisionerVersion: "1.0.7",
-					},
-					Status: mdproto.ProvisionerStatus_PROVISIONER_STATUS_RESOURCE_UPDATE,
-					ResourceProgress: &mdproto.ProvisionerResourceProgress{
-						ResourceType: "aws_s3_bucket",
-						ResourceName: "one",
-						Status:       mdproto.ProvisionerResourceStatus_PROVISIONER_RESOURCE_STATUS_DRIFT,
-						Action:       mdproto.ProvisionerResourceAction_PROVISIONER_RESOURCE_ACTION_DELETE,
-					},
-					Timestamp: "2021-10-22T10:00:21.180582-07:00",
-				},
+			want: []string{
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"provisioner_error"},"payload":{"deployment_id":"id","error_message":"Error creating S3 bucket: AccessDenied: Access Denied\n\tstatus code: 403, request id: 8ZJF3ZKYM9QE8Y5Y, host id: PE/mhk+dO5TDoPmLw/wCuKDRUcfuvP+LFx3cFl5EOhfYe0F9fKtmdIG+lAseO2QqufTN+69ihOw=","error_level":"error"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"create_pending"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_pending"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_pending"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"recreate_pending"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"create_running"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_running"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket","resource_id":"242c983b-ff05-4b81-8dd4-afbac03ea364"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_running"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket","resource_id":"242c983b-ff05-4b81-8dd4-afbac03ea364"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"create_completed"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket","resource_key":"key","resource_id":"242c983b-ff05-4b81-8dd4-afbac03ea364"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_completed"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket","resource_key":"0","resource_id":"242c983b-ff05-4b81-8dd4-afbac03ea364"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_completed"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"create_failed"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_failed"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_failed"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"drift_detected"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
 			},
 		},
 	}
 
-	terraform.ReportProgressSender = storeInSlice
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			testRequests = make([]*mdproto.ProvisionerProgressUpdateRequest, 0)
+			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
+			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
+			testRequests = make([]string, 0)
+			testSNSClient := SNSTestClient{}
+			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
 
 			input, err := os.Open(tc.input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
+			defer input.Close()
 
-			err = terraform.ReportProgressFromLogs("id", "token", input)
+			err = terraform.ReportProgressFromLogs(&testMassdriverClient, "id", input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			if len(tc.expected) != len(testRequests) {
-				t.Fatalf("expected: %v, got: %v", len(tc.expected), len(testRequests))
+			if len(tc.want) != len(testRequests) {
+				t.Fatalf("want: %v, got: %v", len(tc.want), len(testRequests))
 			}
 
-			for i := 0; i < len(tc.expected); i++ {
-				if !proto.Equal(&tc.expected[i], testRequests[i]) {
-					t.Fatalf("expected: %v, got: %v", tc.expected[i], *testRequests[i])
+			for i := 0; i < len(tc.want); i++ {
+				if tc.want[i] != testRequests[i] {
+					t.Fatalf("want: %v, got: %v", tc.want[i], testRequests[i])
 				}
 			}
 		})
