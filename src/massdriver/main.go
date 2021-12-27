@@ -50,12 +50,11 @@ func (c MassdriverClient) PublishEventToSNS(event *Event) error {
 	jsonString := string(jsonBytes)
 
 	deduplicationId := uuid.New().String()
-	groupId := event.Payload.GetDeploymentId()
 
 	input := sns.PublishInput{
 		Message:                &jsonString,
 		MessageDeduplicationId: &deduplicationId,
-		MessageGroupId:         &groupId,
+		MessageGroupId:         &c.Specification.DeploymentID,
 		TopicArn:               &c.Specification.EventTopicARN,
 	}
 

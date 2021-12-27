@@ -44,20 +44,25 @@ func TestPublishEventToSNS(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
+			environmentDepId := "envDepId"
+			t.Setenv("MASSDRIVER_DEPLOYMENT_ID", environmentDepId)
+			testClient, err := massdriver.InitializeMassdriverClient()
+			if err != nil {
+				t.Fatalf("%d, unexpected error", err)
+			}
 			testSNSClient := SNSTestClient{}
-			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
-			err := testClient.PublishEventToSNS(tc.input)
+			testClient.SNSClient = &testSNSClient
+			err = testClient.PublishEventToSNS(tc.input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			got := *testSNSClient.Input
+			got := testSNSClient.Input
 			if *got.Message != tc.want {
 				t.Fatalf("want: %v, got: %v", tc.want, *got.Message)
 			}
-			if *got.MessageGroupId != "depId" {
-				t.Fatalf("want: %v, got: %v", "depId", *got.MessageGroupId)
+			if *got.MessageGroupId != environmentDepId {
+				t.Fatalf("want: %v, got: %v", environmentDepId, *got.MessageGroupId)
 			}
 		})
 	}

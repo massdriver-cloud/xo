@@ -30,12 +30,8 @@ const EVENT_TYPE_RESOURCE_DELETE_FAILED string = "resource_delete_failed"
 const EVENT_TYPE_RESOURCE_DRIFT_DETECTED string = "resource_drift_detected"
 
 type Event struct {
-	Metadata EventMetadata    `json:"metadata"`
-	Payload  PayloadInterface `json:"payload,omitempty"`
-}
-
-type PayloadInterface interface {
-	GetDeploymentId() string
+	Metadata EventMetadata `json:"metadata"`
+	Payload  interface{}   `json:"payload,omitempty"`
 }
 
 type EventMetadata struct {
@@ -67,14 +63,6 @@ type EventPayloadDiagnostic struct {
 	Message      string `json:"error_message"`
 	Level        string `json:"error_level"`
 }
-
-func (p EventPayloadProvisionerStatus) GetDeploymentId() string { return p.DeploymentId }
-
-func (p EventPayloadResourceProgress) GetDeploymentId() string { return p.DeploymentId }
-
-func (p EventPayloadArtifacts) GetDeploymentId() string { return p.DeploymentId }
-
-func (p EventPayloadDiagnostic) GetDeploymentId() string { return p.DeploymentId }
 
 var EventTimeString = time.Now().String
 
