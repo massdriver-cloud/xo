@@ -13,5 +13,5 @@ docker.build:
 hack.build-to-massdriver:
 	GOOS=linux GOARCH=amd64 go build && cp ./xo ../massdriver/xo-amd64
 
-hack.build-to-m1:
-	GOOS=darwin GOARCH=arm64 go build && cp ./xo ../massdriver/xo-arm64
+local.build-to-m1:
+	GOOS=darwin GOARCH=arm64 go build
