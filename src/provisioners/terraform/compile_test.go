@@ -53,6 +53,9 @@ func TestGenerateFiles(t *testing.T) {
     "md_default_tags": {
       "type": "map"
     },
+    "md_metadata": {
+      "type": "any"
+    },
     "md_name_prefix": {
       "type": "string"
     }
