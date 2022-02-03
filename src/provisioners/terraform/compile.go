@@ -12,11 +12,16 @@ import (
 func GenerateFiles(baseDir string) error {
 	massdriverVariables := map[string]interface{}{
 		"variable": map[string]interface{}{
+			// TODO: remove after md_metadata is deployed
 			"md_name_prefix": map[string]string{
 				"type": "string",
 			},
+			// TODO: remove after md_metadata is deployed
 			"md_default_tags": map[string]string{
 				"type": "map",
+			},
+			"md_metadata": map[string]string{
+				"type": "any",
 			},
 		},
 	}
