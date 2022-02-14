@@ -50,14 +50,8 @@ func TestGenerateFiles(t *testing.T) {
 }`,
 				"_md_variables.tf.json": `{
   "variable": {
-    "md_default_tags": {
-      "type": "map"
-    },
     "md_metadata": {
       "type": "any"
-    },
-    "md_name_prefix": {
-      "type": "string"
     }
   }
 }`,
