@@ -1,12 +1,14 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"os"
 	"xo/src/massdriver"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
 )
 
 var descritionLong = `
@@ -89,13 +91,6 @@ var deploymentDecommissionFailCmd = &cobra.Command{
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentArtifactsCmd = &cobra.Command{
-	Use:                   "artifacts",
-	Short:                 "Upload artifacts to massdriver",
-	RunE:                  RunDeploymentUploadArtifacts,
-	DisableFlagsInUseLine: true,
-}
-
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
@@ -109,12 +104,12 @@ func init() {
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionStartCmd)
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionCompleteCmd)
 	deploymentDecommissionCmd.AddCommand(deploymentDecommissionFailCmd)
-
-	deploymentCmd.AddCommand(deploymentArtifactsCmd)
-	deploymentArtifactsCmd.Flags().StringP("file", "f", "./artifacts.json", "Artifacts file")
 }
 
 func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentProvisionStart")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -126,7 +121,7 @@ func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_started event")
 		return err
 	}
-	err = mdClient.ReportProvisionStarted(deploymentId)
+	err = mdClient.ReportProvisionStarted(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_started event")
 		return err
@@ -137,6 +132,9 @@ func RunDeploymentProvisionStart(cmd *cobra.Command, args []string) error {
 }
 
 func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentProvisionComplete")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -148,7 +146,7 @@ func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_completed event")
 		return err
 	}
-	err = mdClient.ReportProvisionCompleted(deploymentId)
+	err = mdClient.ReportProvisionCompleted(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_completed event")
 		return err
@@ -159,6 +157,9 @@ func RunDeploymentProvisionComplete(cmd *cobra.Command, args []string) error {
 }
 
 func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentProvisionFail")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -170,7 +171,7 @@ func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_failed event")
 		return err
 	}
-	err = mdClient.ReportProvisionFailed(deploymentId)
+	err = mdClient.ReportProvisionFailed(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending provision_failed event")
 		return err
@@ -181,6 +182,9 @@ func RunDeploymentProvisionFail(cmd *cobra.Command, args []string) error {
 }
 
 func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentDecommissionStart")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -192,7 +196,7 @@ func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_started event")
 		return err
 	}
-	err = mdClient.ReportDecommissionStarted(deploymentId)
+	err = mdClient.ReportDecommissionStarted(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_started event")
 		return err
@@ -203,6 +207,9 @@ func RunDeploymentDecommissionStart(cmd *cobra.Command, args []string) error {
 }
 
 func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentDecommissionComplete")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -214,7 +221,7 @@ func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error 
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_completed event")
 		return err
 	}
-	err = mdClient.ReportDecommissionCompleted(deploymentId)
+	err = mdClient.ReportDecommissionCompleted(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_completed event")
 		return err
@@ -225,6 +232,9 @@ func RunDeploymentDecommissionComplete(cmd *cobra.Command, args []string) error 
 }
 
 func RunDeploymentDecommissionFail(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentDecommissionFail")
+	defer span.End()
+
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
 	if deploymentId == "" {
 		return errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
@@ -236,7 +246,7 @@ func RunDeploymentDecommissionFail(cmd *cobra.Command, args []string) error {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_failed event")
 		return err
 	}
-	err = mdClient.ReportDecommissionFailed(deploymentId)
+	err = mdClient.ReportDecommissionFailed(ctx, deploymentId)
 	if err != nil {
 		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending decommission_failed event")
 		return err

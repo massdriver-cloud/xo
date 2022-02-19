@@ -1,6 +1,7 @@
 package massdriver_test
 
 import (
+	"context"
 	"testing"
 	"xo/src/massdriver"
 )
@@ -26,7 +27,7 @@ func TestReportDecommissionStarted(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testSNSClient := SNSTestClient{}
 			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
-			err := testClient.ReportDecommissionStarted(tc.id)
+			err := testClient.ReportDecommissionStarted(context.Background(), tc.id)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
@@ -60,7 +61,7 @@ func TestReportDecommissionCompleted(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testSNSClient := SNSTestClient{}
 			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
-			err := testClient.ReportDecommissionCompleted(tc.id)
+			err := testClient.ReportDecommissionCompleted(context.Background(), tc.id)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
@@ -94,7 +95,7 @@ func TestReportDecommissionFailed(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testSNSClient := SNSTestClient{}
 			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
-			err := testClient.ReportDecommissionFailed(tc.id)
+			err := testClient.ReportDecommissionFailed(context.Background(), tc.id)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}

@@ -2,6 +2,7 @@ package terraform
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,10 @@ import (
 	"xo/src/massdriver"
 
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/zclconf/go-cty/cty"
 	ctyconvert "github.com/zclconf/go-cty/cty/convert"
@@ -61,7 +66,10 @@ type terraformResourceAddr struct {
 	ResourceKey     ctyjson.SimpleJSONValue `json:"resource_key"`
 }
 
-func ReportProgressFromLogs(client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
+func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
+	_, span := otel.Tracer("xo").Start(ctx, "ReportProgressFromLogs")
+	defer span.End()
+
 	scanner := bufio.NewScanner(stream)
 
 	for scanner.Scan() {
@@ -76,7 +84,7 @@ func ReportProgressFromLogs(client *massdriver.MassdriverClient, deploymentId st
 			continue
 		}
 
-		event, err := convertLogToMassdriverEvent(&record, deploymentId)
+		event, err := convertLogToMassdriverEvent(ctx, &record, deploymentId)
 		if err != nil {
 			log.Error().Err(err).Msg("an error occurred while parsing status message")
 		}
@@ -92,7 +100,10 @@ func ReportProgressFromLogs(client *massdriver.MassdriverClient, deploymentId st
 	return nil
 }
 
-func convertLogToMassdriverEvent(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+func convertLogToMassdriverEvent(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+	_, span := otel.Tracer("xo").Start(ctx, "convertLogToMassdriverEvent")
+	defer span.End()
+
 	if record.Terraform != "" {
 		terraformVersion = record.Terraform
 		return nil, nil
@@ -106,12 +117,12 @@ func convertLogToMassdriverEvent(record *terraformLog, deploymentId string) (*ma
 		// skipping change_summary events for now
 		return nil, nil
 	case "diagnostic":
-		event, err = parseDiagnosticLog(record, deploymentId)
+		event, err = parseDiagnosticLog(ctx, record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
 	case "planned_change", "apply_start", "apply_complete", "apply_errored", "resource_drift":
-		event, err = parseResourceUpdateLog(record, deploymentId)
+		event, err = parseResourceUpdateLog(ctx, record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
@@ -119,12 +130,17 @@ func convertLogToMassdriverEvent(record *terraformLog, deploymentId string) (*ma
 		return nil, nil
 	}
 
-	event.Metadata.Version = terraformVersion
+	if event != nil {
+		event.Metadata.Version = terraformVersion
+	}
 
 	return event, nil
 }
 
-func parseDiagnosticLog(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+func parseDiagnosticLog(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+	_, span := otel.Tracer("xo").Start(ctx, "parseDiagnosticLog")
+	defer span.End()
+
 	if record.Diagnostic == nil {
 		return nil, errors.New("diagnostic struct missing")
 	}
@@ -137,6 +153,9 @@ func parseDiagnosticLog(record *terraformLog, deploymentId string) (*massdriver.
 	switch record.Diagnostic.Severity {
 	case "error":
 		diagnostic.Level = "error"
+		terraformError := errors.New(diagnostic.Message)
+		span.RecordError(terraformError)
+		span.SetStatus(codes.Error, terraformError.Error())
 	case "warning":
 		diagnostic.Level = "warning"
 	default:
@@ -148,7 +167,9 @@ func parseDiagnosticLog(record *terraformLog, deploymentId string) (*massdriver.
 	return event, nil
 }
 
-func parseResourceUpdateLog(record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+func parseResourceUpdateLog(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
+	_, span := otel.Tracer("xo").Start(ctx, "parseResourceUpdateLog")
+	defer span.End()
 
 	var action *terraformAction
 	if record.Hook != nil {
@@ -171,6 +192,8 @@ func parseResourceUpdateLog(record *terraformLog, deploymentId string) (*massdri
 		eventType = "delete_"
 	case "replace":
 		eventType = "recreate_"
+	case "read":
+		return nil, nil // squelching these for now, I think these only happen on data lookups
 	default:
 		return nil, errors.New("unknown action: " + action.Action)
 	}
@@ -205,6 +228,13 @@ func parseResourceUpdateLog(record *terraformLog, deploymentId string) (*massdri
 		}
 		progress.ResourceKey = key.AsString()
 	}
+
+	span.AddEvent("resource-update", trace.WithAttributes(
+		attribute.String("resource-status", eventType),
+		attribute.String("resource-id", progress.ResourceId),
+		attribute.String("resource-name", progress.ResourceName),
+		attribute.String("resource-type", progress.ResourceType),
+	))
 
 	event.Payload = progress
 
