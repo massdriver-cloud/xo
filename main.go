@@ -1,10 +1,7 @@
 package main
 
 import (
-	// "fmt"
-	// "os"
 	"context"
-	"errors"
 	"log"
 	"os"
 	"xo/cmd"
@@ -47,13 +44,13 @@ func newTraceProvider(exp *otlptrace.Exporter) *sdktrace.TracerProvider {
 	)
 }
 
-func main() {
+func setupTracing() error {
 	ctx := context.Background()
 
 	// Configure a new exporter using environment variables for sending data to Honeycomb over gRPC.
 	exp, err := newExporter(ctx)
 	if err != nil {
-		log.Fatalf("failed to initialize exporter: %v", err)
+		return err
 	}
 
 	// Create a new tracer provider with a batch span processor and the otlp exporter.
@@ -73,8 +70,14 @@ func main() {
 		),
 	)
 
-	_, span := otel.Tracer("xo").Start(ctx, "RunDeploymentProvisionStart")
-	span.RecordError(errors.New("poop"))
-	defer span.End()
+	return nil
+}
+
+func main() {
+	err := setupTracing()
+	if err != nil {
+		log.Fatalf("failed to setup tracing: %v", err)
+	}
+
 	cmd.Execute()
 }
