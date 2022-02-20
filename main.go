@@ -44,13 +44,14 @@ func newTraceProvider(exp *otlptrace.Exporter) *sdktrace.TracerProvider {
 	)
 }
 
-func setupTracing() error {
+func main() {
+	// Setup Tracing
 	ctx := context.Background()
 
 	// Configure a new exporter using environment variables for sending data to Honeycomb over gRPC.
 	exp, err := newExporter(ctx)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	// Create a new tracer provider with a batch span processor and the otlp exporter.
@@ -70,14 +71,6 @@ func setupTracing() error {
 		),
 	)
 
-	return nil
-}
-
-func main() {
-	err := setupTracing()
-	if err != nil {
-		log.Fatalf("failed to setup tracing: %v", err)
-	}
-
+	// Run application
 	cmd.Execute()
 }
