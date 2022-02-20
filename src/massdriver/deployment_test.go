@@ -24,7 +24,7 @@ func TestReportDeploymentStatus(t *testing.T) {
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provision_started"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
-			name:   "Test Provision Comleted",
+			name:   "Test Provision Completed",
 			id:     "id",
 			status: "provision_complete",
 			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
