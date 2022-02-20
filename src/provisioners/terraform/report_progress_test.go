@@ -65,7 +65,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 			}
 			defer input.Close()
 
-			err = terraform.ReportProgressFromLogs(&testMassdriverClient, "id", input)
+			err = terraform.ReportProgressFromLogs(context.Background(), &testMassdriverClient, "id", input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}

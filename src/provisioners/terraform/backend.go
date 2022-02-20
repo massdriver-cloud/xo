@@ -1,9 +1,12 @@
 package terraform
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"os"
+
+	"go.opentelemetry.io/otel"
 )
 
 type TopLevelBlock struct {
@@ -28,7 +31,10 @@ type S3BackendBlock struct {
 	SharedCredentialsFile string `json:"shared_credentials_file,omitempty"`
 }
 
-func GenerateBackendS3File(output string, bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
+func GenerateBackendS3File(ctx context.Context, output string, bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
+	_, span := otel.Tracer("xo").Start(ctx, "GenerateBackendS3File")
+	defer span.End()
+
 	outputHandle, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err

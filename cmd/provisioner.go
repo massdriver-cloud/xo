@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"io"
 	"os"
 	"xo/src/massdriver"
@@ -9,6 +10,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var provisionerCmd = &cobra.Command{
@@ -100,8 +103,13 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 }
 
 func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "runProvisionerTerraformReport")
+	defer span.End()
+
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
@@ -116,6 +124,8 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 		inputFile, err := os.Open(file)
 		if err != nil {
 			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			return err
 		}
 		defer inputFile.Close()
@@ -124,12 +134,16 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while getting deployment from Massdriver")
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	err = tf.ReportProgressFromLogs(mdClient, deploymentId, input)
+	err = tf.ReportProgressFromLogs(ctx, mdClient, deploymentId, input)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while reporting progress")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
@@ -137,6 +151,9 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "runProvisionerTerraformBackendS3")
+	defer span.End()
+
 	output, _ := cmd.Flags().GetString("output")
 	bucket, _ := cmd.Flags().GetString("bucket")
 	key, _ := cmd.Flags().GetString("key")
@@ -155,5 +172,5 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 		Str("shared-credentials-file", sharedCredentialsFile).
 		Str("profile", profile).Msg("Generating state file")
 
-	return tf.GenerateBackendS3File(output, bucket, key, region, dynamoDbTable, sharedCredentialsFile, profile)
+	return tf.GenerateBackendS3File(ctx, output, bucket, key, region, dynamoDbTable, sharedCredentialsFile, profile)
 }
