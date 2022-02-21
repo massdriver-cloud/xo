@@ -84,7 +84,9 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 			continue
 		}
 
-		event, err := convertLogToMassdriverEvent(ctx, &record, deploymentId)
+		// normally we'd pass context instead of a span (probably an antipattern) but for readability
+		// its much easier to annotate the same span, so we pass that instead
+		event, err := convertLogToMassdriverEvent(span, &record, deploymentId)
 		if err != nil {
 			log.Error().Err(err).Msg("an error occurred while parsing status message")
 		}
@@ -102,10 +104,7 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 	return nil
 }
 
-func convertLogToMassdriverEvent(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
-	_, span := otel.Tracer("xo").Start(ctx, "convertLogToMassdriverEvent")
-	defer span.End()
-
+func convertLogToMassdriverEvent(span trace.Span, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 	if record.Terraform != "" {
 		terraformVersion = record.Terraform
 		return nil, nil
@@ -119,12 +118,12 @@ func convertLogToMassdriverEvent(ctx context.Context, record *terraformLog, depl
 		// skipping change_summary events for now
 		return nil, nil
 	case "diagnostic":
-		event, err = parseDiagnosticLog(ctx, record, deploymentId)
+		event, err = parseDiagnosticLog(span, record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
 	case "planned_change", "apply_start", "apply_complete", "apply_errored", "resource_drift":
-		event, err = parseResourceUpdateLog(ctx, record, deploymentId)
+		event, err = parseResourceUpdateLog(span, record, deploymentId)
 		if err != nil {
 			return nil, err
 		}
@@ -139,10 +138,7 @@ func convertLogToMassdriverEvent(ctx context.Context, record *terraformLog, depl
 	return event, nil
 }
 
-func parseDiagnosticLog(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
-	_, span := otel.Tracer("xo").Start(ctx, "parseDiagnosticLog")
-	defer span.End()
-
+func parseDiagnosticLog(span trace.Span, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 	if record.Diagnostic == nil {
 		return nil, errors.New("diagnostic struct missing")
 	}
@@ -160,6 +156,9 @@ func parseDiagnosticLog(ctx context.Context, record *terraformLog, deploymentId 
 		span.SetStatus(codes.Error, terraformError.Error())
 	case "warning":
 		diagnostic.Level = "warning"
+		span.AddEvent("warning", trace.WithAttributes(
+			attribute.String("message", diagnostic.Message),
+		))
 	default:
 		return nil, errors.New("unknown severity: " + record.Diagnostic.Severity)
 	}
@@ -169,10 +168,7 @@ func parseDiagnosticLog(ctx context.Context, record *terraformLog, deploymentId 
 	return event, nil
 }
 
-func parseResourceUpdateLog(ctx context.Context, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
-	_, span := otel.Tracer("xo").Start(ctx, "parseResourceUpdateLog")
-	defer span.End()
-
+func parseResourceUpdateLog(span trace.Span, record *terraformLog, deploymentId string) (*massdriver.Event, error) {
 	var action *terraformAction
 	if record.Hook != nil {
 		action = record.Hook
