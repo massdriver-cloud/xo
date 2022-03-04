@@ -46,30 +46,33 @@ func newTraceProvider(exp *otlptrace.Exporter) *sdktrace.TracerProvider {
 
 func main() {
 	// Setup Tracing
-	ctx := context.Background()
+	// TODO: this is a poor check but it works for now
+	if os.Getenv("HONEYCOMB_API_KEY") != "" && os.Getenv("HONEYCOMB_DATASET") != "" {
+		ctx := context.Background()
 
-	// Configure a new exporter using environment variables for sending data to Honeycomb over gRPC.
-	exp, err := newExporter(ctx)
-	if err != nil {
-		log.Fatal(err)
+		// Configure a new exporter using environment variables for sending data to Honeycomb over gRPC.
+		exp, err := newExporter(ctx)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// Create a new tracer provider with a batch span processor and the otlp exporter.
+		tp := newTraceProvider(exp)
+
+		// Handle this error in a sensible manner where possible
+		defer func() { _ = tp.Shutdown(ctx) }()
+
+		// Set the Tracer Provider and the W3C Trace Context propagator as globals
+		otel.SetTracerProvider(tp)
+
+		// Register the trace context and baggage propagators so data is propagated across services/processes.
+		otel.SetTextMapPropagator(
+			propagation.NewCompositeTextMapPropagator(
+				propagation.TraceContext{},
+				propagation.Baggage{},
+			),
+		)
 	}
-
-	// Create a new tracer provider with a batch span processor and the otlp exporter.
-	tp := newTraceProvider(exp)
-
-	// Handle this error in a sensible manner where possible
-	defer func() { _ = tp.Shutdown(ctx) }()
-
-	// Set the Tracer Provider and the W3C Trace Context propagator as globals
-	otel.SetTracerProvider(tp)
-
-	// Register the trace context and baggage propagators so data is propagated across services/processes.
-	otel.SetTextMapPropagator(
-		propagation.NewCompositeTextMapPropagator(
-			propagation.TraceContext{},
-			propagation.Baggage{},
-		),
-	)
 
 	// Run application
 	cmd.Execute()
