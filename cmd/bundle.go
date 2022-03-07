@@ -30,13 +30,25 @@ var bundleGenerateCmd = &cobra.Command{
 	RunE:  runBundleGenerate,
 }
 
+var bundlePullCmd = &cobra.Command{
+	Use:   "pull",
+	Short: "Pulls a bundle from S3",
+	RunE:  runBundlePull,
+}
+
 func init() {
 	rootCmd.AddCommand(bundleCmd)
+
 	bundleCmd.AddCommand(bundleBuildCmd)
 	bundleBuildCmd.Flags().StringP("output", "o", "", "Path to output directory (default is bundle.yaml directory)")
+
 	bundleCmd.AddCommand(bundleGenerateCmd)
 	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
+
+	bundleCmd.AddCommand(bundlePullCmd)
+	bundlePullCmd.Flags().StringP("bucket", "b", "xo-prod-bundlebucket-0000", "Bundle bucket")
+	bundlePullCmd.Flags().StringP("key", "k", "k8s-application-aws.zip", "Path to bundle directory")
 }
 
 func runBundleBuild(cmd *cobra.Command, args []string) error {
@@ -108,6 +120,24 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 	}
 
 	err = generator.Generate(*templateData)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func runBundlePull(cmd *cobra.Command, args []string) error {
+	bucket, err := cmd.Flags().GetString("bucket")
+	if err != nil {
+		return err
+	}
+	key, err := cmd.Flags().GetString("key")
+	if err != nil {
+		return err
+	}
+
+	err = bundles.Pull(bucket, key)
 	if err != nil {
 		return err
 	}
