@@ -8,6 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type S3API interface {
@@ -20,7 +22,10 @@ type S3API interface {
 		optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 }
 
-func Pull(bucket string, key string) error {
+func Pull(ctx context.Context, bundleBucket string, bundleType string, bundleName string, organizationId string) error {
+	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
+	defer span.End()
+
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		panic("configuration error, " + err.Error())
@@ -28,55 +33,42 @@ func Pull(bucket string, key string) error {
 
 	client := s3.NewFromConfig(cfg)
 
-	// bucket := "xo-prod-bundlebucket-0000"
-	// prefix := ""
+	var key string
 
-	// input := &s3.ListObjectsV2Input{
-	// 	Bucket: &bucket,
-	// 	Prefix: &prefix,
-	// }
+	if bundleType == "public" {
+		key = "public"
+	} else {
+		key = organizationId
+	}
 
-	// resp, err := client.ListObjectsV2(context.TODO(), input)
-
-	// if err != nil {
-	// 	fmt.Println("Got error retrieving list of objects:")
-	// 	return err
-	// }
-
-	// fmt.Println("Objects in " + bucket + ":")
-
-	// for _, item := range resp.Contents {
-	// 	fmt.Println("Name:          ", *item.Key)
-	// 	fmt.Println("Last modified: ", *item.LastModified)
-	// 	fmt.Println("Size:          ", item.Size)
-	// 	fmt.Println("Storage class: ", item.StorageClass)
-	// 	fmt.Println("")
+	key += "/" + bundleName + ".zip"
 
 	getInput := &s3.GetObjectInput{
-		Bucket: &bucket,
+		Bucket: &bundleBucket,
 		Key:    &key,
 	}
 
 	obj, err := client.GetObject(context.TODO(), getInput)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
+
 	outFile, err := os.Create(filepath.Base(key))
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	// handle err
+
 	defer outFile.Close()
 	_, err = io.Copy(outFile, obj.Body)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	// handle err
-
-	// }
-
-	// fmt.Println("Found", len(resp.Contents), "items in bucket", bucket)
-	// fmt.Println("")
 
 	return nil
 }

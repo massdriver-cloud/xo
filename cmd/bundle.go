@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"xo/src/bundles"
 	"xo/src/generator"
@@ -9,6 +12,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 var bundleCmd = &cobra.Command{
@@ -47,8 +52,11 @@ func init() {
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
 
 	bundleCmd.AddCommand(bundlePullCmd)
-	bundlePullCmd.Flags().StringP("bucket", "b", "xo-prod-bundlebucket-0000", "Bundle bucket")
-	bundlePullCmd.Flags().StringP("key", "k", "k8s-application-aws.zip", "Path to bundle directory")
+	// bundlePullCmd.Flags().StringP("bucket", "b", "", "Bundle bucket")
+	// bundlePullCmd.Flags().StringP("type", "t", "public", "Bundle type (public or private)")
+	// bundlePullCmd.Flags().StringP("organization", "o", "", "Organization ID (required if private)")
+	// bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
+	// bundlePullCmd.MarkFlagRequired("name")
 }
 
 func runBundleBuild(cmd *cobra.Command, args []string) error {
@@ -128,17 +136,46 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 }
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
-	bucket, err := cmd.Flags().GetString("bucket")
-	if err != nil {
-		return err
-	}
-	key, err := cmd.Flags().GetString("key")
-	if err != nil {
+	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentStatus")
+	defer span.End()
+
+	bundleBucket := os.Getenv("MASSDRIVER_BUNDLE_BUCKET")
+	if bundleBucket == "" {
+		err := errors.New("MASSDRIVER_BUNDLE_BUCKET environment variable must be set")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
-	err = bundles.Pull(bucket, key)
+	bundleType := os.Getenv("MASSDRIVER_BUNDLE_TYPE")
+	if bundleType == "" {
+		err := errors.New("MASSDRIVER_BUNDLE_TYPE environment variable must be set")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	bundleName := os.Getenv("MASSDRIVER_BUNDLE_NAME")
+	if bundleName == "" {
+		err := errors.New("MASSDRIVER_BUNDLE_NAME environment variable must be set")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	organizationId := os.Getenv("DEPLOYMENT_ORGANIZATION_ID")
+	if organizationId == "" {
+		err := errors.New("DEPLOYMENT_ORGANIZATION_ID environment variable must be set")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
+	err := bundles.Pull(ctx, bundleBucket, bundleType, bundleName, organizationId)
 	if err != nil {
+		log.Error().Err(err).Msg("an error occurred while pulling bundle: " + bundleName)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
