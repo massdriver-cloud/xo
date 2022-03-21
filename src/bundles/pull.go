@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -42,6 +43,8 @@ func Pull(ctx context.Context, bundleBucket string, bundleAccess string, bundleN
 	}
 
 	key += "/" + bundleName + ".zip"
+
+	log.Info().Msg("attempting to pull s3://" + bundleBucket + "/" + key)
 
 	getInput := &s3.GetObjectInput{
 		Bucket: &bundleBucket,

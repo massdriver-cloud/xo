@@ -171,6 +171,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	log.Info().Msg("pulling bundle")
 	err := bundles.Pull(ctx, bundleBucket, bundleAccess, bundleName, organizationId)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while pulling bundle: " + bundleName)
@@ -178,6 +179,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
+	log.Info().Msg("bundle pulled")
 
 	return nil
 }
