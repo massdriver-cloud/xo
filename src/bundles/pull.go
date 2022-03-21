@@ -22,7 +22,7 @@ type S3API interface {
 		optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 }
 
-func Pull(ctx context.Context, bundleBucket string, bundleType string, bundleName string, organizationId string) error {
+func Pull(ctx context.Context, bundleBucket string, bundleAccess string, bundleName string, organizationId string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
 	defer span.End()
 
@@ -35,7 +35,7 @@ func Pull(ctx context.Context, bundleBucket string, bundleType string, bundleNam
 
 	var key string
 
-	if bundleType == "public" {
+	if bundleAccess == "public" {
 		key = "public"
 	} else {
 		key = organizationId
