@@ -38,7 +38,6 @@ func newTraceProvider(exp *otlptrace.Exporter) *sdktrace.TracerProvider {
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String("xo"),
 			attribute.String("MASSDRIVER_DEPLOYMENT_ID", os.Getenv("MASSDRIVER_DEPLOYMENT_ID")),
-			attribute.String("MASSDRIVER_TOKEN", os.Getenv("MASSDRIVER_TOKEN")),
 			attribute.String("MASSDRIVER_ORGANIZATION_ID", os.Getenv("MASSDRIVER_ORGANIZATION_ID")),
 			attribute.String("MASSDRIVER_PACKAGE_ID", os.Getenv("MASSDRIVER_PACKAGE_ID")),
 			attribute.String("MASSDRIVER_BUNDLE_ACCESS", os.Getenv("MASSDRIVER_BUNDLE_ACCESS")),
