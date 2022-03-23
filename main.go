@@ -7,6 +7,7 @@ import (
 	"xo/cmd"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
@@ -36,6 +37,11 @@ func newTraceProvider(exp *otlptrace.Exporter) *sdktrace.TracerProvider {
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String("xo"),
+			attribute.String("massdriver.deployment_id", os.Getenv("MASSDRIVER_DEPLOYMENT_ID")),
+			attribute.String("massdriver.organization_id", os.Getenv("MASSDRIVER_ORGANIZATION_ID")),
+			attribute.String("massdriver.package_id", os.Getenv("MASSDRIVER_PACKAGE_ID")),
+			attribute.String("massdriver.bundle_access", os.Getenv("MASSDRIVER_BUNDLE_ACCESS")),
+			attribute.String("massdriver.bundle_name", os.Getenv("MASSDRIVER_BUNDLE_NAME")),
 		)
 
 	return sdktrace.NewTracerProvider(
