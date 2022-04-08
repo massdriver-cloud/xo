@@ -89,7 +89,7 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 
 	switch bundle.Provisioner {
 	case "terraform":
-		err = terraform.GenerateFiles(output)
+		err = terraform.GenerateFiles(output, bundle)
 		if err != nil {
 			log.Error().Err(err).Str("bundle", path).Str("provisioner", bundle.Provisioner).Msg("an error occurred while generating provisioner files")
 			return err

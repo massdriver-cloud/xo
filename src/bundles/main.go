@@ -22,16 +22,17 @@ const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type Bundle struct {
-	Uuid        string                 `json:"uuid"`
-	Schema      string                 `json:"schema"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	Provisioner string                 `json:"provisioner"`
-	Type        string                 `json:"type"`
-	Artifacts   map[string]interface{} `json:"artifacts"`
-	Params      map[string]interface{} `json:"params"`
-	Connections map[string]interface{} `json:"connections"`
-	Ui          map[string]interface{} `json:"ui"`
+	Uuid        string                 `json:"uuid" yaml:"uuid"`
+	Schema      string                 `json:"schema" yaml:"schema"`
+	Title       string                 `json:"title" yaml:"title"`
+	Description string                 `json:"description" yaml:"description"`
+	Provisioner string                 `json:"provisioner" yaml:"provisioner"`
+	Type        string                 `json:"type" yaml:"type"`
+	Steps       []string               `json:"steps" yaml:"steps"`
+	Artifacts   map[string]interface{} `json:"artifacts" yaml:"artifacts"`
+	Params      map[string]interface{} `json:"params" yaml:"params"`
+	Connections map[string]interface{} `json:"connections" yaml:"connections"`
+	Ui          map[string]interface{} `json:"ui" yaml:"ui"`
 }
 
 // ParseBundle parses a bundle from a YAML file
