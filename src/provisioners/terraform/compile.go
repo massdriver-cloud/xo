@@ -9,7 +9,7 @@ import (
 	"xo/src/jsonschema"
 )
 
-func GenerateFiles(baseDir string) error {
+func GenerateFiles(baseDir string, bundle bundles.Bundle) error {
 	massdriverVariables := map[string]interface{}{
 		"variable": map[string]interface{}{
 			"md_metadata": map[string]string{
@@ -18,40 +18,47 @@ func GenerateFiles(baseDir string) error {
 		},
 	}
 
-	err := os.MkdirAll(path.Join(baseDir, "src"), 0755)
-	if err != nil {
-		return err
+	for i := 0; i < len(bundle.Steps); i++ {
+		dir := bundle.Steps[i]
+
+		err := os.MkdirAll(path.Join(baseDir, dir), 0755)
+		if err != nil {
+			return err
+		}
+
+		paramsVariablesFile, err := os.Create(path.Join(baseDir, dir, "_params_variables.tf.json"))
+		if err != nil {
+			return err
+		}
+		err = Compile(path.Join(baseDir, bundles.ParamsSchemaFilename), paramsVariablesFile)
+		if err != nil {
+			return err
+		}
+
+		connectionsVariablesFile, err := os.Create(path.Join(baseDir, dir, "_connections_variables.tf.json"))
+		if err != nil {
+			return err
+		}
+		err = Compile(path.Join(baseDir, bundles.ConnectionsSchemaFilename), connectionsVariablesFile)
+		if err != nil {
+			return err
+		}
+
+		massdriverVariablesFile, err := os.Create(path.Join(baseDir, dir, "_md_variables.tf.json"))
+		if err != nil {
+			return err
+		}
+		bytes, err := json.MarshalIndent(massdriverVariables, "", "  ")
+		if err != nil {
+			return err
+		}
+		_, err = massdriverVariablesFile.Write(bytes)
+		if err != nil {
+			return err
+		}
 	}
 
-	paramsVariablesFile, err := os.Create(path.Join(baseDir, "src", "_params_variables.tf.json"))
-	if err != nil {
-		return err
-	}
-	err = Compile(path.Join(baseDir, bundles.ParamsSchemaFilename), paramsVariablesFile)
-	if err != nil {
-		return err
-	}
-
-	connectionsVariablesFile, err := os.Create(path.Join(baseDir, "src", "_connections_variables.tf.json"))
-	if err != nil {
-		return err
-	}
-	err = Compile(path.Join(baseDir, bundles.ConnectionsSchemaFilename), connectionsVariablesFile)
-	if err != nil {
-		return err
-	}
-
-	massdriverVariablesFile, err := os.Create(path.Join(baseDir, "src", "_md_variables.tf.json"))
-	if err != nil {
-		return err
-	}
-	bytes, err := json.MarshalIndent(massdriverVariables, "", "  ")
-	if err != nil {
-		return err
-	}
-	_, err = massdriverVariablesFile.Write(bytes)
-
-	return err
+	return nil
 }
 
 // Compile a JSON Schema to Terraform Variable Definition JSON
