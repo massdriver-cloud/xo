@@ -18,8 +18,7 @@ func GenerateFiles(baseDir string, bundle bundles.Bundle) error {
 		},
 	}
 
-	for i := 0; i < len(bundle.Steps); i++ {
-		dir := bundle.Steps[i]
+	for _, dir := range bundle.Steps {
 
 		err := os.MkdirAll(path.Join(baseDir, dir), 0755)
 		if err != nil {
