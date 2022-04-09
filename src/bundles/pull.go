@@ -42,7 +42,7 @@ func Pull(ctx context.Context, bundleBucket string, bundleAccess string, bundleN
 		key = organizationId
 	}
 
-	key += "/" + bundleName + ".zip"
+	key += "/" + bundleName + ".tar.gz"
 
 	log.Info().Msg("attempting to pull s3://" + bundleBucket + "/" + key)
 
