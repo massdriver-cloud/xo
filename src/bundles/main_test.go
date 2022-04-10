@@ -55,7 +55,6 @@ func TestParseBundle(t *testing.T) {
 		Type:        "aws-vpc",
 		Title:       "AWS VPC",
 		Description: "Something",
-		Provisioner: "terraform",
 		Artifacts:   map[string]interface{}{},
 		Params: map[string]interface{}{
 			"properties": map[string]interface{}{

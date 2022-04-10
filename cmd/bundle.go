@@ -61,45 +61,49 @@ func init() {
 
 func runBundleBuild(cmd *cobra.Command, args []string) error {
 	var err error
-	path := args[0]
+	bundlePath := args[0]
 
 	// default the output to the path of the bundle.yaml file
 	output, err := cmd.Flags().GetString("output")
 	if err != nil {
-		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
+		log.Error().Err(err).Str("bundle", bundlePath).Msg("an error occurred while building bundle")
 		return err
 	}
 	if output == "" {
-		output = filepath.Dir(path)
+		output = filepath.Dir(bundlePath)
 	}
 
-	log.Info().Str("bundle", path).Msg("building bundle")
+	log.Info().Str("bundle", bundlePath).Msg("building bundle")
 
-	bundle, err := bundles.ParseBundle(path)
+	bundle, err := bundles.ParseBundle(bundlePath)
 	if err != nil {
-		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while building bundle")
+		log.Error().Err(err).Str("bundle", bundlePath).Msg("an error occurred while building bundle")
 		return err
 	}
 
 	err = bundle.GenerateSchemas(output)
 	if err != nil {
-		log.Error().Err(err).Str("bundle", path).Msg("an error occurred while generating bundle schema files")
+		log.Error().Err(err).Str("bundle", bundlePath).Msg("an error occurred while generating bundle schema files")
 		return err
 	}
 
-	switch bundle.Provisioner {
-	case "terraform":
-		err = terraform.GenerateFiles(output, bundle)
-		if err != nil {
-			log.Error().Err(err).Str("bundle", path).Str("provisioner", bundle.Provisioner).Msg("an error occurred while generating provisioner files")
-			return err
+	for _, step := range bundle.Steps {
+		switch step.Provisioner {
+		case "terraform":
+			err = terraform.GenerateFiles(output, step.Path)
+			if err != nil {
+				log.Error().Err(err).Str("bundle", bundlePath).Str("provisioner", step.Provisioner).Msg("an error occurred while generating provisioner files")
+				return err
+			}
+		case "exec":
+			// No-op (Golang doesn't not fallthrough unless explicitly stated)
+		default:
+			log.Error().Str("bundle", bundlePath).Msg("unknown provisioner: " + step.Provisioner)
+			return fmt.Errorf("unknown provisioner: %v", step.Provisioner)
 		}
-	default:
-		log.Error().Str("bundle", path).Msg("unknown provisioner: " + bundle.Provisioner)
-		return fmt.Errorf("unknown provisioner: %v", bundle.Provisioner)
 	}
 
-	log.Info().Str("bundle", path).Str("output", output).Msg("bundle built")
+	log.Info().Str("bundle", bundlePath).Str("output", output).Msg("bundle built")
 
 	return err
 }

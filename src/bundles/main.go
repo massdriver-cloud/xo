@@ -21,14 +21,18 @@ const UiSchemaFilename = "schema-ui.json"
 const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema-%s.json"
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
+type BundleStep struct {
+	Path        string `json:"uuid" yaml:"uuid"`
+	Provisioner string `json:"provisioner" yaml:"provisioner"`
+}
+
 type Bundle struct {
 	Uuid        string                 `json:"uuid" yaml:"uuid"`
 	Schema      string                 `json:"schema" yaml:"schema"`
 	Title       string                 `json:"title" yaml:"title"`
 	Description string                 `json:"description" yaml:"description"`
-	Provisioner string                 `json:"provisioner" yaml:"provisioner"`
 	Type        string                 `json:"type" yaml:"type"`
-	Steps       []string               `json:"steps" yaml:"steps"`
+	Steps       []BundleStep           `json:"steps" yaml:"steps"`
 	Artifacts   map[string]interface{} `json:"artifacts" yaml:"artifacts"`
 	Params      map[string]interface{} `json:"params" yaml:"params"`
 	Connections map[string]interface{} `json:"connections" yaml:"connections"`

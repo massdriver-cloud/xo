@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"testing"
-	"xo/src/bundles"
 )
 
 // Helper function for asserting json serde matches
@@ -24,16 +23,14 @@ func TestGenerateFiles(t *testing.T) {
 	type testData struct {
 		name       string
 		bundlePath string
-		bundle     bundles.Bundle
+		srcDir     string
 		expected   map[string]string
 	}
 	tests := []testData{
 		{
 			name:       "standard",
 			bundlePath: "testdata/testbundle/",
-			bundle: bundles.Bundle{
-				Steps: []string{"src"},
-			},
+			srcDir:     "src",
 			expected: map[string]string{
 				"_connections_variables.tf.json": `{
   "variable": {
@@ -66,21 +63,19 @@ func TestGenerateFiles(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := GenerateFiles(tc.bundlePath, tc.bundle)
+			err := GenerateFiles(tc.bundlePath, tc.srcDir)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			for _, dir := range tc.bundle.Steps {
-				for file, want := range tc.expected {
-					got, err := os.ReadFile(path.Join(tc.bundlePath, dir, file))
-					if err != nil {
-						t.Fatalf("%d, unexpected error", err)
-					}
+			for file, want := range tc.expected {
+				got, err := os.ReadFile(path.Join(tc.bundlePath, tc.srcDir, file))
+				if err != nil {
+					t.Fatalf("%d, unexpected error", err)
+				}
 
-					if string(got) != want {
-						t.Errorf("got %s want %s", string(got), want)
-					}
+				if string(got) != want {
+					t.Errorf("got %s want %s", string(got), want)
 				}
 			}
 		})

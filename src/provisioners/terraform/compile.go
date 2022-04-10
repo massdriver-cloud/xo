@@ -9,7 +9,7 @@ import (
 	"xo/src/jsonschema"
 )
 
-func GenerateFiles(baseDir string, bundle bundles.Bundle) error {
+func GenerateFiles(bundlePath string, srcDir string) error {
 	massdriverVariables := map[string]interface{}{
 		"variable": map[string]interface{}{
 			"md_metadata": map[string]string{
@@ -18,43 +18,35 @@ func GenerateFiles(baseDir string, bundle bundles.Bundle) error {
 		},
 	}
 
-	for _, dir := range bundle.Steps {
+	paramsVariablesFile, err := os.Create(path.Join(bundlePath, srcDir, "_params_variables.tf.json"))
+	if err != nil {
+		return err
+	}
+	err = Compile(path.Join(bundlePath, bundles.ParamsSchemaFilename), paramsVariablesFile)
+	if err != nil {
+		return err
+	}
 
-		err := os.MkdirAll(path.Join(baseDir, dir), 0755)
-		if err != nil {
-			return err
-		}
+	connectionsVariablesFile, err := os.Create(path.Join(bundlePath, srcDir, "_connections_variables.tf.json"))
+	if err != nil {
+		return err
+	}
+	err = Compile(path.Join(bundlePath, bundles.ConnectionsSchemaFilename), connectionsVariablesFile)
+	if err != nil {
+		return err
+	}
 
-		paramsVariablesFile, err := os.Create(path.Join(baseDir, dir, "_params_variables.tf.json"))
-		if err != nil {
-			return err
-		}
-		err = Compile(path.Join(baseDir, bundles.ParamsSchemaFilename), paramsVariablesFile)
-		if err != nil {
-			return err
-		}
-
-		connectionsVariablesFile, err := os.Create(path.Join(baseDir, dir, "_connections_variables.tf.json"))
-		if err != nil {
-			return err
-		}
-		err = Compile(path.Join(baseDir, bundles.ConnectionsSchemaFilename), connectionsVariablesFile)
-		if err != nil {
-			return err
-		}
-
-		massdriverVariablesFile, err := os.Create(path.Join(baseDir, dir, "_md_variables.tf.json"))
-		if err != nil {
-			return err
-		}
-		bytes, err := json.MarshalIndent(massdriverVariables, "", "  ")
-		if err != nil {
-			return err
-		}
-		_, err = massdriverVariablesFile.Write(bytes)
-		if err != nil {
-			return err
-		}
+	massdriverVariablesFile, err := os.Create(path.Join(bundlePath, srcDir, "_md_variables.tf.json"))
+	if err != nil {
+		return err
+	}
+	bytes, err := json.MarshalIndent(massdriverVariables, "", "  ")
+	if err != nil {
+		return err
+	}
+	_, err = massdriverVariablesFile.Write(bytes)
+	if err != nil {
+		return err
 	}
 
 	return nil
