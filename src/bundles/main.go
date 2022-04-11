@@ -22,7 +22,7 @@ const idUrlPattern = "https://schemas.massdriver.cloud/schemas/bundles/%s/schema
 const jsonSchemaUrlPattern = "http://json-schema.org/%s/schema"
 
 type BundleStep struct {
-	Path        string `json:"uuid" yaml:"uuid"`
+	Path        string `json:"path" yaml:"path"`
 	Provisioner string `json:"provisioner" yaml:"provisioner"`
 }
 
