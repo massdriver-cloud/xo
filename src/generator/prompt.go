@@ -15,7 +15,6 @@ var prompts = []func(t *TemplateData) error{
 	getName,
 	getType,
 	getAccessLevel,
-	getProvisioner,
 	getDescription,
 }
 
@@ -86,21 +85,6 @@ func getAccessLevel(t *TemplateData) error {
 	}
 
 	t.Access = result
-	return nil
-}
-
-func getProvisioner(t *TemplateData) error {
-	prompt := promptui.Select{
-		Label: "Provisioner",
-		Items: []string{"terraform"},
-	}
-	_, result, err := prompt.Run()
-
-	if err != nil {
-		return err
-	}
-
-	t.Provisioner = result
 	return nil
 }
 

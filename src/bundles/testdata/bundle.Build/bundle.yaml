@@ -3,7 +3,6 @@ type: aws-vpc
 schema: draft-07
 title: "AWS VPC"
 description: Something
-provisioner: terraform
 access: public
 params:
   required: ["name"]

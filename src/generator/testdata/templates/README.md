@@ -1,4 +1,4 @@
-# {{ .Name }} ({{ .Provisioner }})
+# {{ .Name }}
 
 {{ .Description }}
 

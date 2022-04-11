@@ -13,7 +13,6 @@ import (
 type TemplateData struct {
 	Type        string
 	Description string
-	Provisioner string
 	Access      string
 	Name        string
 	TemplateDir string

@@ -20,7 +20,6 @@ func TestGenerate(t *testing.T) {
 		Description: "a vpc",
 		TemplateDir: "./testdata/templates",
 		BundleDir:   "./testdata/bundle",
-		Provisioner: "terraform",
 	}
 
 	assertFileCreatedAndContainsText := func(t testing.TB, filename, expectedContent string) {
