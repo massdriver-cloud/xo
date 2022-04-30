@@ -50,11 +50,10 @@ func TestGenerateSchema(t *testing.T) {
 func TestParseBundle(t *testing.T) {
 	var got, _ = bundles.ParseBundle("./testdata/bundle.yaml")
 	var want = bundles.Bundle{
-		Uuid:        "FC2C7101-86A6-437B-B8C2-A2391FE8C847",
 		Schema:      "draft-07",
-		Type:        "aws-vpc",
-		Title:       "AWS VPC",
+		Name:        "aws-vpc",
 		Description: "Something",
+		Type:        "bundle",
 		Artifacts:   map[string]interface{}{},
 		Params: map[string]interface{}{
 			"properties": map[string]interface{}{
