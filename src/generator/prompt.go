@@ -52,7 +52,7 @@ func getName(t *TemplateData) error {
 		return err
 	}
 
-	t.Type = result
+	t.Name = result
 	return nil
 }
 

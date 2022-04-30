@@ -37,9 +37,12 @@ func TestGenerate(t *testing.T) {
 
 	os.Mkdir(bundleData.BundleDir, 0777)
 
-	generator.Generate(&bundleData)
+	err := generator.Generate(&bundleData)
+	if err != nil {
+		t.Fatalf("%d, unexpected error", err)
+	}
 
-	templatePath := fmt.Sprintf("%s/%s", bundleData.BundleDir, bundleData.Type)
+	templatePath := fmt.Sprintf("%s/%s", bundleData.BundleDir, bundleData.Name)
 
 	bundleYamlPath := fmt.Sprintf("%s/bundle.yaml", templatePath)
 	expectedContent := "name: aws-vpc"

@@ -18,7 +18,7 @@ type TemplateData struct {
 }
 
 func Generate(data *TemplateData) error {
-	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Type)
+	bundleDir := fmt.Sprintf("%s/%s", data.BundleDir, data.Name)
 	currentDirectory := ""
 
 	err := filepath.WalkDir(data.TemplateDir, func(path string, info fs.DirEntry, err error) error {
