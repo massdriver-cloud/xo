@@ -52,11 +52,6 @@ func init() {
 	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
 
 	bundleCmd.AddCommand(bundlePullCmd)
-	// bundlePullCmd.Flags().StringP("bucket", "b", "", "Bundle bucket")
-	// bundlePullCmd.Flags().StringP("type", "t", "public", "Bundle type (public or private)")
-	// bundlePullCmd.Flags().StringP("organization", "o", "", "Organization ID (required if private)")
-	// bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
-	// bundlePullCmd.MarkFlagRequired("name")
 }
 
 func runBundleBuild(cmd *cobra.Command, args []string) error {
@@ -152,16 +147,8 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bundleAccess := os.Getenv("MASSDRIVER_BUNDLE_ACCESS")
-	if bundleAccess == "" {
-		err := errors.New("MASSDRIVER_BUNDLE_ACCESS environment variable must be set")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	bundleName := os.Getenv("MASSDRIVER_BUNDLE_NAME")
-	if bundleName == "" {
+	bundleId := os.Getenv("MASSDRIVER_BUNDLE_ID")
+	if bundleId == "" {
 		err := errors.New("MASSDRIVER_BUNDLE_NAME environment variable must be set")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
@@ -177,9 +164,9 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msg("pulling bundle")
-	err := bundles.Pull(ctx, bundleBucket, bundleAccess, bundleName, organizationId)
+	err := bundles.Pull(ctx, bundleBucket, organizationId, bundleId)
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while pulling bundle: " + bundleName)
+		log.Error().Err(err).Msg("an error occurred while pulling bundle")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err

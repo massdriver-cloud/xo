@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -23,7 +24,7 @@ type S3API interface {
 		optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 }
 
-func Pull(ctx context.Context, bundleBucket string, bundleAccess string, bundleName string, organizationId string) error {
+func Pull(ctx context.Context, bundleBucket string, organizationId string, bundleId string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
 	defer span.End()
 
@@ -34,15 +35,7 @@ func Pull(ctx context.Context, bundleBucket string, bundleAccess string, bundleN
 
 	client := s3.NewFromConfig(cfg)
 
-	var key string
-
-	if bundleAccess == "public" {
-		key = "public"
-	} else {
-		key = organizationId
-	}
-
-	key += "/" + bundleName + ".tar.gz"
+	key := path.Join(organizationId, bundleId, "bundle.tar.gz")
 
 	log.Info().Msg("attempting to pull s3://" + bundleBucket + "/" + key)
 
