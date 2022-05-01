@@ -8,6 +8,9 @@ import (
 )
 
 func main() {
+	exitCode := 0
+	defer func() { os.Exit(exitCode) }()
+
 	// Setup Tracing
 	if os.Getenv("LS_ACCESS_TOKEN") != "" {
 		otelLauncher := launcher.ConfigureOpentelemetry(
@@ -25,5 +28,8 @@ func main() {
 	}
 
 	// Run application
-	cmd.Execute()
+	if err := cmd.Execute(); err != nil {
+		exitCode = 1
+		return
+	}
 }
