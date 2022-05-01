@@ -35,7 +35,7 @@ func Pull(ctx context.Context, bundleBucket string, organizationId string, bundl
 
 	client := s3.NewFromConfig(cfg)
 
-	key := path.Join(organizationId, bundleId, "bundle.tar.gz")
+	key := path.Join("bundles", organizationId, bundleId, "bundle.tar.gz")
 
 	log.Info().Msg("attempting to pull s3://" + bundleBucket + "/" + key)
 
