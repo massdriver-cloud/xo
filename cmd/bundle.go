@@ -149,22 +149,22 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 
 	bundleId := os.Getenv("MASSDRIVER_BUNDLE_ID")
 	if bundleId == "" {
-		err := errors.New("MASSDRIVER_BUNDLE_NAME environment variable must be set")
+		err := errors.New("MASSDRIVER_BUNDLE_ID environment variable must be set")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
-	organizationId := os.Getenv("MASSDRIVER_ORGANIZATION_ID")
-	if organizationId == "" {
-		err := errors.New("MASSDRIVER_ORGANIZATION_ID environment variable must be set")
+	bundleOwnerOrganizationId := os.Getenv("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID")
+	if bundleOwnerOrganizationId == "" {
+		err := errors.New("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID environment variable must be set")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
 	log.Info().Msg("pulling bundle")
-	err := bundles.Pull(ctx, bundleBucket, organizationId, bundleId)
+	err := bundles.Pull(ctx, bundleBucket, bundleOwnerOrganizationId, bundleId)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while pulling bundle")
 		span.RecordError(err)
