@@ -24,7 +24,7 @@ type S3API interface {
 		optFns ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 }
 
-func Pull(ctx context.Context, bundleBucket string, organizationId string, bundleId string) error {
+func Pull(ctx context.Context, bundleBucket string, bundleOwnerOrganizationId string, bundleId string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
 	defer span.End()
 
@@ -35,7 +35,7 @@ func Pull(ctx context.Context, bundleBucket string, organizationId string, bundl
 
 	client := s3.NewFromConfig(cfg)
 
-	key := path.Join("bundles", organizationId, bundleId, "bundle.tar.gz")
+	key := path.Join("bundles", bundleOwnerOrganizationId, bundleId, "bundle.tar.gz")
 
 	log.Info().Msg("attempting to pull s3://" + bundleBucket + "/" + key)
 
