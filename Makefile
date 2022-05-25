@@ -8,7 +8,7 @@ test:
 
 .PHONY: docker.build
 docker.build:
-	DOCKER_BUILDKIT=1 docker build -t 005022811284.dkr.ecr.us-west-2.amazonaws.com/massdriver-cloud/xo .
+	DOCKER_BUILDKIT=1 docker build --platform=linux/x86_64 -t 005022811284.dkr.ecr.us-west-2.amazonaws.com/massdriver-cloud/xo .
 
 hack.build-to-massdriver:
 	GOOS=linux GOARCH=amd64 go build && cp ./xo ../massdriver/xo-amd64
