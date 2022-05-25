@@ -1,5 +1,7 @@
 ########################################## xo
 xo
+######################################### locally built executables dir
+bin/
 
 ########################################## Golang
 # Binaries for programs and plugins

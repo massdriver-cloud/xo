@@ -1,3 +1,5 @@
+INSTALL_PATH ?= /usr/local/bin
+
 .PHONY: test
 test:
 	go test ./cmd
@@ -13,5 +15,21 @@ docker.build:
 hack.build-to-massdriver:
 	GOOS=linux GOARCH=amd64 go build && cp ./xo ../massdriver/xo-amd64
 
-local.build-to-m1:
-	GOOS=darwin GOARCH=arm64 go build
+bin:
+	mkdir bin
+
+.PHONY: build
+build: bin
+	GOOS=darwin GOARCH=arm64 go build -o bin/xo-darwin-arm64
+	GOOS=linux GOARCH=amd64 go build -o bin/xo-linux-amd64
+
+
+.PHONY: install.macos
+install.macos: local.build-to-m1
+	rm -f ${INSTALL_PATH}/xo
+	cp bin/xo-darwin-arm64 ${INSTALL_PATH}/xo
+
+.PHONY: install.linux
+install.linux: build
+	cp -f bin/xo-linux-amd64 ${INSTALL_PATH}/xo
+
