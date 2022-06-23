@@ -22,6 +22,7 @@ func main() {
 				"massdriver.bundle_owner_org_id": os.Getenv("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID"),
 				"massdriver.bundle_org_id":       os.Getenv("MASSDRIVER_ORGANIZATION_ID"),
 				"massdriver.package_id":          os.Getenv("MASSDRIVER_PACKAGE_ID"),
+				"massdriver.package_name":        os.Getenv("MASSDRIVER_PACKAGE_NAME"),
 				"massdriver.bundle_access":       os.Getenv("MASSDRIVER_BUNDLE_ACCESS"),
 				"massdriver.bundle_name":         os.Getenv("MASSDRIVER_BUNDLE_NAME"),
 			}),
