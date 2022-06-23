@@ -38,6 +38,7 @@ type terraformLog struct {
 type terraformDiagnostic struct {
 	Severity string `json:"severity"`
 	Summary  string `json:"summary"`
+	Detail   string `json:"detail"`
 	Address  string `json:"address"`
 }
 
@@ -147,11 +148,12 @@ func parseDiagnosticLog(span trace.Span, record *terraformLog, deploymentId stri
 	diagnostic := new(massdriver.EventPayloadDiagnostic)
 	diagnostic.DeploymentId = deploymentId
 	diagnostic.Message = record.Diagnostic.Summary
+	diagnostic.Details = record.Diagnostic.Detail
 
 	switch record.Diagnostic.Severity {
 	case "error":
 		diagnostic.Level = "error"
-		terraformError := errors.New(diagnostic.Message)
+		terraformError := errors.New(diagnostic.Message + " Details: " + diagnostic.Details)
 		span.RecordError(terraformError)
 		span.SetStatus(codes.Error, terraformError.Error())
 	case "warning":
