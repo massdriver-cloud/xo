@@ -47,6 +47,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_failed"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_failed"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"drift_detected"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"provisioner_error"},"payload":{"deployment_id":"id","error_message":"Argument is deprecated","error_details":"This field is being removed and instead the type is fetched from the massdriver.yaml file","error_level":"warning"}}`,
 			},
 		},
 	}
