@@ -32,7 +32,6 @@ func TestGenerateAuthFiles(t *testing.T) {
 				"path/test-yaml.yaml": `test: yaml
 `,
 				"path/test-ini.ini": `lol=rofl
-
 `,
 				"path/test-template.json": `{"new1":"one","new2":"two"}`,
 			},
@@ -45,11 +44,9 @@ func TestGenerateAuthFiles(t *testing.T) {
 				"path/aws-creds.ini": `[default]
 aws_secret_access_key=lolroflnopasswordherefbi
 aws_access_key_id=FAKEFAKEFAKEFAKE
-
 `,
 				"path/aws-role.ini": `[default]
 role_arn=arn:aws:iam::123456789012:role/testrole
-
 `,
 				"path/k8s-authentication.yaml": `apiVersion: v1
 clusters:
