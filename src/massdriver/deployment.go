@@ -3,6 +3,7 @@ package massdriver
 import (
 	"context"
 	"errors"
+	"xo/src/telemetry"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -10,6 +11,7 @@ import (
 
 func (c MassdriverClient) ReportDeploymentStatus(ctx context.Context, deploymentId string, status string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ReportDeploymentStatus")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	var event *Event

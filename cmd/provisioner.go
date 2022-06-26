@@ -104,6 +104,7 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerTerraformReport")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	file, err := cmd.Flags().GetString("file")
@@ -152,6 +153,7 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerTerraformBackendS3")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	output, _ := cmd.Flags().GetString("output")

@@ -137,6 +137,7 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runBundlePull")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	bundleBucket := os.Getenv("MASSDRIVER_BUNDLE_BUCKET")

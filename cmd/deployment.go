@@ -109,6 +109,7 @@ func init() {
 
 func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "RunDeploymentStatus")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")

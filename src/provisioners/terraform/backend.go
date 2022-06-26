@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"xo/src/telemetry"
 
 	"go.opentelemetry.io/otel"
 )
@@ -33,6 +34,7 @@ type S3BackendBlock struct {
 
 func GenerateBackendS3File(ctx context.Context, output string, bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "GenerateBackendS3File")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	outputHandle, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
