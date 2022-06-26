@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	"context"
 	"io"
 	"os"
 	"xo/src/massdriver"
 	"xo/src/provisioners"
 	tf "xo/src/provisioners/terraform"
+	"xo/src/telemetry"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -103,7 +103,8 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 }
 
 func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
-	ctx, span := otel.Tracer("xo").Start(context.Background(), "runProvisionerTerraformReport")
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerTerraformReport")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	file, err := cmd.Flags().GetString("file")
@@ -151,7 +152,8 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 }
 
 func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
-	ctx, span := otel.Tracer("xo").Start(context.Background(), "runProvisionerTerraformBackendS3")
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerTerraformBackendS3")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	output, _ := cmd.Flags().GetString("output")

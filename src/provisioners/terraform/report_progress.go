@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"xo/src/massdriver"
+	"xo/src/telemetry"
 
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
@@ -69,6 +70,7 @@ type terraformResourceAddr struct {
 
 func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ReportProgressFromLogs")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	scanner := bufio.NewScanner(stream)
@@ -159,7 +161,7 @@ func parseDiagnosticLog(span trace.Span, record *terraformLog, deploymentId stri
 	case "warning":
 		diagnostic.Level = "warning"
 		span.AddEvent("warning", trace.WithAttributes(
-			attribute.String("message", diagnostic.Message),
+			attribute.String("message", diagnostic.Message+" Details: "+diagnostic.Details),
 		))
 	default:
 		return nil, errors.New("unknown severity: " + record.Diagnostic.Severity)

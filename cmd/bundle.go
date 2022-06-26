@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,6 +8,7 @@ import (
 	"xo/src/bundles"
 	"xo/src/generator"
 	"xo/src/provisioners/terraform"
+	"xo/src/telemetry"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -136,7 +136,8 @@ func runBundleGenerate(cmd *cobra.Command, args []string) error {
 }
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
-	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentStatus")
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runBundlePull")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	bundleBucket := os.Getenv("MASSDRIVER_BUNDLE_BUCKET")

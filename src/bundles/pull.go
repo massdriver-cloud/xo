@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"xo/src/telemetry"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -26,6 +27,7 @@ type S3API interface {
 
 func Pull(ctx context.Context, bundleBucket string, bundleOwnerOrganizationId string, bundleId string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())

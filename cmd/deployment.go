@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"os"
 	"xo/src/massdriver"
+	"xo/src/telemetry"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -108,7 +108,8 @@ func init() {
 }
 
 func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
-	ctx, span := otel.Tracer("xo").Start(context.Background(), "RunDeploymentStatus")
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "RunDeploymentStatus")
+	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
 	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
