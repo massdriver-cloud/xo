@@ -31,7 +31,7 @@ func SetSpanAttributes(span trace.Span) {
 		attribute.String("massdriver.deployment_id", os.Getenv("MASSDRIVER_DEPLOYMENT_ID")),
 		attribute.String("massdriver.bundle_id", os.Getenv("MASSDRIVER_BUNDLE_ID")),
 		attribute.String("massdriver.bundle_owner_org_id", os.Getenv("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID")),
-		attribute.String("massdriver.bundle_org_id", os.Getenv("MASSDRIVER_ORGANIZATION_ID")),
+		attribute.String("massdriver.organization_id", os.Getenv("MASSDRIVER_ORGANIZATION_ID")),
 		attribute.String("massdriver.package_id", os.Getenv("MASSDRIVER_PACKAGE_ID")),
 		attribute.String("massdriver.package_name", os.Getenv("MASSDRIVER_PACKAGE_NAME")),
 		attribute.String("massdriver.bundle_access", os.Getenv("MASSDRIVER_BUNDLE_ACCESS")),
