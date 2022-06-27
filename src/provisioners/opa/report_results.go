@@ -41,10 +41,10 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 		span.SetStatus(codes.Error, err.Error())
 	}
 
-	// normally we'd pass context instead of a span (probably an antipattern) but for readability
-	// its much easier to annotate the same span, so we pass that instead
 	for _, result := range output.Result {
 		for _, expression := range result.Expressions {
+			// normally we'd pass context instead of a span (probably an antipattern) but for readability
+			// its much easier to annotate the same span, so we pass that instead
 			event := convertResultExpressionToMassdriverEvent(span, expression, deploymentId)
 
 			if event != nil {
