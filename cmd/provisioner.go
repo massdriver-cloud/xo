@@ -5,6 +5,7 @@ import (
 	"os"
 	"xo/src/massdriver"
 	"xo/src/provisioners"
+	"xo/src/provisioners/opa"
 	tf "xo/src/provisioners/terraform"
 	"xo/src/telemetry"
 
@@ -25,6 +26,19 @@ var provisionerAuthCmd = &cobra.Command{
 	Short: "Generate auth file(s) for provisioners",
 	Long:  ``,
 	RunE:  runProvisionerAuth,
+}
+
+var provisionerOPACmd = &cobra.Command{
+	Use:   "opa",
+	Short: "Commands specific to opa provisioner",
+	Long:  ``,
+}
+
+var provisionerOPAReportCmd = &cobra.Command{
+	Use:   "report",
+	Short: "Report opa results to Massdriver",
+	Long:  ``,
+	RunE:  runProvisionerOPAReport,
 }
 
 var provisionerTerraformCmd = &cobra.Command{
@@ -60,6 +74,11 @@ func init() {
 	provisionerAuthCmd.PersistentFlags().StringP("schema", "s", "schema-connections.json", "Connections schema file")
 	provisionerAuthCmd.PersistentFlags().StringP("connections", "c", "connections.tf.json", "Connections json file")
 	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "./auth", "Output dir path")
+
+	provisionerCmd.AddCommand(provisionerOPACmd)
+	provisionerOPACmd.AddCommand(provisionerOPAReportCmd)
+	provisionerOPAReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
+	provisionerOPAReportCmd.MarkFlagRequired("file")
 
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
@@ -99,6 +118,55 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	log.Info().Msg("Auth files generated")
+	return nil
+}
+
+func runProvisionerOPAReport(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerOPAReport")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
+
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		log.Warn().Msg("Deployment ID is empty (nothing in MASSDRIVER_DEPLOYMENT_ID environment variable)")
+	}
+
+	var input io.Reader
+	if file == "-" {
+		input = os.Stdin
+	} else {
+		inputFile, err := os.Open(file)
+		if err != nil {
+			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
+		defer inputFile.Close()
+		input = inputFile
+	}
+
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+	err = opa.ReportResults(ctx, mdClient, deploymentId, input)
+	if err != nil {
+		log.Error().Err(err).Msg("an error occurred while reporting progress")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+
 	return nil
 }
 

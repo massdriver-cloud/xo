@@ -1,0 +1,33 @@
+{
+  "result": [
+    {
+      "expressions": [
+        {
+          "value": [
+            "random_pet.one",
+            "random_pet.two"
+          ],
+          "text": "data.terraform.deletion_violations",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ]
+    },
+    {
+      "expressions": [
+        {
+          "value": [
+            "random_pet.three"
+          ],
+          "text": "data.terraform.deletion_violations",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ]
+    }
+  ]
+}

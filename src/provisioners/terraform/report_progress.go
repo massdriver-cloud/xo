@@ -69,7 +69,7 @@ type terraformResourceAddr struct {
 }
 
 func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
-	_, span := otel.Tracer("xo").Start(ctx, "ReportProgressFromLogs")
+	_, span := otel.Tracer("xo").Start(ctx, "provisioners.terraform.ReportProgressFromLogs")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
