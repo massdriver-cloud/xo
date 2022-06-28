@@ -13,6 +13,8 @@ const EVENT_TYPE_DECOMMISSION_COMPLETED string = "decommission_completed"
 const EVENT_TYPE_DECOMMISSION_FAILED string = "decommission_failed"
 const EVENT_TYPE_ARTIFACT_UPDATE string = "artifact_update"
 
+const EVENT_TYPE_PROVISIONER_VIOLATION string = "provisioner_violation"
+
 const EVENT_TYPE_PROVISIONER_COMPLETE string = "provisioner_completed"
 const EVENT_TYPE_PROVISIONER_ERROR string = "provisioner_error"
 const EVENT_TYPE_RESOURCE_CREATE_PENDING string = "resource_create_pending"
@@ -63,6 +65,12 @@ type EventPayloadDiagnostic struct {
 	Message      string `json:"error_message"`
 	Details      string `json:"error_details,omitempty"`
 	Level        string `json:"error_level"`
+}
+
+type EventPayloadOPAViolation struct {
+	DeploymentId string      `json:"deployment_id"`
+	Rule         string      `json:"opa_rule"`
+	Value        interface{} `json:"opa_value"`
 }
 
 var EventTimeString = time.Now().String
