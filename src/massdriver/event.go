@@ -63,7 +63,7 @@ type EventPayloadArtifacts struct {
 type EventPayloadDiagnostic struct {
 	DeploymentId string `json:"deployment_id"`
 	Message      string `json:"error_message"`
-	Details      string `json:"error_details,omitempty"`
+	Details      string `json:"error_details"`
 	Level        string `json:"error_level"`
 }
 
