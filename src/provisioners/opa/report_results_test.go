@@ -30,15 +30,19 @@ func TestReportProgressFromLogs(t *testing.T) {
 	tests := []testData{
 		{
 			name:  "empty",
-			input: "testdata/opa-output-empty.ndjson",
+			input: "testdata/opa-output-empty.json",
 			want:  []string{},
 		},
 		{
-			name:  "2 values",
-			input: "testdata/opa-output-multiple.ndjson",
+			name:  "6 values",
+			input: "testdata/opa-output-multiple.json",
 			want: []string{
-				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provisioner_violation"},"payload":{"deployment_id":"id","opa_rule":"Deletion Violation","opa_value":["random_pet.one","random_pet.two"]}}`,
-				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provisioner_violation"},"payload":{"deployment_id":"id","opa_rule":"Deletion Violation","opa_value":["random_pet.three"]}}`,
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"four\",\"resource_type\":\"random_pet\",\"resource_key\":\"foo\",\"resource_id\":\"ace-mutt\"}}",
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"two\",\"resource_type\":\"random_pet\",\"resource_id\":\"loving-zebra\"}}",
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"three\",\"resource_type\":\"random_pet\",\"resource_key\":\"0\",\"resource_id\":\"moving-newt\"}}",
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"three\",\"resource_type\":\"random_pet\",\"resource_key\":\"1\",\"resource_id\":\"steady-pegasus\"}}",
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"one\",\"resource_type\":\"random_pet\",\"resource_id\":\"striking-skunk\"}}",
+				"{\"metadata\":{\"timestamp\":\"2021-01-01 12:00:00.1234\",\"provisioner\":\"testaform\",\"event_type\":\"resource_update_failed\"},\"payload\":{\"deployment_id\":\"id\",\"resource_name\":\"four\",\"resource_type\":\"random_pet\",\"resource_key\":\"bar\",\"resource_id\":\"upward-ox\"}}",
 			},
 		},
 	}
