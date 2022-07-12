@@ -11,15 +11,11 @@ import (
 	"xo/src/telemetry"
 	"xo/src/util"
 
-	"github.com/open-policy-agent/opa/rego"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type OPAOutput struct {
-	Result rego.ResultSet `json:"result"`
-}
 
 
 func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
@@ -107,52 +103,36 @@ func stringifiedMapValues(m map[string]interface{}) (map[string]string, error) {
 	return out, nil
 }
 
-func expressionToEventPayloadResourceProgress(expression *rego.ExpressionValue, deploymentId string) (*massdriver.EventPayloadResourceProgress, error) {
-	expVal, ok := expression.Value.(map[string]interface{})
-	if !ok {
-		return nil, fmt.Errorf("unexpected type for expression value: %v expected map got %T", expression.Value, expression.Value)
-	}
-	// cannot type assert map[string]string so we do this in our own function iteratively.
-	r, strErr := stringifiedMapValues(expVal)
-	if strErr != nil {
-		return nil, strErr
-	}
-
+func expressionToEventPayloadResourceProgress(expression OPAExpression, deploymentId string) (*massdriver.EventPayloadResourceProgress, error) {
 	payload := new(massdriver.EventPayloadResourceProgress)
 
 	payload.DeploymentId = deploymentId
-	payload.ResourceId, ok = r["resource_id"]
-	if !ok {
-		return nil, fmt.Errorf("missing expected key resource_id got %v", expression.Value)
-	}
-	payload.ResourceType, ok = r["resource_type"]
-	if !ok {
-		return nil, fmt.Errorf("missing expected key resource_type got %v", expression.Value)
-	}
-	payload.ResourceName, ok = r["resource_name"]
-	if !ok {
-		return nil, fmt.Errorf("missing expected key resource_name got %v", expression.Value)
-	}
-	payload.ResourceKey, ok = r["resource_key"]
-	if !ok {
-		return nil, fmt.Errorf("missing expected key resource_key got %v", expression.Value)
-	}
+	payload.ResourceId = expression.Value.ResourceID
+	payload.ResourceType = expression.Value.ResourceType
+	payload.ResourceName = expression.Value.ResourceName
+	payload.ResourceKey = expression.Value.ResourceKey
 
 	return payload, nil
 }
 
-func expressionToEventPayloadDiagnostic(expression *rego.ExpressionValue, deploymentId string) (*massdriver.EventPayloadDiagnostic, error) {
+func expressionToEventPayloadDiagnostic(expression OPAExpression, deploymentId string) (*massdriver.EventPayloadDiagnostic, error) {
 	payload := new(massdriver.EventPayloadDiagnostic)
 
 	payload.DeploymentId = deploymentId
 	payload.Message = expressionTextToRule(expression.Text)
-	payload.Details = fmt.Sprintf("%v", expression.Value)
+	details, err := json.Marshal(expression.Value)
+	if err == nil {
+		payload.Details = string(details)
+	} else {
+		// if for some reason we can't marshal the expression value, we'll just print the golang representation of the value as this will give more info than nothing.
+		payload.Details = fmt.Sprintf("%v", expression.Value)
+	}
 	payload.Level = "error"
 
 	return payload, nil
 }
 
-func convertResultExpressionToMassdriverEvent(span trace.Span, expression *rego.ExpressionValue, deploymentId string) (*massdriver.Event, error) {
+func convertResultExpressionToMassdriverEvent(span trace.Span, expression OPAExpression, deploymentId string) (*massdriver.Event, error) {
 	event := massdriver.NewEvent(massdriver.EVENT_TYPE_RESOURCE_UPDATE_FAILED)
 	opaViolationPayload, convErr := expressionToEventPayloadResourceProgress(expression, deploymentId)
 	if convErr != nil {
