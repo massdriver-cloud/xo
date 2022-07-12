@@ -55,7 +55,23 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 			if event != nil {
 				pubErr := client.PublishEventToSNS(event)
 				if pubErr != nil {
-					util.LogError(err, span, "an error occurred while sending OPA result to massdriver")
+					util.LogError(err, span, "an error occurred while sending OPA event to massdriver")
+					errCounter++
+				}
+			}
+
+			diagnostic, convErr := expressionToEventPayloadDiagnostic(expression, deploymentId)
+			if convErr != nil {
+				util.LogError(err, span ,"an error occurred while parsing OPA result")
+				errCounter++
+			}
+
+			if diagnostic != nil {
+				event := massdriver.NewEvent(massdriver.EVENT_TYPE_PROVISIONER_ERROR)
+				event.Payload = diagnostic
+				pubErr := client.PublishEventToSNS(event)
+				if pubErr != nil {
+					util.LogError(err, span, "an error occurred while sending OPA diagnostic to massdriver")
 					errCounter++
 				}
 			}
@@ -121,6 +137,17 @@ func expressionToEventPayloadResourceProgress(expression *rego.ExpressionValue, 
 	if !ok {
 		return nil, fmt.Errorf("missing expected key resource_key got %v", expression.Value)
 	}
+
+	return payload, nil
+}
+
+func expressionToEventPayloadDiagnostic(expression *rego.ExpressionValue, deploymentId string) (*massdriver.EventPayloadDiagnostic, error) {
+	payload := new(massdriver.EventPayloadDiagnostic)
+
+	payload.DeploymentId = deploymentId
+	payload.Message = expressionTextToRule(expression.Text)
+	payload.Details = fmt.Sprintf("%v", expression.Value)
+	payload.Level = "error"
 
 	return payload, nil
 }
