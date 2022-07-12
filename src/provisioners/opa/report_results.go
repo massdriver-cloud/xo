@@ -16,8 +16,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-
-
 func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
 	_, span := otel.Tracer("xo").Start(ctx, "provisioners.opa.ReportResults")
 	telemetry.SetSpanAttributes(span)
@@ -25,18 +23,18 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 
 	buf, err := ioutil.ReadAll(stream)
 	if err != nil {
-		util.LogError(err, span ,"an error occurred while reading OPA result")
+		util.LogError(err, span, "an error occurred while reading OPA result")
 	}
 
 	var output OPAOutput
 
 	err = json.Unmarshal(buf, &output)
 	if err != nil {
-		util.LogError(err, span ,"an error occurred while parsing OPA result")
+		util.LogError(err, span, "an error occurred while parsing OPA result")
 		return err
 	}
 
-	// aggregate errors so returning early doesn't prevent publishing of events due to error on an earlier expression. 
+	// aggregate errors so returning early doesn't prevent publishing of events due to error on an earlier expression.
 	errCounter := 0
 	for _, result := range output.Result {
 		for _, expression := range result.Expressions {
@@ -44,7 +42,7 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 			// its much easier to annotate the same span, so we pass that instead
 			event, convErr := convertResultExpressionToMassdriverEvent(span, expression, deploymentId)
 			if convErr != nil {
-				util.LogError(err, span ,"an error occurred while parsing OPA result")
+				util.LogError(err, span, "an error occurred while parsing OPA result")
 				errCounter++
 			}
 
@@ -58,7 +56,7 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 
 			diagnostic, convErr := expressionToEventPayloadDiagnostic(expression, deploymentId)
 			if convErr != nil {
-				util.LogError(err, span ,"an error occurred while parsing OPA result")
+				util.LogError(err, span, "an error occurred while parsing OPA result")
 				errCounter++
 			}
 
@@ -97,7 +95,7 @@ func stringifiedMapValues(m map[string]interface{}) (map[string]string, error) {
 				continue
 			}
 
-			return nil, fmt.Errorf("unexpected type for key %s: %v expected string or int got %T", k, v, v)	
+			return nil, fmt.Errorf("unexpected type for key %s: %v expected string or int got %T", k, v, v)
 		}
 	}
 	return out, nil

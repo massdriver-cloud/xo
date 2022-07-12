@@ -6,7 +6,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-
 func LogError(err error, span trace.Span, msg string) {
 	log.Error().Err(err).Msg(msg)
 	span.RecordError(err)

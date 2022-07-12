@@ -16,22 +16,22 @@ type OPAResult struct {
 
 type OPAExpression struct {
 	Value OPAResource `json:"value"`
-	Text string      `json:"text"`
+	Text  string      `json:"text"`
 }
 
 type OPAResource struct {
-	ResourceID string `json:"resource_id"`
-	ResourceKey string `json:"resource_key"`
+	ResourceID   string `json:"resource_id"`
+	ResourceKey  string `json:"resource_key"`
 	ResourceName string `json:"resource_name"`
 	ResourceType string `json:"resource_type"`
 }
 
-func (r *OPAResource) UnmarshalJSON(data []byte) error {     
+func (r *OPAResource) UnmarshalJSON(data []byte) error {
 
-	var m map[string]interface{}     
-	if err := json.Unmarshal(data, &m); err != nil {       
-	   return err     
-	}     
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		return err
+	}
 	for k, v := range m {
 		switch k {
 		case "resource_id":
@@ -44,9 +44,9 @@ func (r *OPAResource) UnmarshalJSON(data []byte) error {
 			r.ResourceType = v.(string)
 		}
 	}
-	
-	return nil 
-   }
+
+	return nil
+}
 
 func stringify(x interface{}) string {
 	switch v := x.(type) {
