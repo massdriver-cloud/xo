@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"xo/src/bundles"
-	"xo/src/generator"
 	"xo/src/provisioners/terraform"
 	"xo/src/telemetry"
 
@@ -29,12 +28,6 @@ var bundleBuildCmd = &cobra.Command{
 	RunE:  runBundleBuild,
 }
 
-var bundleGenerateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generates a new bundle",
-	RunE:  runBundleGenerate,
-}
-
 var bundlePullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pulls a bundle from S3",
@@ -46,11 +39,6 @@ func init() {
 
 	bundleCmd.AddCommand(bundleBuildCmd)
 	bundleBuildCmd.Flags().StringP("output", "o", "", "Path to output directory (default is bundle.yaml directory)")
-
-	bundleCmd.AddCommand(bundleGenerateCmd)
-	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
-	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
-
 	bundleCmd.AddCommand(bundlePullCmd)
 }
 
@@ -101,38 +89,6 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 	log.Info().Str("bundle", bundlePath).Str("output", output).Msg("bundle built")
 
 	return err
-}
-
-func runBundleGenerate(cmd *cobra.Command, args []string) error {
-	var err error
-
-	bundleDir, err := cmd.Flags().GetString("bundle-dir")
-	if err != nil {
-		return err
-	}
-
-	templateDir, err := cmd.Flags().GetString("template-dir")
-	if err != nil {
-		return err
-	}
-
-	templateData := generator.TemplateData{
-		BundleDir:   bundleDir,
-		TemplateDir: templateDir,
-		Type:        "bundle",
-	}
-
-	err = generator.RunPrompt(&templateData)
-	if err != nil {
-		return err
-	}
-
-	err = generator.Generate(&templateData)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
