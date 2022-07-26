@@ -61,7 +61,10 @@ func Compile(path string, out io.Writer) error {
 
 	// You can't have an empty variable block, so if there are no vars return an empty json block
 	if len(vars) == 0 {
-		out.Write([]byte("{}"))
+		_, errWrite := out.Write([]byte("{}"))
+		if errWrite != nil {
+			return errWrite
+		}
 		return nil
 	}
 

@@ -34,7 +34,9 @@ func TestGenerateSchema(t *testing.T) {
 	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
-	bundles.GenerateSchema(bundle.Params, bundle.Metadata("params"), &inputIo)
+	if err := bundles.GenerateSchema(bundle.Params, bundle.Metadata("params"), &inputIo); err != nil {
+		t.Errorf("error generating schema %v", err)
+	}
 	var gotJson = &map[string]interface{}{}
 	_ = json.Unmarshal(inputIo.Bytes(), gotJson)
 

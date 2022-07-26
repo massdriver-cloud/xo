@@ -6,7 +6,7 @@ The `bundles` packages parses massdriver-bundles' _bundle.yaml_ file and creates
 * schema-connections.json
 * schema-artifacts.json
 
-## Example: bundle.yaml 
+## Example: bundle.yaml
 
 ```yaml
 # The schema version

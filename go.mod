@@ -12,6 +12,7 @@ require (
 	github.com/lightstep/otel-launcher-go v1.5.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/open-policy-agent/opa v0.41.0
 	github.com/rs/zerolog v1.27.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
@@ -61,7 +62,6 @@ require (
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/open-policy-agent/opa v0.41.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

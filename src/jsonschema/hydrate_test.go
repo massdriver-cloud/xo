@@ -17,14 +17,14 @@ func TestHydrate(t *testing.T) {
 	cases := []TestCase{
 		{
 			Name:  "Hydrates a $ref",
-			Input: jsonDecode(`{"$ref": "./testdata/artifacts/aws-example.json"}`),
+			Input: jsonDecode(t, `{"$ref": "./testdata/artifacts/aws-example.json"}`),
 			Expected: map[string]string{
 				"id": "fake-schema-id",
 			},
 		},
 		{
 			Name:  "Hydrates a $ref alongside arbitrary values",
-			Input: jsonDecode(`{"foo": true, "bar": {}, "$ref": "./testdata/artifacts/aws-example.json"}`),
+			Input: jsonDecode(t, `{"foo": true, "bar": {}, "$ref": "./testdata/artifacts/aws-example.json"}`),
 			Expected: map[string]interface{}{
 				"foo": true,
 				"bar": map[string]interface{}{},
@@ -33,7 +33,7 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Hydrates a nested $ref",
-			Input: jsonDecode(`{"key": {"$ref": "./testdata/artifacts/aws-example.json"}}`),
+			Input: jsonDecode(t, `{"key": {"$ref": "./testdata/artifacts/aws-example.json"}}`),
 			Expected: map[string]map[string]string{
 				"key": {
 					"id": "fake-schema-id",
@@ -42,21 +42,21 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Does not hydrate HTTPS refs",
-			Input: jsonDecode(`{"$ref": "https://elsewhere.com/schema.json"}`),
+			Input: jsonDecode(t, `{"$ref": "https://elsewhere.com/schema.json"}`),
 			Expected: map[string]string{
 				"$ref": "https://elsewhere.com/schema.json",
 			},
 		},
 		{
 			Name:  "Does not hydrate fragment (#) refs",
-			Input: jsonDecode(`{"$ref": "#/its-in-this-file"}`),
+			Input: jsonDecode(t, `{"$ref": "#/its-in-this-file"}`),
 			Expected: map[string]string{
 				"$ref": "#/its-in-this-file",
 			},
 		},
 		{
 			Name:  "Hydrates $refs in a list",
-			Input: jsonDecode(`{"list": ["string", {"$ref": "./testdata/artifacts/aws-example.json"}]}`),
+			Input: jsonDecode(t, `{"list": ["string", {"$ref": "./testdata/artifacts/aws-example.json"}]}`),
 			Expected: map[string]interface{}{
 				"list": []interface{}{
 					"string",
@@ -68,7 +68,7 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Hydrates a $ref deterministically (keys outside of ref always win)",
-			Input: jsonDecode(`{"conflictingKey": "not-from-ref", "$ref": "./testdata/artifacts/conflicting-keys.json"}`),
+			Input: jsonDecode(t, `{"conflictingKey": "not-from-ref", "$ref": "./testdata/artifacts/conflicting-keys.json"}`),
 			Expected: map[string]string{
 				"conflictingKey": "not-from-ref",
 				"nonConflictKey": "from-ref",
@@ -76,7 +76,7 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Hydrates a $ref recursively",
-			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
+			Input: jsonDecode(t, `{"$ref": "./testdata/artifacts/ref-aws-example.json"}`),
 			Expected: map[string]map[string]string{
 				"properties": {
 					"id": "fake-schema-id",
@@ -85,7 +85,7 @@ func TestHydrate(t *testing.T) {
 		},
 		{
 			Name:  "Hydrates a $ref recursively",
-			Input: jsonDecode(`{"$ref": "./testdata/artifacts/ref-lower-dir-aws-example.json"}`),
+			Input: jsonDecode(t, `{"$ref": "./testdata/artifacts/ref-lower-dir-aws-example.json"}`),
 			Expected: map[string]map[string]string{
 				"properties": {
 					"id": "fake-schema-id",
@@ -116,8 +116,10 @@ func TestHydrate(t *testing.T) {
 	}
 }
 
-func jsonDecode(data string) map[string]interface{} {
+func jsonDecode(t *testing.T, data string) map[string]interface{} {
 	var result map[string]interface{}
-	json.Unmarshal([]byte(data), &result)
+	if err := json.Unmarshal([]byte(data), &result); err != nil {
+		t.Errorf("unmarshal error %v", err)
+	}
 	return result
 }

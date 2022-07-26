@@ -9,11 +9,15 @@ import (
 )
 
 // Helper function for asserting json serde matches
-func doc(str string) string {
+func doc(t *testing.T, str string) string {
 	b := []byte(str)
 
 	jsonMap := make(map[string](interface{}))
-	json.Unmarshal([]byte(b), &jsonMap)
+	if str != "" {
+		if err := json.Unmarshal([]byte(b), &jsonMap); err != nil {
+			t.Fatalf("%d, unexpected error for string %s", err, str)
+		}
+	}
 
 	outBytes, _ := json.MarshalIndent(jsonMap, "", "  ")
 	return string(outBytes)
@@ -65,13 +69,13 @@ func TestGenerateFiles(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := GenerateFiles(tc.bundlePath, tc.srcDir)
 			if err != nil {
-				t.Fatalf("%d, unexpected error", err)
+				t.Fatalf("%d, unexpected error for test %s", err, tc.name)
 			}
 
 			for file, want := range tc.expected {
 				got, err := os.ReadFile(path.Join(tc.bundlePath, tc.srcDir, file))
 				if err != nil {
-					t.Fatalf("%d, unexpected error", err)
+					t.Fatalf("%d, unexpected error for test %s", err, tc.name)
 				}
 
 				if string(got) != want {
@@ -91,7 +95,7 @@ func TestCompile(t *testing.T) {
 		{
 			name:       "populated schema",
 			schemaPath: "file://./testdata/local-schema.json",
-			expected: doc(`
+			expected: doc(t, `
 {
 	"variable": {
 		"name": {
@@ -112,7 +116,7 @@ func TestCompile(t *testing.T) {
 		{
 			name:       "empty schema",
 			schemaPath: "file://./testdata/empty-schema.json",
-			expected:   doc(""),
+			expected:   doc(t, ""),
 		},
 	}
 
@@ -121,7 +125,7 @@ func TestCompile(t *testing.T) {
 			var got bytes.Buffer
 			err := Compile(tc.schemaPath, &got)
 			if err != nil {
-				t.Fatalf("%d, unexpected error", err)
+				t.Fatalf("%d, unexpected error for test %s", err, tc.name)
 			}
 			want := tc.expected
 

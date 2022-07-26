@@ -35,7 +35,9 @@ func TestGenerate(t *testing.T) {
 		}
 	}
 
-	os.Mkdir(bundleData.BundleDir, 0777)
+	if errDir := os.Mkdir(bundleData.BundleDir, 0777); errDir != nil {
+		t.Fatalf("%d, unexpected error", errDir)
+	}
 
 	err := generator.Generate(&bundleData)
 	if err != nil {

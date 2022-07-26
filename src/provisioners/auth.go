@@ -152,8 +152,13 @@ func generateIni(cfg *ini.File, data interface{}, sectionName string) error {
 			} else {
 				newSectionName = sectionName + "." + k
 			}
-			cfg.NewSection(newSectionName)
-			generateIni(cfg, v, newSectionName)
+			_, errSession := cfg.NewSection(newSectionName)
+			if errSession != nil {
+				return errSession
+			}
+			if errGen := generateIni(cfg, v, newSectionName); errGen != nil {
+				return errGen
+			}
 		default:
 			section, err := cfg.GetSection(sectionName)
 			if err != nil {

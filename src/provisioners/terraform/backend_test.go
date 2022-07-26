@@ -6,7 +6,7 @@ import (
 
 func TestGenerateJSONBackendS3Config(t *testing.T) {
 	got, _ := GenerateJSONBackendS3Config("bucket", "org/pkg.tfstate", "region", "dynamoDbTable", "sharedCredFile", "profile")
-	want := doc(`
+	want := doc(t, `
 	{
 		"terraform": {
 			"backend": {

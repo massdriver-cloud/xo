@@ -27,7 +27,9 @@ func WriteDereferencedSchema(schemaFilePath string, outDir string) error {
 		return err
 	}
 
-	json.Unmarshal(data, &rawJson)
+	if errUnmarshal := json.Unmarshal(data, &rawJson); errUnmarshal != nil {
+		return errUnmarshal
+	}
 	definition, err := Hydrate(rawJson, cwd)
 	if err != nil {
 		return err

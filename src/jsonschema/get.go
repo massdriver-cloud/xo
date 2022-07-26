@@ -11,11 +11,13 @@ func GetJSONSchema(path string) (Schema, error) {
 		return schema, err
 	}
 
-	byteData, err := json.Marshal(schemaSrc)
-	if err != nil {
-		return schema, err
+	byteData, errMarshal := json.Marshal(schemaSrc)
+	if errMarshal != nil {
+		return schema, errMarshal
 	}
 
-	json.Unmarshal(byteData, &schema)
+	if errUnmarsh := json.Unmarshal(byteData, &schema); errUnmarsh != nil {
+		return schema, errUnmarsh
+	}
 	return schema, nil
 }

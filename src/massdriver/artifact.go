@@ -15,10 +15,11 @@ func (c MassdriverClient) UploadArtifactFile(file string, id string) error {
 
 	var artifacts []map[string]interface{}
 	bytes, _ := ioutil.ReadAll(artifactHandle)
-	json.Unmarshal(bytes, &artifacts)
+	if errMarshal := json.Unmarshal(bytes, &artifacts); errMarshal != nil {
+		return errMarshal
+	}
 
-	err = c.UploadArtifact(artifacts, id)
-	return err
+	return c.UploadArtifact(artifacts, id)
 }
 
 func (c MassdriverClient) UploadArtifact(artifacts []map[string]interface{}, id string) error {

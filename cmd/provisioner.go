@@ -78,13 +78,17 @@ func init() {
 	provisionerCmd.AddCommand(provisionerOPACmd)
 	provisionerOPACmd.AddCommand(provisionerOPAReportCmd)
 	provisionerOPAReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
-	provisionerOPAReportCmd.MarkFlagRequired("file")
+	if errFlagFile := provisionerOPAReportCmd.MarkFlagRequired("file"); errFlagFile != nil {
+		log.Err(errFlagFile).Msg("Error setting required flag")
+	}
 
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
 	provisionerTerraformCmd.AddCommand(provisionerTerraformReportCmd)
 	provisionerTerraformReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
-	provisionerTerraformReportCmd.MarkFlagRequired("file")
+	if errRepFlagFile := provisionerTerraformReportCmd.MarkFlagRequired("file"); errRepFlagFile != nil {
+		log.Err(errRepFlagFile).Msg("Error setting required flag")
+	}
 
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
@@ -95,8 +99,12 @@ func init() {
 	provisionerTerraformBackendS3Cmd.Flags().StringP("dynamodb-table", "d", "", "DynamoDB state lock table")
 	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "", "Shared credentials file path")
 	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "", "Name of AWS profile")
-	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
-	provisionerTerraformBackendS3Cmd.MarkFlagRequired("key")
+	if errFlagBucket := provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket"); errFlagBucket != nil {
+		log.Err(errFlagBucket).Msg("Error setting required flag")
+	}
+	if errFlagKey := provisionerTerraformBackendS3Cmd.MarkFlagRequired("key"); errFlagKey != nil {
+		log.Err(errFlagKey).Msg("Error setting required flag")
+	}
 }
 
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {

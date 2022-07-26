@@ -1,10 +1,10 @@
 {
-  "cSpell.words": [
-    "client",
-    "deployments",
-    "new",
-    "protobuf",
-    "tfdef",
-    "tfvars"
-  ]
+    "cSpell.words": [
+        "client",
+        "deployments",
+        "new",
+        "protobuf",
+        "tfdef",
+        "tfvars"
+    ]
 }
