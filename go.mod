@@ -10,7 +10,6 @@ require (
 	github.com/itchyny/gojq v0.12.8
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lightstep/otel-launcher-go v1.5.2
-	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/open-policy-agent/opa v0.41.0
 	github.com/rs/zerolog v1.27.0
@@ -44,7 +43,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.7 // indirect
 	github.com/aws/smithy-go v1.11.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
-	github.com/chzyer/readline v1.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
