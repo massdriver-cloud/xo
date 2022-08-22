@@ -1,0 +1,154 @@
+{
+  "result": [
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "ace-mutt",
+            "resource_key": "foo",
+            "resource_name": "four",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "ace-mutt",
+          "resource_key": "foo",
+          "resource_name": "four",
+          "resource_type": "random_pet"
+        }
+      }
+    },
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "loving-zebra",
+            "resource_key": "",
+            "resource_name": "two",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "loving-zebra",
+          "resource_key": "",
+          "resource_name": "two",
+          "resource_type": "random_pet"
+        }
+      }
+    },
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "moving-newt",
+            "resource_key": 0,
+            "resource_name": "three",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "moving-newt",
+          "resource_key": 0,
+          "resource_name": "three",
+          "resource_type": "random_pet"
+        }
+      }
+    },
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "steady-pegasus",
+            "resource_key": 1,
+            "resource_name": "three",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "steady-pegasus",
+          "resource_key": 1,
+          "resource_name": "three",
+          "resource_type": "random_pet"
+        }
+      }
+    },
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "striking-skunk",
+            "resource_key": "",
+            "resource_name": "one",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "striking-skunk",
+          "resource_key": "",
+          "resource_name": "one",
+          "resource_type": "random_pet"
+        }
+      }
+    },
+    {
+      "expressions": [
+        {
+          "value": {
+            "resource_id": "upward-ox",
+            "resource_key": "bar",
+            "resource_name": "four",
+            "resource_type": "random_pet"
+          },
+          "text": "data.terraform.deletion_violations[x]",
+          "location": {
+            "row": 1,
+            "col": 1
+          }
+        }
+      ],
+      "bindings": {
+        "x": {
+          "resource_id": "upward-ox",
+          "resource_key": "bar",
+          "resource_name": "four",
+          "resource_type": "random_pet"
+        }
+      }
+    }
+  ]
+}

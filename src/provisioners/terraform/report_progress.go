@@ -9,8 +9,8 @@ import (
 	"io"
 	"xo/src/massdriver"
 	"xo/src/telemetry"
+	"xo/src/util"
 
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -91,15 +91,13 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 		// its much easier to annotate the same span, so we pass that instead
 		event, err := convertLogToMassdriverEvent(span, &record, deploymentId)
 		if err != nil {
-			log.Error().Err(err).Msg("an error occurred while parsing status message")
+			util.LogError(err, span, "an error occurred while parsing status message")
 		}
 
 		if event != nil {
 			err = client.PublishEventToSNS(event)
 			if err != nil {
-				log.Error().Err(err).Msg("an error occurred while sending resource status to massdriver")
-				span.RecordError(err)
-				span.SetStatus(codes.Error, err.Error())
+				util.LogError(err, span, "an error occurred while sending resource status to massdriver")
 			}
 		}
 	}
