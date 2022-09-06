@@ -2,96 +2,185 @@ package provisioners_test
 
 import (
 	"bytes"
-	"io"
+	"context"
+	"strings"
 	"testing"
+	"xo/src/massdriver"
 	"xo/src/provisioners"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts/types"
 )
 
-var testAuthOutput map[string]*bytes.Buffer
-
-func outputToTestBuffer(dir, name, ext string) (io.Writer, error) {
-	key := dir + "/" + name + "." + ext
-	testAuthOutput[key] = new(bytes.Buffer)
-	return testAuthOutput[key], nil
+type stsMock struct {
+	AssumeRoleOutput sts.AssumeRoleOutput
+	AssumeRoleInput  *sts.AssumeRoleInput
 }
 
-func TestGenerateAuthFiles(t *testing.T) {
-	type testData struct {
-		name       string
-		schemaPath string
-		dataPath   string
-		expected   map[string]string
-	}
-	tests := []testData{
-		{
-			name:       "Test all renders",
-			schemaPath: "testdata/schema-all.json",
-			dataPath:   "testdata/data-all.json",
-			expected: map[string]string{
-				"path/test-json.json": `{"foo":"bar","hello":"world"}`,
-				"path/test-yaml.yaml": `test: yaml
-`,
-				"path/test-ini.ini": `lol=rofl
-`,
-				"path/test-template.json": `{"new1":"one","new2":"two"}`,
-			},
-		},
-		{
-			name:       "Test real auth files",
-			schemaPath: "testdata/schema-real.json",
-			dataPath:   "testdata/data-real.json",
-			expected: map[string]string{
-				"path/aws-creds.ini": `[default]
-aws_secret_access_key=lolroflnopasswordherefbi
-aws_access_key_id=FAKEFAKEFAKEFAKE
-`,
-				"path/aws-role.ini": `[default]
-role_arn=arn:aws:iam::123456789012:role/testrole
-`,
-				"path/k8s-authentication.yaml": `apiVersion: v1
-clusters:
-- cluster:
-    certificate-authority-data: notarealcertificateherejimmy
-    server: https://my.dumb.k8s
-  name: default
-contexts:
-- context:
-    cluster: default
-    user: default
-  name: default
-current-context: default
-kind: Config
-users:
-- name: default
-  user:
-    token: goaheadandtrythistokenandseeifitworks
-`,
+func (m *stsMock) AssumeRole(ctx context.Context, params *sts.AssumeRoleInput, optFns ...func(*sts.Options)) (*sts.AssumeRoleOutput, error) {
+	m.AssumeRoleInput = params
+	return &m.AssumeRoleOutput, nil
+}
+
+func TestGenerateProvisionerAWSCredentials(t *testing.T) {
+	buf := bytes.Buffer{}
+	stsMock := stsMock{
+		AssumeRoleOutput: sts.AssumeRoleOutput{
+			Credentials: &types.Credentials{
+				AccessKeyId:     aws.String("FAKEACCESSKEYID"),
+				SecretAccessKey: aws.String("FAKESECRETACCESSKEY"),
+				SessionToken:    aws.String("FakeSessionToken=="),
 			},
 		},
 	}
-	provisioners.OutputGenerator = outputToTestBuffer
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			testAuthOutput = make(map[string]*bytes.Buffer)
-
-			err := provisioners.GenerateAuthFiles(tc.schemaPath, tc.dataPath, "path")
-			if err != nil {
-				t.Fatalf("%d, unexpected error", err)
-			}
-
-			if len(tc.expected) != len(testAuthOutput) {
-				t.Fatalf("expected: %v, got: %v", len(tc.expected), len(testAuthOutput))
-			}
-
-			for key, want := range tc.expected {
-				got, exists := testAuthOutput[key]
-				if !exists {
-					t.Fatalf("expected key %v to exist", key)
-				}
-				if want != got.String() {
-					t.Fatalf("expected: %v, got: %v", want, got.String())
-				}
-			}
-		})
+	spec := massdriver.Specification{
+		EventTopicARN:             "arn:aws:sns:eventTopicArn",
+		S3StateBucket:             "stateBucket",
+		OrganizationID:            "orgId",
+		PackageID:                 "packageId",
+		DynamoDBStateLockTable:    "aws:aws:dynamodb:table/some-table",
+		BundleBucket:              "bundleBucket",
+		BundleOwnerOrganizationID: "bundleOrgId",
+		BundleID:                  "bundleId",
 	}
+
+	roleName := "arn:aws:iam:::role/foo"
+
+	err := provisioners.GenerateProvisionerAWSCredentials(context.Background(), &buf, &stsMock, &spec, roleName)
+	if err != nil {
+		t.Fatalf("%d, unexpected error", err)
+	}
+
+	gotRole := *stsMock.AssumeRoleInput.RoleArn
+	if gotRole != roleName {
+		t.Fatalf("want: %v, got: %v", roleName, gotRole)
+	}
+
+	gotSessionName := *stsMock.AssumeRoleInput.RoleSessionName
+	wantSessionName := spec.PackageID
+	if gotSessionName != wantSessionName {
+		t.Fatalf("want: %v, got: %v", wantSessionName, gotSessionName)
+	}
+
+	gotPolicy := *stsMock.AssumeRoleInput.Policy
+	wantPolicy := `{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "WorkflowProgressPublisher",
+			"Effect": "Allow",
+			"Action": [
+				"sns:Publish"
+			],
+			"Resource": [
+				"arn:aws:sns:eventTopicArn"
+			]
+		},
+		{
+			"Sid": "AssumeRole",
+			"Effect": "Allow",
+			"Action": [
+				"sts:AssumeRole"
+			],
+			"Resource": [
+				"*"
+			]
+		},
+		{
+			"Sid": "TerraformStateBucketList",
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::stateBucket"
+			]
+		},
+		{
+			"Sid": "TerraformStateBucketManage",
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject",
+				"s3:PutObject"
+			],
+			"Resource": [
+				"arn:aws:s3:::stateBucket/orgId/packageId/*"
+			]
+		},
+		{
+			"Sid": "TerraformStateDynamoDBTableLock",
+			"Effect": "Allow",
+			"Action": [
+				"dynamodb:PutItem",
+				"dynamodb:GetItem",
+				"dynamodb:DeleteItem"
+			],
+			"Resource": [
+				"aws:aws:dynamodb:table/some-table"
+			],
+			"Condition": {
+				"ForAllValues:StringLike": {
+					"dynamodb:LeadingKeys": [
+						"stateBucket/orgId/packageId/*"
+					]
+				}
+			}
+		},
+		{
+			"Sid": "BundleBucketList",
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::bundleBucket"
+			]
+		},
+		{
+			"Sid": "BundleBucketRead",
+			"Effect": "Allow",
+			"Action": [
+				"s3:GetObject"
+			],
+			"Resource": [
+				"arn:aws:s3:::bundleBucket/bundles/bundleOrgId/bundleId/bundle.tar.gz"
+			]
+		}
+	]
+}`
+
+	if gotPolicy != strings.TrimSpace(wantPolicy) {
+		t.Fatalf("want: %v, got: %v", strings.TrimSpace(wantPolicy), gotPolicy)
+	}
+
+	wantIni := `[default]
+aws_access_key_id=FAKEACCESSKEYID
+aws_secret_access_key=FAKESECRETACCESSKEY
+aws_session_token=FakeSessionToken==
+`
+
+	gotIniLines := strings.Split(buf.String(), "\n")
+	wantIniLines := strings.Split(wantIni, "\n")
+
+	if len(wantIniLines) != len(gotIniLines) {
+		t.Fatalf("want: %v, got: %v", len(wantIniLines), len(gotIniLines))
+	}
+	if gotIniLines[0] != wantIniLines[0] {
+		t.Fatalf("want: %v, got: %v", wantIniLines[0], gotIniLines[0])
+	}
+	for i := 1; i < len(wantIniLines); i++ {
+		if !contains(gotIniLines, wantIniLines[i]) {
+			t.Fatalf("Line missing: want: %v, got: %v", wantIniLines[i], gotIniLines)
+		}
+	}
+}
+
+func contains(str []string, eq string) bool {
+	for _, val := range str {
+		if val == eq {
+			return true
+		}
+	}
+	return false
 }

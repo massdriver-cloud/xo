@@ -59,7 +59,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testRequests = make([]string, 0)
 			testSNSClient := SNSTestClient{}
-			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
+			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
 
 			input, err := os.Open(tc.input)
 			if err != nil {

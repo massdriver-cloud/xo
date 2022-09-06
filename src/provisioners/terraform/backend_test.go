@@ -2,26 +2,41 @@ package terraform
 
 import (
 	"testing"
+	"xo/src/massdriver"
 )
 
 func TestGenerateJSONBackendS3Config(t *testing.T) {
-	got, _ := GenerateJSONBackendS3Config("bucket", "org/pkg.tfstate", "region", "dynamoDbTable", "sharedCredFile", "profile")
+	spec := massdriver.Specification{
+		S3StateBucket:          "bucket",
+		OrganizationID:         "org",
+		PackageID:              "pkg",
+		S3StateRegion:          "region",
+		DynamoDBStateLockTable: "dynamoDbTable",
+	}
+	got, _ := GenerateJSONBackendS3Config(&spec, "step")
 	want := doc(`
 	{
 		"terraform": {
 			"backend": {
 				"s3": {
 					"bucket": "bucket",
-					"key": "org/pkg.tfstate",
+					"key": "org/pkg/step.tfstate",
 					"region": "region",
-					"dynamodb_table": "dynamoDbTable",
-					"shared_credentials_file": "sharedCredFile",
-					"profile": "profile"
+					"dynamodb_table": "dynamoDbTable"
 				}
 			}
 		}
 	}
 `)
+
+	if string(got) != want {
+		t.Errorf("got %s want %s", got, want)
+	}
+}
+
+func TestGetS3StateKey(t *testing.T) {
+	got := GetS3StateKey("org", "pkg", "step")
+	want := "org/pkg/step.tfstate"
 
 	if string(got) != want {
 		t.Errorf("got %s want %s", got, want)

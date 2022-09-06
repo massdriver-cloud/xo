@@ -15,21 +15,37 @@ type SnsInterface interface {
 }
 
 type MassdriverClient struct {
-	Specification Specification
+	Specification *Specification
 	SNSClient     SnsInterface
 }
 
 type Specification struct {
-	DeploymentID  string `envconfig:"DEPLOYMENT_ID"`
-	EventTopicARN string `envconfig:"EVENT_TOPIC_ARN"`
-	Provisioner   string `envconfig:"PROVISIONER"`
+	Action                    string `envconfig:"ACTION"`
+	BundleBucket              string `envconfig:"BUNDLE_BUCKET"`
+	BundleID                  string `envconfig:"BUNDLE_ID"`
+	BundleName                string `envconfig:"BUNDLE_NAME"`
+	BundleOwnerOrganizationID string `envconfig:"BUNDLE_OWNER_ORGANIZATION_ID"`
+	BundleType                string `envconfig:"BUNDLE_TYPE"`
+	DeploymentID              string `envconfig:"DEPLOYMENT_ID"`
+	DynamoDBStateLockTable    string `envconfig:"DYNAMODB_STATE_LOCK_TABLE"`
+	EventTopicARN             string `envconfig:"EVENT_TOPIC_ARN"`
+	OrganizationID            string `envconfig:"ORGANIZATION_ID"`
+	PackageID                 string `envconfig:"PACKAGE_ID"`
+	PackageName               string `envconfig:"PACKAGE_NAME"`
+	Provisioner               string `envconfig:"PROVISIONER"`
+	S3StateBucket             string `envconfig:"S3_STATE_BUCKET"`
+	S3StateRegion             string `envconfig:"S3_STATE_REGION"`
+	Token                     string `envconfig:"TOKEN"`
+	URL                       string `envconfig:"URL"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {
 	client := new(MassdriverClient)
-	err := envconfig.Process("massdriver", &client.Specification)
-	if err != nil {
-		return nil, err
+
+	var specErr error
+	client.Specification, specErr = GetSpecification()
+	if specErr != nil {
+		return nil, specErr
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
@@ -40,6 +56,12 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	client.SNSClient = sns.NewFromConfig(cfg)
 
 	return client, nil
+}
+
+func GetSpecification() (*Specification, error) {
+	spec := Specification{}
+	err := envconfig.Process("massdriver", &spec)
+	return &spec, err
 }
 
 func (c MassdriverClient) PublishEventToSNS(event *Event) error {

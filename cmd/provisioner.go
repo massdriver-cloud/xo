@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"errors"
 	"io"
 	"os"
 	"xo/src/massdriver"
@@ -9,6 +11,8 @@ import (
 	tf "xo/src/provisioners/terraform"
 	"xo/src/telemetry"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
@@ -23,7 +27,7 @@ var provisionerCmd = &cobra.Command{
 
 var provisionerAuthCmd = &cobra.Command{
 	Use:   "auth",
-	Short: "Generate auth file(s) for provisioners",
+	Short: "Generate secure AWS credential file for provisioning",
 	Long:  ``,
 	RunE:  runProvisionerAuth,
 }
@@ -71,9 +75,8 @@ func init() {
 	rootCmd.AddCommand(provisionerCmd)
 
 	provisionerCmd.AddCommand(provisionerAuthCmd)
-	provisionerAuthCmd.PersistentFlags().StringP("schema", "s", "schema-connections.json", "Connections schema file")
-	provisionerAuthCmd.PersistentFlags().StringP("connections", "c", "connections.tf.json", "Connections json file")
-	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "./auth", "Output dir path")
+	provisionerAuthCmd.PersistentFlags().StringP("role", "r", os.Getenv("MASSDRIVER_PROVISIONER_ROLE"), "AWS Role ARN to assume for provisioning (custom policy will be generated)")
+	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "", "Output dir path")
 
 	provisionerCmd.AddCommand(provisionerOPACmd)
 	provisionerOPACmd.AddCommand(provisionerOPAReportCmd)
@@ -89,35 +92,59 @@ func init() {
 	provisionerTerraformCmd.AddCommand(provisionerTerraformBackendCmd)
 	provisionerTerraformBackendCmd.PersistentFlags().StringP("output", "o", "./backend.tf.json", "Output file path")
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
-	provisionerTerraformBackendS3Cmd.Flags().StringP("bucket", "b", "", "S3 bucket (required)")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("key", "k", "", "Path to the state file inside the S3 Bucket (required)")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("region", "r", "us-west-2", "AWS Region")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("dynamodb-table", "d", "", "DynamoDB state lock table")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("shared-credentials-file", "s", "", "Shared credentials file path")
-	provisionerTerraformBackendS3Cmd.Flags().StringP("profile", "p", "", "Name of AWS profile")
-	provisionerTerraformBackendS3Cmd.MarkFlagRequired("bucket")
-	provisionerTerraformBackendS3Cmd.MarkFlagRequired("key")
+	provisionerTerraformBackendS3Cmd.Flags().StringP("step", "s", "", "Bundle Step")
+	provisionerTerraformBackendS3Cmd.MarkFlagRequired("step")
 }
 
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {
-	connectionsPath, _ := cmd.Flags().GetString("connections")
-	schemaPath, _ := cmd.Flags().GetString("schema")
-	authPath, _ := cmd.Flags().GetString("output")
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerAuth")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
 
-	log.Info().Msg("Generating auth files...")
-	if _, err := os.Stat(authPath); os.IsNotExist(err) {
-		err := os.Mkdir(authPath, 0777)
-		if err != nil {
-			log.Error().Err(err).Msg("an error occurred while creating auth directory")
-			return err
+	out, _ := cmd.Flags().GetString("output")
+	roleArn, _ := cmd.Flags().GetString("role")
+
+	var output io.Writer
+	if out == "" {
+		output = os.Stdout
+	} else {
+		if _, err := os.Stat(out); errors.Is(err, os.ErrNotExist) {
+			outputFile, fileErr := os.Create(out)
+			if fileErr != nil {
+				log.Error().Err(fileErr).Msg("an error occurred while creating file")
+				span.RecordError(fileErr)
+				span.SetStatus(codes.Error, fileErr.Error())
+				return fileErr
+			}
+			defer outputFile.Close()
+			output = outputFile
 		}
 	}
-	err := provisioners.GenerateAuthFiles(schemaPath, connectionsPath, authPath)
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while generating auth files")
-		return err
+
+	spec, specErr := massdriver.GetSpecification()
+	if specErr != nil {
+		log.Error().Err(specErr).Msg("an error occurred while extracting Massdriver specification")
+		span.RecordError(specErr)
+		span.SetStatus(codes.Error, specErr.Error())
+		return specErr
 	}
-	log.Info().Msg("Auth files generated")
+
+	log.Info().Msg("Generating secure AWS credentials for provisioning...")
+
+	cfg, cfgErr := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
+	if cfgErr != nil {
+		return cfgErr
+	}
+
+	stsClient := sts.NewFromConfig(cfg)
+
+	genErr := provisioners.GenerateProvisionerAWSCredentials(ctx, output, stsClient, spec, roleArn)
+	if genErr != nil {
+		return genErr
+	}
+
+	log.Info().Msg("Credentials generated.")
+
 	return nil
 }
 
@@ -225,22 +252,25 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 	defer span.End()
 
 	output, _ := cmd.Flags().GetString("output")
-	bucket, _ := cmd.Flags().GetString("bucket")
-	key, _ := cmd.Flags().GetString("key")
-	region, _ := cmd.Flags().GetString("region")
-	dynamoDbTable, _ := cmd.Flags().GetString("dynamodb-table")
-	sharedCredentialsFile, _ := cmd.Flags().GetString("shared-credentials-file")
-	profile, _ := cmd.Flags().GetString("profile")
+	step, _ := cmd.Flags().GetString("step")
+
+	spec, specErr := massdriver.GetSpecification()
+	if specErr != nil {
+		log.Error().Err(specErr).Msg("an error occurred while extracting Massdriver specification")
+		span.RecordError(specErr)
+		span.SetStatus(codes.Error, specErr.Error())
+		return specErr
+	}
 
 	log.Info().
 		Str("provisioner", "terraform").
 		Str("output", output).
-		Str("bucket", bucket).
-		Str("key", key).
-		Str("region", region).
-		Str("dynamodb-table", dynamoDbTable).
-		Str("shared-credentials-file", sharedCredentialsFile).
-		Str("profile", profile).Msg("Generating state file")
+		Str("step", step).
+		Str("bucket", spec.S3StateBucket).
+		Str("organization-id", spec.OrganizationID).
+		Str("package-id", spec.PackageID).
+		Str("region", spec.S3StateRegion).
+		Str("dynamodb-table", spec.DynamoDBStateLockTable).Msg("Generating state file")
 
-	return tf.GenerateBackendS3File(ctx, output, bucket, key, region, dynamoDbTable, sharedCredentialsFile, profile)
+	return tf.GenerateBackendS3File(ctx, output, spec, step)
 }
