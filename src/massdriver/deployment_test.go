@@ -12,7 +12,6 @@ func TestReportDeploymentStatus(t *testing.T) {
 		name   string
 		id     string
 		status string
-		client massdriver.MassdriverClient
 		want   string
 	}
 	tests := []testData{
@@ -20,42 +19,36 @@ func TestReportDeploymentStatus(t *testing.T) {
 			name:   "Test Provision Started",
 			id:     "id",
 			status: "provision_start",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provision_started"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
 			name:   "Test Provision Completed",
 			id:     "id",
 			status: "provision_complete",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provision_completed"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
 			name:   "Test Provision Failed",
 			id:     "id",
 			status: "provision_fail",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"provision_failed"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
 			name:   "Test Decommision Started",
 			id:     "id",
 			status: "decommission_start",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"decommission_started"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
 			name:   "Test Decommission Completed",
 			id:     "id",
 			status: "decommission_complete",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"decommission_completed"},"payload":{"deployment_id":"id"}}`,
 		},
 		{
 			name:   "Test Decommission Failed",
 			id:     "id",
 			status: "decommission_fail",
-			client: massdriver.MassdriverClient{Specification: massdriver.Specification{Provisioner: "testaform"}},
 			want:   `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"decommission_failed"},"payload":{"deployment_id":"id"}}`,
 		},
 	}
@@ -65,7 +58,7 @@ func TestReportDeploymentStatus(t *testing.T) {
 			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testSNSClient := SNSTestClient{}
-			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
+			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
 			err := testClient.ReportDeploymentStatus(context.Background(), tc.id, tc.status)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)

@@ -32,7 +32,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 			name:  "empty schema",
 			input: "testdata/terraform-output.ndjson",
 			want: []string{
-				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"provisioner_error"},"payload":{"deployment_id":"id","error_message":"Error creating S3 bucket: AccessDenied: Access Denied\n\tstatus code: 403, request id: 8ZJF3ZKYM9QE8Y5Y, host id: PE/mhk+dO5TDoPmLw/wCuKDRUcfuvP+LFx3cFl5EOhfYe0F9fKtmdIG+lAseO2QqufTN+69ihOw=","error_level":"error"}}`,
+				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"provisioner_error"},"payload":{"deployment_id":"id","error_message":"Error creating S3 bucket: AccessDenied: Access Denied\n\tstatus code: 403, request id: 8ZJF3ZKYM9QE8Y5Y, host id: PE/mhk+dO5TDoPmLw/wCuKDRUcfuvP+LFx3cFl5EOhfYe0F9fKtmdIG+lAseO2QqufTN+69ihOw=","error_details":"","error_level":"error"}}`,
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"create_pending"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"update_pending"},"payload":{"deployment_id":"id","resource_name":"one","resource_type":"aws_s3_bucket"}}`,
 				`{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","version":"1.0.7","event_type":"delete_pending"},"payload":{"deployment_id":"id","resource_name":"two","resource_type":"aws_s3_bucket"}}`,
@@ -58,7 +58,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testRequests = make([]string, 0)
 			testSNSClient := SNSTestClient{}
-			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
+			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
 
 			input, err := os.Open(tc.input)
 			if err != nil {

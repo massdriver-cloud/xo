@@ -1,166 +1,219 @@
 package provisioners
 
 import (
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"os"
 	"path"
-	"reflect"
-	"xo/src/jsonschema"
+	"xo/src/bundles"
+	"xo/src/massdriver"
+	"xo/src/provisioners/terraform"
+	"xo/src/telemetry"
+	"xo/src/util"
 
-	"github.com/itchyny/gojq"
-	"gopkg.in/ini.v1"
-	"gopkg.in/yaml.v2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
+	"go.opentelemetry.io/otel"
 )
 
-var OutputGenerator func(string, string, string) (io.Writer, error)
-
-func init() {
-	OutputGenerator = outputToFile
+type AWSIAMPolicyDocument struct {
+	Version   string                   `json:"Version,omitempty"`
+	Statement []*AWSIAMPolicyStatement `json:"Statement,omitempty"`
 }
 
-func outputToFile(dir, name, ext string) (io.Writer, error) {
-	return os.OpenFile(path.Join(dir, name+"."+ext), os.O_WRONLY|os.O_CREATE, 0644)
+type AWSIAMPolicyStatement struct {
+	Sid       string                 `json:"Sid,omitempty"`
+	Effect    string                 `json:"Effect,omitempty"`
+	Action    []string               `json:"Action,omitempty"`
+	Resource  []string               `json:"Resource,omitempty"`
+	Condition map[string]interface{} `json:"Condition,omitempty"`
 }
 
-func GenerateAuthFiles(schemaPath string, dataPath string, outputPath string) error {
-	schema, err := jsonschema.GetJSONSchema(schemaPath)
-	if err != nil {
-		return err
-	}
-
-	var data map[string]interface{}
-	bytes, err := ioutil.ReadFile(dataPath)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(bytes, &data)
-	if err != nil {
-		return err
-	}
-
-	for name, prop := range schema.Properties {
-		if prop.GenerateAuthFile != nil {
-			if data[name] == nil {
-				return errors.New("schema property doesn't exist in data file: " + name)
-			}
-
-			out, err := OutputGenerator(outputPath, name, prop.GenerateAuthFile.Format)
-			if err != nil {
-				return err
-			}
-
-			outputData := data[name]
-			if prop.GenerateAuthFile.Template != nil {
-				outputData, err = renderTemplate(data[name], *prop.GenerateAuthFile.Template)
-				if err != nil {
-					return err
-				}
-			}
-
-			switch prop.GenerateAuthFile.Format {
-			case "ini":
-				err = renderINI(out, outputData)
-				if err != nil {
-					return err
-				}
-			case "json":
-				err = renderJSON(out, outputData)
-				if err != nil {
-					return err
-				}
-			case "yaml":
-				err = renderYAML(out, outputData)
-				if err != nil {
-					return err
-				}
-			default:
-				return errors.New("unrecognized file format " + prop.GenerateAuthFile.Format)
-			}
-		}
-	}
-	return nil
+type STSAPI interface {
+	AssumeRole(ctx context.Context, params *sts.AssumeRoleInput, optFns ...func(*sts.Options)) (*sts.AssumeRoleOutput, error)
 }
 
-func renderTemplate(data interface{}, template string) (interface{}, error) {
-	query, err := gojq.Parse(template)
-	if err != nil {
-		return nil, err
+func GenerateProvisionerAWSCredentials(ctx context.Context, out io.Writer, stsClient STSAPI, spec *massdriver.Specification, roleARN string) error {
+	_, span := otel.Tracer("xo").Start(ctx, "provisioners.terraform.ReportProgressFromLogs")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
+
+	// Generate a custom policy statement scoped to exactly (and only) the permission needed
+	policy := getProvisionerPolicy(spec)
+
+	policyBytes, marshalErr := json.MarshalIndent(policy, "", "\t")
+	if marshalErr != nil {
+		util.LogError(marshalErr, span, "error while marshaling the generated AWS policy")
+		return marshalErr
 	}
-	iter := query.Run(data)
-	// this iterator object is strange. I think its for iterating through the results
-	// of complex manipulations (like turning a map into an array, and iterating through
-	// the array elements). Since we're just doing simple transformations for now, I'm
-	// making the assumption that everything we need is in the first iterator element.
-	// This logic **PROBABLY** will fall apart if we start doing complex jq queries,
-	// and we'll have to revisit it then.
-	v, _ := iter.Next()
-	if err, ok := v.(error); ok {
-		return nil, err
+
+	// you can pass a custom policy to "Assume Role" and it will assume the role (identity) with the custom permissions, ignoring the default role permissions
+	ari := sts.AssumeRoleInput{
+		RoleArn:         &roleARN,
+		Policy:          aws.String(string(policyBytes)),
+		RoleSessionName: aws.String(spec.DeploymentID),
+		DurationSeconds: aws.Int32(3600),
 	}
-	return v, nil
+
+	aro, assumeErr := stsClient.AssumeRole(ctx, &ari)
+	if assumeErr != nil {
+		util.LogError(assumeErr, span, "error while assuming AWS role")
+		return assumeErr
+	}
+
+	// Behind the scenes, "AssumeRole" generates a set of short lived credentials. We extract these credentials and put them in an ini format,
+	// which is the standard format for AWS
+	iniConfig := map[string]interface{}{
+		"default": map[string]interface{}{
+			"aws_access_key_id":     *aro.Credentials.AccessKeyId,
+			"aws_secret_access_key": *aro.Credentials.SecretAccessKey,
+			"aws_session_token":     *aro.Credentials.SessionToken,
+		},
+	}
+
+	return renderINI(out, iniConfig)
 }
 
-func renderINI(out io.Writer, data interface{}) error {
-	cfg := ini.Empty()
-
-	err := generateIni(cfg, data, ini.DefaultSection)
-	if err != nil {
-		return err
+func getProvisionerPolicy(spec *massdriver.Specification) *AWSIAMPolicyDocument {
+	policy := AWSIAMPolicyDocument{
+		Version:   "2012-10-17",
+		Statement: []*AWSIAMPolicyStatement{},
 	}
 
-	ini.PrettyFormat = false
-	_, err = cfg.WriteTo(out)
-	return err
+	policyFunctions := []func(*massdriver.Specification) []*AWSIAMPolicyStatement{
+		getWorkflowProgressPolicies,
+		getAssumeRolePolicies,
+		getStateManagementPolicies,
+		getBundleReadPolicies,
+	}
+
+	for _, policyFunction := range policyFunctions {
+		statements := policyFunction(spec)
+		policy.Statement = append(policy.Statement, statements...)
+	}
+
+	return &policy
 }
 
-func renderJSON(out io.Writer, data interface{}) error {
-	bytes, err := json.Marshal(data)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(bytes)
-	return err
+func getWorkflowProgressPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to send provisioning events back via SNS
+	statements := make([]*AWSIAMPolicyStatement, 0, 1)
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "WorkflowProgressPublisher",
+		Effect: "Allow",
+		Action: []string{
+			"sns:Publish",
+		},
+		Resource: []string{
+			spec.EventTopicARN,
+		},
+	})
+
+	return statements
 }
 
-func renderYAML(out io.Writer, data interface{}) error {
-	bytes, err := yaml.Marshal(data)
-	if err != nil {
-		return err
-	}
-	_, err = out.Write(bytes)
-	return err
+func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs AssumeRole access for terraform to be able to assume the customer's role in AWS bundles
+	statements := make([]*AWSIAMPolicyStatement, 0, 1)
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "AssumeRole",
+		Effect: "Allow",
+		Action: []string{
+			"sts:AssumeRole",
+		},
+		// Technically this could also be scoped to just the massdriver-cloud-provisioner role in the users account if
+		// this bundle provisions into AWS, but currently thats hard to determine and extract (connections JSON blob)
+		Resource: []string{
+			"*",
+		},
+	})
+
+	return statements
 }
 
-// The ini package we are using doesn't currently have the ability to Marshal/Unmarshal
-// ini files to/from map[string]interface{}. There is a github issue:
-// https://github.com/go-ini/ini/issues/275 but it isn't getting much traction. For now,
-// our use-case is simple enough we can write our own "marshaler".
-func generateIni(cfg *ini.File, data interface{}, sectionName string) error {
-	d := data.(map[string]interface{})
-	for k, v := range d {
-		t := reflect.ValueOf(v).Kind()
-		_ = t
-		switch reflect.ValueOf(v).Kind() {
-		case reflect.Map:
-			var newSectionName string
-			if sectionName == ini.DefaultSection {
-				newSectionName = k
-			} else {
-				newSectionName = sectionName + "." + k
-			}
-			cfg.NewSection(newSectionName)
-			generateIni(cfg, v, newSectionName)
-		default:
-			section, err := cfg.GetSection(sectionName)
-			if err != nil {
-				return err
-			}
-			section.Key(k).SetValue(fmt.Sprintf("%v", v))
-		}
-	}
-	return nil
+func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to the S3 state store, but ONLY for this package
+	statements := make([]*AWSIAMPolicyStatement, 0, 3)
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "TerraformStateBucketList",
+		Effect: "Allow",
+		Action: []string{
+			"s3:ListBucket",
+		},
+		Resource: []string{
+			bucketNameToARN(spec.S3StateBucket),
+		},
+	})
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "TerraformStateBucketManage",
+		Effect: "Allow",
+		Action: []string{
+			"s3:GetObject",
+			"s3:PutObject",
+		},
+		Resource: []string{
+			path.Join(bucketNameToARN(spec.S3StateBucket), path.Dir(terraform.GetS3StateKey(spec.OrganizationID, spec.PackageID, "RemovedByDirCommand")), "*"),
+		},
+	})
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "TerraformStateDynamoDBTableLock",
+		Effect: "Allow",
+		Action: []string{
+			"dynamodb:PutItem",
+			"dynamodb:GetItem",
+			"dynamodb:DeleteItem",
+		},
+		Resource: []string{
+			spec.DynamoDBStateLockTableArn,
+		},
+		// https://www.terraform.io/language/settings/backends/s3#protecting-access-to-workspace-state
+		Condition: map[string]interface{}{
+			"ForAllValues:StringLike": map[string][]string{
+				"dynamodb:LeadingKeys": {
+					path.Join(spec.S3StateBucket, spec.OrganizationID, spec.PackageID, "*"),
+				},
+			},
+		},
+	})
+
+	return statements
+}
+
+func getBundleReadPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
+	statements := make([]*AWSIAMPolicyStatement, 0, 2)
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "BundleBucketList",
+		Effect: "Allow",
+		Action: []string{
+			"s3:ListBucket",
+		},
+		Resource: []string{
+			bucketNameToARN(spec.BundleBucket),
+		},
+	})
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "BundleBucketRead",
+		Effect: "Allow",
+		Action: []string{
+			"s3:GetObject",
+		},
+		Resource: []string{
+			path.Join(bucketNameToARN(spec.BundleBucket), bundles.GetBundleKey(spec.BundleOwnerOrganizationID, spec.BundleID)),
+		},
+	})
+
+	return statements
+}
+
+func bucketNameToARN(name string) string {
+	return fmt.Sprintf("arn:aws:s3:::%s", name)
 }

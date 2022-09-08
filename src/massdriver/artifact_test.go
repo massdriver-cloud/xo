@@ -27,7 +27,7 @@ func TestUploadArtifactFile(t *testing.T) {
 			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testSNSClient := SNSTestClient{}
-			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient}
+			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
 			err := testMassdriverClient.UploadArtifact(tc.artifacts, tc.id)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)

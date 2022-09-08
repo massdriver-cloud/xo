@@ -3,8 +3,12 @@ package terraform
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+	"path"
+	"strings"
+	"xo/src/massdriver"
 	"xo/src/telemetry"
 
 	"go.opentelemetry.io/otel"
@@ -24,15 +28,13 @@ type BackendBlock struct {
 }
 
 type S3BackendBlock struct {
-	Bucket                string `json:"bucket"`
-	DynamoDBTable         string `json:"dynamodb_table,omitempty"`
-	Key                   string `json:"key"`
-	Profile               string `json:"profile,omitempty"`
-	Region                string `json:"region"`
-	SharedCredentialsFile string `json:"shared_credentials_file,omitempty"`
+	Bucket        string `json:"bucket"`
+	DynamoDBTable string `json:"dynamodb_table,omitempty"`
+	Key           string `json:"key"`
+	Region        string `json:"region"`
 }
 
-func GenerateBackendS3File(ctx context.Context, output string, bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) error {
+func GenerateBackendS3File(ctx context.Context, output string, spec *massdriver.Specification, bundleStep string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "GenerateBackendS3File")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
@@ -43,7 +45,7 @@ func GenerateBackendS3File(ctx context.Context, output string, bucket string, ke
 	}
 	defer outputHandle.Close()
 
-	config, err := GenerateJSONBackendS3Config(bucket, key, region, dynamoDbTable, sharedCredFile, profile)
+	config, err := GenerateJSONBackendS3Config(spec, bundleStep)
 	if err != nil {
 		return err
 	}
@@ -51,18 +53,28 @@ func GenerateBackendS3File(ctx context.Context, output string, bucket string, ke
 	return writeBackend(config, outputHandle)
 }
 
-func GenerateJSONBackendS3Config(bucket string, key string, region string, dynamoDbTable string, sharedCredFile string, profile string) ([]byte, error) {
+func GenerateJSONBackendS3Config(spec *massdriver.Specification, bundleStep string) ([]byte, error) {
 	s3bb := new(S3BackendBlock)
-	s3bb.Bucket = bucket
-	s3bb.Key = key
-	s3bb.Region = region
-	s3bb.DynamoDBTable = dynamoDbTable
-	s3bb.SharedCredentialsFile = sharedCredFile
-	s3bb.Profile = profile
+	s3bb.Bucket = spec.S3StateBucket
+	s3bb.Key = GetS3StateKey(spec.OrganizationID, spec.PackageID, bundleStep)
+	s3bb.Region = spec.S3StateRegion
+	s3bb.DynamoDBTable = getDynamoDBTableNameFromARN(spec.DynamoDBStateLockTableArn)
 
 	topBlock := &TopLevelBlock{Terraform: &TerraformBlock{BackendBlock: &BackendBlock{S3BackendBlock: s3bb}}}
 
 	return json.MarshalIndent(topBlock, "", "  ")
+}
+
+func GetS3StateKey(organizationID, packageID, bundleStep string) string {
+	return path.Join(organizationID, packageID, fmt.Sprintf("%s.tfstate", bundleStep))
+}
+
+func getDynamoDBTableNameFromARN(dynamoDBTableARN string) string {
+	return strings.Split(dynamoDBTableARN, ":table/")[1]
+}
+
+func getS3BucketNameFromARN(dynamoDBTableARN string) string {
+	return strings.Split(dynamoDBTableARN, ":table/")[1]
 }
 
 func writeBackend(config []byte, out io.Writer) error {
