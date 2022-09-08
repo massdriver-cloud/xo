@@ -39,6 +39,7 @@ func GenerateProvisionerAWSCredentials(ctx context.Context, out io.Writer, stsCl
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
+	// Generate a custom policy statement scoped to exactly (and only) the permission needed
 	policy := getProvisionerPolicy(spec)
 
 	policyBytes, marshalErr := json.MarshalIndent(policy, "", "\t")
@@ -47,19 +48,22 @@ func GenerateProvisionerAWSCredentials(ctx context.Context, out io.Writer, stsCl
 		return marshalErr
 	}
 
+	// you can pass a custom policy to "Assume Role" and it will assume the role (identity) with the custom permissions, ignoring the default role permissions
 	ari := sts.AssumeRoleInput{
 		RoleArn:         &roleARN,
 		Policy:          aws.String(string(policyBytes)),
-		RoleSessionName: aws.String(spec.PackageID),
-		DurationSeconds: aws.Int32(7200),
+		RoleSessionName: aws.String(spec.DeploymentID),
+		DurationSeconds: aws.Int32(3600),
 	}
 
 	aro, assumeErr := stsClient.AssumeRole(ctx, &ari)
 	if assumeErr != nil {
-		util.LogError(marshalErr, span, "error while assume AWS role")
+		util.LogError(assumeErr, span, "error while assuming AWS role")
 		return assumeErr
 	}
 
+	// Behind the scenes, "AssumeRole" generates a set of short lived credentials. We extract these credentials and put them in an ini format,
+	// which is the standard format for AWS
 	iniConfig := map[string]interface{}{
 		"default": map[string]interface{}{
 			"aws_access_key_id":     *aro.Credentials.AccessKeyId,
@@ -93,6 +97,7 @@ func getProvisionerPolicy(spec *massdriver.Specification) *AWSIAMPolicyDocument 
 }
 
 func getWorkflowProgressPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to send provisioning events back via SNS
 	statements := make([]*AWSIAMPolicyStatement, 0, 1)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
@@ -110,6 +115,7 @@ func getWorkflowProgressPolicies(spec *massdriver.Specification) []*AWSIAMPolicy
 }
 
 func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs AssumeRole access for terraform to be able to assume the customer's role in AWS bundles
 	statements := make([]*AWSIAMPolicyStatement, 0, 1)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
@@ -118,6 +124,8 @@ func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 		Action: []string{
 			"sts:AssumeRole",
 		},
+		// Technically this could also be scoped to just the massdriver-cloud-provisioner role in the users account if
+		// this bundle provisions into AWS, but currently thats hard to determine and extract (connections JSON blob)
 		Resource: []string{
 			"*",
 		},
@@ -127,6 +135,7 @@ func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 }
 
 func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to the S3 state store, but ONLY for this package
 	statements := make([]*AWSIAMPolicyStatement, 0, 3)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
@@ -148,7 +157,7 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 			"s3:PutObject",
 		},
 		Resource: []string{
-			path.Join(bucketNameToARN(spec.S3StateBucket), path.Dir(terraform.GetS3StateKey(spec.OrganizationID, spec.PackageID, "remove")), "*"),
+			path.Join(bucketNameToARN(spec.S3StateBucket), path.Dir(terraform.GetS3StateKey(spec.OrganizationID, spec.PackageID, "RemovedByDirCommand")), "*"),
 		},
 	})
 
@@ -161,7 +170,7 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 			"dynamodb:DeleteItem",
 		},
 		Resource: []string{
-			spec.DynamoDBStateLockTable,
+			spec.DynamoDBStateLockTableArn,
 		},
 		// https://www.terraform.io/language/settings/backends/s3#protecting-access-to-workspace-state
 		Condition: map[string]interface{}{
@@ -177,6 +186,7 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 }
 
 func getBundleReadPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
 	statements := make([]*AWSIAMPolicyStatement, 0, 2)
 
 	statements = append(statements, &AWSIAMPolicyStatement{

@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"strings"
 	"xo/src/massdriver"
 	"xo/src/telemetry"
 
@@ -57,7 +58,7 @@ func GenerateJSONBackendS3Config(spec *massdriver.Specification, bundleStep stri
 	s3bb.Bucket = spec.S3StateBucket
 	s3bb.Key = GetS3StateKey(spec.OrganizationID, spec.PackageID, bundleStep)
 	s3bb.Region = spec.S3StateRegion
-	s3bb.DynamoDBTable = spec.DynamoDBStateLockTable
+	s3bb.DynamoDBTable = getDynamoDBTableNameFromARN(spec.DynamoDBStateLockTableArn)
 
 	topBlock := &TopLevelBlock{Terraform: &TerraformBlock{BackendBlock: &BackendBlock{S3BackendBlock: s3bb}}}
 
@@ -66,6 +67,14 @@ func GenerateJSONBackendS3Config(spec *massdriver.Specification, bundleStep stri
 
 func GetS3StateKey(organizationID, packageID, bundleStep string) string {
 	return path.Join(organizationID, packageID, fmt.Sprintf("%s.tfstate", bundleStep))
+}
+
+func getDynamoDBTableNameFromARN(dynamoDBTableARN string) string {
+	return strings.Split(dynamoDBTableARN, ":table/")[1]
+}
+
+func getS3BucketNameFromARN(dynamoDBTableARN string) string {
+	return strings.Split(dynamoDBTableARN, ":table/")[1]
 }
 
 func writeBackend(config []byte, out io.Writer) error {

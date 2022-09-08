@@ -39,7 +39,8 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 		S3StateBucket:             "stateBucket",
 		OrganizationID:            "orgId",
 		PackageID:                 "packageId",
-		DynamoDBStateLockTable:    "aws:aws:dynamodb:table/some-table",
+		DeploymentID:              "deploymentId",
+		DynamoDBStateLockTableArn: "aws:aws:dynamodb:table/some-table",
 		BundleBucket:              "bundleBucket",
 		BundleOwnerOrganizationID: "bundleOrgId",
 		BundleID:                  "bundleId",
@@ -58,7 +59,7 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 	}
 
 	gotSessionName := *stsMock.AssumeRoleInput.RoleSessionName
-	wantSessionName := spec.PackageID
+	wantSessionName := spec.DeploymentID
 	if gotSessionName != wantSessionName {
 		t.Fatalf("want: %v, got: %v", wantSessionName, gotSessionName)
 	}

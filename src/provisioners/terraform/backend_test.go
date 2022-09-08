@@ -7,11 +7,11 @@ import (
 
 func TestGenerateJSONBackendS3Config(t *testing.T) {
 	spec := massdriver.Specification{
-		S3StateBucket:          "bucket",
-		OrganizationID:         "org",
-		PackageID:              "pkg",
-		S3StateRegion:          "region",
-		DynamoDBStateLockTable: "dynamoDbTable",
+		S3StateBucket:             "bucket",
+		OrganizationID:            "org",
+		PackageID:                 "pkg",
+		S3StateRegion:             "region",
+		DynamoDBStateLockTableArn: "arn:aws:dynamodb:us-west-2:111111111111:table/dynamoDbTable",
 	}
 	got, _ := GenerateJSONBackendS3Config(&spec, "step")
 	want := doc(`

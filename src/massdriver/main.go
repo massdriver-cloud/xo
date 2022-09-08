@@ -21,22 +21,21 @@ type MassdriverClient struct {
 
 type Specification struct {
 	Action                    string `envconfig:"ACTION"`
-	BundleBucket              string `envconfig:"BUNDLE_BUCKET"`
-	BundleID                  string `envconfig:"BUNDLE_ID"`
+	BundleBucket              string `envconfig:"BUNDLE_BUCKET" required:"true"`
+	BundleID                  string `envconfig:"BUNDLE_ID" required:"true"`
 	BundleName                string `envconfig:"BUNDLE_NAME"`
-	BundleOwnerOrganizationID string `envconfig:"BUNDLE_OWNER_ORGANIZATION_ID"`
+	BundleOwnerOrganizationID string `envconfig:"BUNDLE_OWNER_ORGANIZATION_ID" required:"true"`
 	BundleType                string `envconfig:"BUNDLE_TYPE"`
-	DeploymentID              string `envconfig:"DEPLOYMENT_ID"`
-	DynamoDBStateLockTable    string `envconfig:"DYNAMODB_STATE_LOCK_TABLE"`
-	EventTopicARN             string `envconfig:"EVENT_TOPIC_ARN"`
-	OrganizationID            string `envconfig:"ORGANIZATION_ID"`
-	PackageID                 string `envconfig:"PACKAGE_ID"`
+	DeploymentID              string `envconfig:"DEPLOYMENT_ID" required:"true"`
+	DynamoDBStateLockTableArn string `envconfig:"DYNAMODB_STATE_LOCK_TABLE_ARN" required:"true"`
+	EventTopicARN             string `envconfig:"EVENT_TOPIC_ARN" required:"true"`
+	OrganizationID            string `envconfig:"ORGANIZATION_ID" required:"true"`
+	PackageID                 string `envconfig:"PACKAGE_ID" required:"true"`
 	PackageName               string `envconfig:"PACKAGE_NAME"`
-	Provisioner               string `envconfig:"PROVISIONER"`
-	S3StateBucket             string `envconfig:"S3_STATE_BUCKET"`
-	S3StateRegion             string `envconfig:"S3_STATE_REGION"`
-	Token                     string `envconfig:"TOKEN"`
-	URL                       string `envconfig:"URL"`
+	S3StateBucket             string `envconfig:"S3_STATE_BUCKET" required:"true"`
+	S3StateRegion             string `envconfig:"S3_STATE_REGION" required:"true"`
+	Token                     string `envconfig:"TOKEN" required:"true"`
+	URL                       string `envconfig:"URL" required:"true"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {

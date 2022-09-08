@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"io"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"xo/src/provisioners/opa"
 	tf "xo/src/provisioners/terraform"
 	"xo/src/telemetry"
+	"xo/src/util"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
@@ -28,7 +28,7 @@ var provisionerCmd = &cobra.Command{
 var provisionerAuthCmd = &cobra.Command{
 	Use:   "auth",
 	Short: "Generate secure AWS credential file for provisioning",
-	Long:  ``,
+	Long:  `This command will generate a set of AWS credentials in ini format which can be passed to the actual provisioning step. These credentials would be narrowly scoped to just this provisioning run so the bundle can't access unauthorized data.`,
 	RunE:  runProvisionerAuth,
 }
 
@@ -104,6 +104,12 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	out, _ := cmd.Flags().GetString("output")
 	roleArn, _ := cmd.Flags().GetString("role")
 
+	if roleArn == "" {
+		err := errors.New("role ARN is empty (nothing in MASSDRIVER_PROVISIONER_ROLE environment variable)")
+		util.LogError(err, span, "error while generating provisioner auth")
+		return err
+	}
+
 	var output io.Writer
 	if out == "" {
 		output = os.Stdout
@@ -131,7 +137,7 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	log.Info().Msg("Generating secure AWS credentials for provisioning...")
 
-	cfg, cfgErr := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-west-2"))
+	cfg, cfgErr := config.LoadDefaultConfig(ctx, config.WithRegion("us-west-2"))
 	if cfgErr != nil {
 		return cfgErr
 	}
@@ -270,7 +276,7 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 		Str("organization-id", spec.OrganizationID).
 		Str("package-id", spec.PackageID).
 		Str("region", spec.S3StateRegion).
-		Str("dynamodb-table", spec.DynamoDBStateLockTable).Msg("Generating state file")
+		Str("dynamodb-table", spec.DynamoDBStateLockTableArn).Msg("Generating state file")
 
 	return tf.GenerateBackendS3File(ctx, output, spec, step)
 }
