@@ -47,8 +47,9 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 	}
 
 	roleName := "arn:aws:iam:::role/foo"
+	externalId := "foobar"
 
-	err := provisioners.GenerateProvisionerAWSCredentials(context.Background(), &buf, &stsMock, &spec, roleName)
+	err := provisioners.GenerateProvisionerAWSCredentials(context.Background(), &buf, &stsMock, &spec, roleName, externalId)
 	if err != nil {
 		t.Fatalf("%d, unexpected error", err)
 	}
@@ -56,6 +57,11 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 	gotRole := *stsMock.AssumeRoleInput.RoleArn
 	if gotRole != roleName {
 		t.Fatalf("want: %v, got: %v", roleName, gotRole)
+	}
+
+	gotExternalId := *stsMock.AssumeRoleInput.ExternalId
+	if gotExternalId != externalId {
+		t.Fatalf("want: %v, got: %v", externalId, gotExternalId)
 	}
 
 	gotSessionName := *stsMock.AssumeRoleInput.RoleSessionName

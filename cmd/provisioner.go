@@ -75,8 +75,9 @@ func init() {
 	rootCmd.AddCommand(provisionerCmd)
 
 	provisionerCmd.AddCommand(provisionerAuthCmd)
-	provisionerAuthCmd.PersistentFlags().StringP("role", "r", os.Getenv("MASSDRIVER_PROVISIONER_ROLE"), "AWS Role ARN to assume for provisioning (custom policy will be generated)")
-	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "", "Output dir path")
+	provisionerAuthCmd.PersistentFlags().StringP("role", "r", os.Getenv("MASSDRIVER_PROVISIONER_ROLE_ARN"), "AWS Role ARN to assume for provisioning (custom policy will be generated)")
+	provisionerAuthCmd.PersistentFlags().StringP("external-id", "d", os.Getenv("MASSDRIVER_PROVISIONER_ROLE_EXTERNAL_ID"), "External ID to use when assuming the provisioner role")
+	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "", "Output file path")
 
 	provisionerCmd.AddCommand(provisionerOPACmd)
 	provisionerOPACmd.AddCommand(provisionerOPAReportCmd)
@@ -103,9 +104,10 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	out, _ := cmd.Flags().GetString("output")
 	roleArn, _ := cmd.Flags().GetString("role")
+	externalId, _ := cmd.Flags().GetString("external-id")
 
 	if roleArn == "" {
-		err := errors.New("role ARN is empty (nothing in MASSDRIVER_PROVISIONER_ROLE environment variable)")
+		err := errors.New("role ARN is empty (nothing in MASSDRIVER_PROVISIONER_ROLE_ARN environment variable)")
 		util.LogError(err, span, "error while generating provisioner auth")
 		return err
 	}
@@ -144,7 +146,7 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	stsClient := sts.NewFromConfig(cfg)
 
-	genErr := provisioners.GenerateProvisionerAWSCredentials(ctx, output, stsClient, spec, roleArn)
+	genErr := provisioners.GenerateProvisionerAWSCredentials(ctx, output, stsClient, spec, roleArn, externalId)
 	if genErr != nil {
 		return genErr
 	}
