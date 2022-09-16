@@ -95,16 +95,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			]
 		},
 		{
-			"Sid": "TerraformStateBucketList",
-			"Effect": "Allow",
-			"Action": [
-				"s3:ListBucket"
-			],
-			"Resource": [
-				"arn:aws:s3:::stateBucket"
-			]
-		},
-		{
 			"Sid": "TerraformStateBucketManage",
 			"Effect": "Allow",
 			"Action": [
@@ -135,16 +125,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			}
 		},
 		{
-			"Sid": "BundleBucketList",
-			"Effect": "Allow",
-			"Action": [
-				"s3:ListBucket"
-			],
-			"Resource": [
-				"arn:aws:s3:::bundleBucket"
-			]
-		},
-		{
 			"Sid": "BundleBucketRead",
 			"Effect": "Allow",
 			"Action": [
@@ -152,6 +132,17 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			],
 			"Resource": [
 				"arn:aws:s3:::bundleBucket/bundles/bundleOrgId/bundleId/bundle.tar.gz"
+			]
+		},
+		{
+			"Sid": "BucketList",
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::bundleBucket",
+				"arn:aws:s3:::stateBucket"
 			]
 		}
 	]

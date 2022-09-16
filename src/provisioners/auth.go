@@ -90,6 +90,7 @@ func getProvisionerPolicy(spec *massdriver.Specification) *AWSIAMPolicyDocument 
 		getAssumeRolePolicies,
 		getStateManagementPolicies,
 		getBundleReadPolicies,
+		getS3ListBucketsPolicy,
 	}
 
 	for _, policyFunction := range policyFunctions {
@@ -140,18 +141,7 @@ func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 
 func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
 	// The provisioner needs access to the S3 state store, but ONLY for this package
-	statements := make([]*AWSIAMPolicyStatement, 0, 3)
-
-	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "TerraformStateBucketList",
-		Effect: "Allow",
-		Action: []string{
-			"s3:ListBucket",
-		},
-		Resource: []string{
-			bucketNameToARN(spec.S3StateBucket),
-		},
-	})
+	statements := make([]*AWSIAMPolicyStatement, 0, 2)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
 		Sid:    "TerraformStateBucketManage",
@@ -191,18 +181,7 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 
 func getBundleReadPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
 	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
-	statements := make([]*AWSIAMPolicyStatement, 0, 2)
-
-	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "BundleBucketList",
-		Effect: "Allow",
-		Action: []string{
-			"s3:ListBucket",
-		},
-		Resource: []string{
-			bucketNameToARN(spec.BundleBucket),
-		},
-	})
+	statements := make([]*AWSIAMPolicyStatement, 0, 1)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
 		Sid:    "BundleBucketRead",
@@ -212,6 +191,25 @@ func getBundleReadPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 		},
 		Resource: []string{
 			path.Join(bucketNameToARN(spec.BundleBucket), bundles.GetBundleKey(spec.BundleOwnerOrganizationID, spec.BundleID)),
+		},
+	})
+
+	return statements
+}
+
+func getS3ListBucketsPolicy(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
+	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
+	statements := make([]*AWSIAMPolicyStatement, 0, 1)
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		Sid:    "BucketList",
+		Effect: "Allow",
+		Action: []string{
+			"s3:ListBucket",
+		},
+		Resource: []string{
+			bucketNameToARN(spec.BundleBucket),
+			bucketNameToARN(spec.S3StateBucket),
 		},
 	})
 
