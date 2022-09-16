@@ -141,6 +141,8 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	cfg, cfgErr := config.LoadDefaultConfig(ctx, config.WithRegion("us-west-2"))
 	if cfgErr != nil {
+		span.RecordError(cfgErr)
+		span.SetStatus(codes.Error, cfgErr.Error())
 		return cfgErr
 	}
 
@@ -148,6 +150,8 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	genErr := provisioners.GenerateProvisionerAWSCredentials(ctx, output, stsClient, spec, roleArn, externalId)
 	if genErr != nil {
+		span.RecordError(genErr)
+		span.SetStatus(codes.Error, genErr.Error())
 		return genErr
 	}
 

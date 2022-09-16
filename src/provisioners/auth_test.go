@@ -75,7 +75,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 	"Version": "2012-10-17",
 	"Statement": [
 		{
-			"Sid": "WorkflowProgressPublisher",
 			"Effect": "Allow",
 			"Action": [
 				"sns:Publish"
@@ -85,7 +84,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			]
 		},
 		{
-			"Sid": "AssumeRole",
 			"Effect": "Allow",
 			"Action": [
 				"sts:AssumeRole"
@@ -95,7 +93,15 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			]
 		},
 		{
-			"Sid": "TerraformStateBucketManage",
+			"Effect": "Allow",
+			"Action": [
+				"s3:ListBucket"
+			],
+			"Resource": [
+				"arn:aws:s3:::stateBucket"
+			]
+		},
+		{
 			"Effect": "Allow",
 			"Action": [
 				"s3:GetObject",
@@ -106,7 +112,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 			]
 		},
 		{
-			"Sid": "TerraformStateDynamoDBTableLock",
 			"Effect": "Allow",
 			"Action": [
 				"dynamodb:PutItem",
@@ -123,27 +128,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 					]
 				}
 			}
-		},
-		{
-			"Sid": "BundleBucketRead",
-			"Effect": "Allow",
-			"Action": [
-				"s3:GetObject"
-			],
-			"Resource": [
-				"arn:aws:s3:::bundleBucket/bundles/bundleOrgId/bundleId/bundle.tar.gz"
-			]
-		},
-		{
-			"Sid": "BucketList",
-			"Effect": "Allow",
-			"Action": [
-				"s3:ListBucket"
-			],
-			"Resource": [
-				"arn:aws:s3:::bundleBucket",
-				"arn:aws:s3:::stateBucket"
-			]
 		}
 	]
 }`

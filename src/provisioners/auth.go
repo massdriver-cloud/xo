@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"xo/src/bundles"
 	"xo/src/massdriver"
 	"xo/src/provisioners/terraform"
 	"xo/src/telemetry"
@@ -89,8 +88,6 @@ func getProvisionerPolicy(spec *massdriver.Specification) *AWSIAMPolicyDocument 
 		getWorkflowProgressPolicies,
 		getAssumeRolePolicies,
 		getStateManagementPolicies,
-		getBundleReadPolicies,
-		getS3ListBucketsPolicy,
 	}
 
 	for _, policyFunction := range policyFunctions {
@@ -106,7 +103,7 @@ func getWorkflowProgressPolicies(spec *massdriver.Specification) []*AWSIAMPolicy
 	statements := make([]*AWSIAMPolicyStatement, 0, 1)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "WorkflowProgressPublisher",
+		// Sid:    "WorkflowProgressPublisher",
 		Effect: "Allow",
 		Action: []string{
 			"sns:Publish",
@@ -124,7 +121,7 @@ func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 	statements := make([]*AWSIAMPolicyStatement, 0, 1)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "AssumeRole",
+		// Sid:    "AssumeRole",
 		Effect: "Allow",
 		Action: []string{
 			"sts:AssumeRole",
@@ -141,10 +138,21 @@ func getAssumeRolePolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatem
 
 func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
 	// The provisioner needs access to the S3 state store, but ONLY for this package
-	statements := make([]*AWSIAMPolicyStatement, 0, 2)
+	statements := make([]*AWSIAMPolicyStatement, 0, 3)
 
 	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "TerraformStateBucketManage",
+		// Sid:    "TerraformStateBucketList",
+		Effect: "Allow",
+		Action: []string{
+			"s3:ListBucket",
+		},
+		Resource: []string{
+			bucketNameToARN(spec.S3StateBucket),
+		},
+	})
+
+	statements = append(statements, &AWSIAMPolicyStatement{
+		// Sid:    "TerraformStateBucketManage",
 		Effect: "Allow",
 		Action: []string{
 			"s3:GetObject",
@@ -156,7 +164,7 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 	})
 
 	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "TerraformStateDynamoDBTableLock",
+		// Sid:    "TerraformStateDynamoDBTableLock",
 		Effect: "Allow",
 		Action: []string{
 			"dynamodb:PutItem",
@@ -173,43 +181,6 @@ func getStateManagementPolicies(spec *massdriver.Specification) []*AWSIAMPolicyS
 					path.Join(spec.S3StateBucket, spec.OrganizationID, spec.PackageID, "*"),
 				},
 			},
-		},
-	})
-
-	return statements
-}
-
-func getBundleReadPolicies(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
-	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
-	statements := make([]*AWSIAMPolicyStatement, 0, 1)
-
-	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "BundleBucketRead",
-		Effect: "Allow",
-		Action: []string{
-			"s3:GetObject",
-		},
-		Resource: []string{
-			path.Join(bucketNameToARN(spec.BundleBucket), bundles.GetBundleKey(spec.BundleOwnerOrganizationID, spec.BundleID)),
-		},
-	})
-
-	return statements
-}
-
-func getS3ListBucketsPolicy(spec *massdriver.Specification) []*AWSIAMPolicyStatement {
-	// The provisioner needs access to the S3 bucket store, but ONLY for this bundle
-	statements := make([]*AWSIAMPolicyStatement, 0, 1)
-
-	statements = append(statements, &AWSIAMPolicyStatement{
-		Sid:    "BucketList",
-		Effect: "Allow",
-		Action: []string{
-			"s3:ListBucket",
-		},
-		Resource: []string{
-			bucketNameToARN(spec.BundleBucket),
-			bucketNameToARN(spec.S3StateBucket),
 		},
 	})
 
