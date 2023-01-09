@@ -15,8 +15,10 @@ type SnsInterface interface {
 }
 
 type MassdriverClient struct {
-	Specification *Specification
-	SNSClient     SnsInterface
+	Specification  *Specification
+	SNSClient      SnsInterface
+	DynamoDBClient DynamoDBInterface
+	KMSClient      KMSInterface
 }
 
 type Specification struct {
@@ -29,11 +31,14 @@ type Specification struct {
 	DeploymentID              string `envconfig:"DEPLOYMENT_ID" required:"true"`
 	DynamoDBStateLockTableArn string `envconfig:"DYNAMODB_STATE_LOCK_TABLE_ARN" required:"true"`
 	EventTopicARN             string `envconfig:"EVENT_TOPIC_ARN" required:"true"`
+	ManifestID                string `envconfig:"MANIFEST_ID"`
 	OrganizationID            string `envconfig:"ORGANIZATION_ID" required:"true"`
 	PackageID                 string `envconfig:"PACKAGE_ID" required:"true"`
 	PackageName               string `envconfig:"PACKAGE_NAME"`
 	S3StateBucket             string `envconfig:"S3_STATE_BUCKET" required:"true"`
 	S3StateRegion             string `envconfig:"S3_STATE_REGION" required:"true"`
+	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME"`
+	TargetMode                string `envconfig:"TARGET_MODE"`
 	Token                     string `envconfig:"TOKEN" required:"true"`
 	URL                       string `envconfig:"URL" required:"true"`
 }

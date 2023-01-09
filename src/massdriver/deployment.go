@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-func (c MassdriverClient) ReportDeploymentStatus(ctx context.Context, deploymentId string, status string) error {
+func (c *MassdriverClient) ReportDeploymentStatus(ctx context.Context, deploymentId string, status string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ReportDeploymentStatus")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
