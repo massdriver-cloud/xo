@@ -62,7 +62,7 @@ func (c *MassdriverClient) GetSecrets(ctx context.Context) (map[string]string, e
 func FetchSecretsFromDynamoDB(ctx context.Context, client DynamoDBInterface, table string, key string) ([]Secret, error) {
 	input := dynamodb.QueryInput{
 		TableName:              aws.String(table),
-		KeyConditionExpression: aws.String("id = :id"),
+		KeyConditionExpression: aws.String("id=:id"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":id": &types.AttributeValueMemberS{Value: key},
 		},

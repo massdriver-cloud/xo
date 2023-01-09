@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
@@ -37,7 +39,7 @@ type Specification struct {
 	PackageName               string `envconfig:"PACKAGE_NAME"`
 	S3StateBucket             string `envconfig:"S3_STATE_BUCKET" required:"true"`
 	S3StateRegion             string `envconfig:"S3_STATE_REGION" required:"true"`
-	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME"`
+	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME" required:"true"`
 	TargetMode                string `envconfig:"TARGET_MODE"`
 	Token                     string `envconfig:"TOKEN" required:"true"`
 	URL                       string `envconfig:"URL" required:"true"`
@@ -58,6 +60,8 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	}
 
 	client.SNSClient = sns.NewFromConfig(cfg)
+	client.DynamoDBClient = dynamodb.NewFromConfig(cfg)
+	client.KMSClient = kms.NewFromConfig(cfg)
 
 	return client, nil
 }
