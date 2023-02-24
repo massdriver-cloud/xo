@@ -72,5 +72,5 @@ jobs:
       - env:
           TF_ACC: "1"
         # not sure if this is the right path
-        run: go test -v -cover ./src/
+        run: go test -v -cover ./src/...
         timeout-minutes: 10
