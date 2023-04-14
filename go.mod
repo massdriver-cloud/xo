@@ -17,7 +17,7 @@ require (
 	github.com/lightstep/otel-launcher-go v1.5.2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/rs/zerolog v1.27.0
+	github.com/rs/zerolog v1.29.1
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 	github.com/xeipuuv/gojsonschema v1.2.0
