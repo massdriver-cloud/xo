@@ -36,11 +36,31 @@ type terraformLog struct {
 	Terraform  string               `json:"terraform,omitempty"`
 }
 
+type diagnosticRangeLocation struct {
+	Line   int `json:"line"`
+	Column int `json:"column"`
+	Byte   int `json:"byte"`
+}
+
+type diagnosticRange struct {
+	FileName string                  `json:"filename"`
+	Start    diagnosticRangeLocation `json:"start"`
+	End      diagnosticRangeLocation `json:"end"`
+}
+
+type diagnosticSnippet struct {
+	Context   string `json:"context"`
+	Code      string `json:"code"`
+	StartLine int    `json:"start_line"`
+}
+
 type terraformDiagnostic struct {
-	Severity string `json:"severity"`
-	Summary  string `json:"summary"`
-	Detail   string `json:"detail"`
-	Address  string `json:"address"`
+	Severity string            `json:"severity"`
+	Summary  string            `json:"summary"`
+	Detail   string            `json:"detail"`
+	Address  string            `json:"address"`
+	Range    diagnosticRange   `json:"range"`
+	Snippet  diagnosticSnippet `json:"snippet"`
 }
 
 type terraformChanges struct {
@@ -148,7 +168,14 @@ func parseDiagnosticLog(span trace.Span, record *terraformLog, deploymentId stri
 	diagnostic := new(massdriver.EventPayloadDiagnostic)
 	diagnostic.DeploymentId = deploymentId
 	diagnostic.Message = record.Diagnostic.Summary
-	diagnostic.Details = record.Diagnostic.Detail
+
+	error_details, err := json.Marshal(record.Diagnostic)
+
+	if err != nil {
+		error_details = []byte(record.Diagnostic.Detail)
+	}
+
+	diagnostic.Details = string(error_details)
 
 	switch record.Diagnostic.Severity {
 	case "error":
