@@ -1,10 +1,12 @@
 package main
 
 import (
+	"log"
 	"os"
 	"xo/cmd"
 
-	"github.com/lightstep/otel-launcher-go/launcher"
+	"github.com/honeycombio/honeycomb-opentelemetry-go"
+	"github.com/honeycombio/otel-config-go/otelconfig"
 )
 
 func main() {
@@ -12,12 +14,17 @@ func main() {
 	defer func() { os.Exit(exitCode) }()
 
 	// Setup Tracing
-	if os.Getenv("LS_ACCESS_TOKEN") != "" {
-		otelLauncher := launcher.ConfigureOpentelemetry(
-			launcher.WithServiceName("xo"),
-			launcher.WithPropagators([]string{"tracecontext"}),
+	if os.Getenv("HONEYCOMB_API_KEY") != "" {
+		bsp := honeycomb.NewBaggageSpanProcessor()
+
+		// use honeycomb distro to setup OpenTelemetry SDK
+		otelShutdown, err := otelconfig.ConfigureOpenTelemetry(
+			otelconfig.WithSpanProcessor(bsp),
 		)
-		defer otelLauncher.Shutdown()
+		if err != nil {
+			log.Fatalf("error setting up OTel SDK - %e", err)
+		}
+		defer otelShutdown()
 	}
 
 	// Run application
