@@ -34,7 +34,7 @@ type STSAPI interface {
 }
 
 func GenerateProvisionerAWSCredentials(ctx context.Context, out io.Writer, stsClient STSAPI, spec *massdriver.Specification, roleARN string, externalId string) error {
-	_, span := otel.Tracer("xo").Start(ctx, "provisioners.terraform.ReportProgressFromLogs")
+	_, span := otel.Tracer("xo").Start(ctx, "provisioners.terraform.GenerateProvisionerAWSCredentials")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
@@ -52,7 +52,7 @@ func GenerateProvisionerAWSCredentials(ctx context.Context, out io.Writer, stsCl
 		RoleArn:         &roleARN,
 		Policy:          aws.String(string(policyBytes)),
 		RoleSessionName: aws.String(spec.DeploymentID),
-		DurationSeconds: aws.Int32(3600),
+		DurationSeconds: aws.Int32(43200),
 	}
 
 	if externalId != "" {

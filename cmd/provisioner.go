@@ -11,7 +11,9 @@ import (
 	"xo/src/telemetry"
 	"xo/src/util"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -77,6 +79,8 @@ func init() {
 	provisionerCmd.AddCommand(provisionerAuthCmd)
 	provisionerAuthCmd.PersistentFlags().StringP("role", "r", os.Getenv("MASSDRIVER_PROVISIONER_ROLE_ARN"), "AWS Role ARN to assume for provisioning (custom policy will be generated)")
 	provisionerAuthCmd.PersistentFlags().StringP("external-id", "d", os.Getenv("MASSDRIVER_PROVISIONER_ROLE_EXTERNAL_ID"), "External ID to use when assuming the provisioner role")
+	provisionerAuthCmd.PersistentFlags().StringP("access-key", "a", os.Getenv("MASSDRIVER_PROVISIONER_WORKFLOW_ACCESS_KEY_ID"), "AWS Access Key ID to use for assuming provisioner role")
+	provisionerAuthCmd.PersistentFlags().StringP("secret-key", "s", os.Getenv("MASSDRIVER_PROVISIONER_WORKFLOW_SECRET_ACCESS_KEY"), "AWS Secret Access Key for assuming the provisioner role")
 	provisionerAuthCmd.PersistentFlags().StringP("output", "o", "", "Output file path")
 
 	provisionerCmd.AddCommand(provisionerOPACmd)
@@ -105,6 +109,8 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	out, _ := cmd.Flags().GetString("output")
 	roleArn, _ := cmd.Flags().GetString("role")
 	externalId, _ := cmd.Flags().GetString("external-id")
+	accessKey, _ := cmd.Flags().GetString("access-key")
+	secretKey, _ := cmd.Flags().GetString("secret-key")
 
 	if roleArn == "" {
 		err := errors.New("role ARN is empty (nothing in MASSDRIVER_PROVISIONER_ROLE_ARN environment variable)")
@@ -139,8 +145,25 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	log.Info().Msg("Generating secure AWS credentials for provisioning...")
 
-	cfg, cfgErr := config.LoadDefaultConfig(ctx, config.WithRegion("us-west-2"))
+	var cfg aws.Config
+	var cfgErr error
+
+	if len(accessKey) > 0 && len(secretKey) > 0 {
+		log.Info().Msg("Using credentials that were passed to perform AssumeRole")
+		cfg, cfgErr = config.LoadDefaultConfig(ctx,
+			config.WithRegion("us-west-2"),
+			config.WithCredentialsProvider(
+				credentials.NewStaticCredentialsProvider(
+					accessKey, secretKey, "",
+				),
+			),
+		)
+	} else {
+		log.Info().Msg("No credentials passed, falling back to default credentials for AssumeRole")
+		cfg, cfgErr = config.LoadDefaultConfig(ctx, config.WithRegion("us-west-2"))
+	}
 	if cfgErr != nil {
+		log.Error().Err(cfgErr).Msg("an error occured while configuring AWS client")
 		span.RecordError(cfgErr)
 		span.SetStatus(codes.Error, cfgErr.Error())
 		return cfgErr
@@ -150,6 +173,7 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 
 	genErr := provisioners.GenerateProvisionerAWSCredentials(ctx, output, stsClient, spec, roleArn, externalId)
 	if genErr != nil {
+		log.Error().Err(genErr).Msg("an error occured while generating secure credentials for provisioning")
 		span.RecordError(genErr)
 		span.SetStatus(codes.Error, genErr.Error())
 		return genErr
