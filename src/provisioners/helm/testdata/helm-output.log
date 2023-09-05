@@ -1,0 +1,16 @@
+client.go:134: [debug] creating 1 resource(s)
+client.go:136: [debug] Creating Namespace /foo...
+client.go:134: [debug] creating 1 resource(s)
+client.go:136: [debug] Creating Deployment foo/foo-provisioner...
+client.go:680: [debug] Looks like there are no changes for Deployment foo/foo-provisioner
+client.go:689: [debug] Patching Deployment foo/foo-provisioner
+upgrade.go:427: [debug] waiting for release foo resources (created: 0 updated: 3  deleted: 0)
+ready.go:297: [debug] Status Deployment is not ready: foo/foo-provisioner (0 out of 1 expected pods are ready)
+ready.go:300: [debug] Status Deployment is ready: foo/foo-provisioner
+client.go:482: [debug] Deleting ServiceAccount foo/foo-provisioner
+wait.go:69: [debug] beginning wait for 3 resources to be deleted with timeout of 5m0s
+wait.go:87: [debug] Deleted Deployment foo/foo-provisioner
+Error: Chart.yaml file is missing
+Error: UPGRADE FAILED: context deadline exceeded
+Error: UPGRADE FAILED: error validating "": error validating data: ValidationError(Deployment.spec.template.spec.containers[0]): unknown field "foo" in io.k8s.api.core.v1.Container
+Error: uninstall: Release not loaded: foo: release: not found
