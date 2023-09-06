@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"regexp"
 	"strings"
 	"xo/src/massdriver"
@@ -31,6 +32,11 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
+	helmVersion := "unknown"
+	if version, ok := os.LookupEnv("HELM_VERSION"); ok {
+		helmVersion = version
+	}
+
 	scanner := bufio.NewScanner(stream)
 
 	for scanner.Scan() {
@@ -45,6 +51,7 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 		}
 
 		if event != nil {
+			event.Metadata.Version = helmVersion
 			err = client.PublishEventToSNS(event)
 			if err != nil {
 				util.LogError(err, span, "an error occurred while sending resource status to massdriver")
