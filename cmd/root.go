@@ -24,7 +24,6 @@ var rootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return errors.New("a subcommand is required")
 	},
-	SilenceUsage: true,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
