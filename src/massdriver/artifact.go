@@ -24,5 +24,5 @@ func (c *MassdriverClient) UploadArtifactFile(file string, id string) error {
 func (c *MassdriverClient) UploadArtifact(artifacts []map[string]interface{}, id string) error {
 	event := NewEvent(EVENT_TYPE_ARTIFACT_UPDATE)
 	event.Payload = EventPayloadArtifacts{DeploymentId: id, Artifacts: artifacts}
-	return c.PublishEventToSNS(event)
+	return c.PublishEvent(event)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 	"xo/src/massdriver"
+	testmass "xo/test"
 )
 
 func TestReportDeploymentStatus(t *testing.T) {
@@ -57,15 +58,16 @@ func TestReportDeploymentStatus(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
-			testSNSClient := SNSTestClient{}
-			testClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
-			err := testClient.ReportDeploymentStatus(context.Background(), tc.id, tc.status)
+			testmass.NewMassdriverTestClient("")
+			testClient := testmass.NewMassdriverTestClient("")
+
+			err := testClient.MassClient.ReportDeploymentStatus(context.Background(), tc.id, tc.status)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			got := *testSNSClient.Data
-			if got != tc.want {
+			got := testClient.GetSNSMessages()
+			if got[0] != tc.want {
 				t.Fatalf("want: %v, got: %v", got, tc.want)
 			}
 		})
