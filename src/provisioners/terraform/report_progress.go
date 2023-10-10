@@ -115,7 +115,7 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 		}
 
 		if event != nil {
-			err = client.PublishEventToSNS(event)
+			err = client.PublishEvent(event)
 			if err != nil {
 				util.LogError(err, span, "an error occurred while sending resource status to massdriver")
 			}

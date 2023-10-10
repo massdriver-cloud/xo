@@ -37,5 +37,5 @@ func (c *MassdriverClient) ReportDeploymentStatus(ctx context.Context, deploymen
 
 	event.Payload = EventPayloadProvisionerStatus{DeploymentId: deploymentId}
 
-	return c.PublishEventToSNS(event)
+	return c.PublishEvent(event)
 }

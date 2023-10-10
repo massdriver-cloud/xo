@@ -1,23 +1,11 @@
 package massdriver_test
 
 import (
-	"context"
 	"testing"
+
 	"xo/src/massdriver"
-
-	"github.com/aws/aws-sdk-go-v2/service/sns"
+	testmass "xo/test"
 )
-
-type SNSTestClient struct {
-	Input *sns.PublishInput
-	Data  *string
-}
-
-func (c *SNSTestClient) Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error) {
-	c.Input = params
-	c.Data = params.Message
-	return &sns.PublishOutput{}, nil
-}
 
 func TestPublishEventToSNS(t *testing.T) {
 
@@ -45,15 +33,15 @@ func TestPublishEventToSNS(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			deploymentId := "depId"
-			testClient := massdriver.MassdriverClient{Specification: &massdriver.Specification{DeploymentID: deploymentId}}
-			testSNSClient := SNSTestClient{}
-			testClient.SNSClient = &testSNSClient
-			err := testClient.PublishEventToSNS(tc.input)
+			testClient := testmass.NewMassdriverTestClient(deploymentId)
+			testClient.MassClient.Specification.DeploymentID = deploymentId
+			err := testClient.MassClient.PublishEvent(tc.input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			got := testSNSClient.Input
+			testClient.GetSNS()
+			got := testClient.GetSNS().Input
 			if *got.Message != tc.want {
 				t.Fatalf("want: %v, got: %v", tc.want, *got.Message)
 			}

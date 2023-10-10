@@ -47,7 +47,7 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 			}
 
 			if event != nil {
-				pubErr := client.PublishEventToSNS(event)
+				pubErr := client.PublishEvent(event)
 				if pubErr != nil {
 					util.LogError(err, span, "an error occurred while sending OPA event to massdriver")
 					errCounter++
@@ -63,7 +63,7 @@ func ReportResults(ctx context.Context, client *massdriver.MassdriverClient, dep
 			if diagnostic != nil {
 				event := massdriver.NewEvent(massdriver.EVENT_TYPE_PROVISIONER_ERROR)
 				event.Payload = diagnostic
-				pubErr := client.PublishEventToSNS(event)
+				pubErr := client.PublishEvent(event)
 				if pubErr != nil {
 					util.LogError(err, span, "an error occurred while sending OPA diagnostic to massdriver")
 					errCounter++
