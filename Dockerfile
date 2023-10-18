@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-ARG BASE_IMG=golang:1.18
-ARG RUN_IMG=alpine:3.14
+ARG BASE_IMG=golang:1.21
+ARG RUN_IMG=alpine:3.18
 
 #############
 # Base stage
