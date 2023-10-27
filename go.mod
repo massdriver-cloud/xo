@@ -23,7 +23,7 @@ require (
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
 	github.com/xeipuuv/gojsonschema v1.2.0
-	github.com/zclconf/go-cty v1.10.0
+	github.com/zclconf/go-cty v1.14.1
 	go.opentelemetry.io/otel v1.18.0
 	go.opentelemetry.io/otel/trace v1.18.0
 	gopkg.in/ini.v1 v1.66.6
@@ -32,6 +32,7 @@ require (
 )
 
 require (
+	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.2 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.6 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.27 // indirect
