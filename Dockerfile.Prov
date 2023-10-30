@@ -20,6 +20,7 @@ WORKDIR /bundle
 # The script uses some bash features so add it in
 RUN apk add --upgrade --no-cache bash git openssh
 COPY --from=builder /app/scripts/run.sh /usr/local/bin
+COPY --from=builder /app/scripts/safe-gitconfig /root/.gitconfig
 COPY --from=builder /app/yq /usr/local/bin
 COPY --from=builder /app/xo /usr/local/bin
 COPY --from=builder /app/terraform /usr/local/bin
