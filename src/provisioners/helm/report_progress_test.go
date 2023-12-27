@@ -6,6 +6,7 @@ import (
 	"testing"
 	"xo/src/massdriver"
 	"xo/src/provisioners/helm"
+	testmass "xo/test"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 )
@@ -51,9 +52,7 @@ func TestReportProgressFromLogs(t *testing.T) {
 			t.Setenv("MASSDRIVER_PROVISIONER", "helm")
 			t.Setenv("HELM_VERSION", "1.2.3")
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
-			testRequests = make([]string, 0)
-			testSNSClient := SNSTestClient{}
-			testMassdriverClient := massdriver.MassdriverClient{SNSClient: &testSNSClient, Specification: &massdriver.Specification{}}
+			testMassdriverClient := testmass.NewMassdriverTestClient("")
 
 			input, err := os.Open(tc.input)
 			if err != nil {
@@ -61,11 +60,12 @@ func TestReportProgressFromLogs(t *testing.T) {
 			}
 			defer input.Close()
 
-			err = helm.ReportProgressFromLogs(context.Background(), &testMassdriverClient, "id", input)
+			err = helm.ReportProgressFromLogs(context.Background(), &testMassdriverClient.MassClient, "id", input)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
+			testRequests := testMassdriverClient.GetSNSMessages()
 			if len(tc.want) != len(testRequests) {
 				t.Fatalf("want: %v, got: %v", len(tc.want), len(testRequests))
 			}

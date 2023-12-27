@@ -19,13 +19,15 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-var creatingRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Creating ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)\.{3}$`
-var readingRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Looks like there are no changes for ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`
-var patchingRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Patching ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`
-var deletingRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Deleting ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`
-var completedRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Status ([a-zA-Z0-9]+) is ready: ([a-zA-Z0-9._\/-]+)$`
-var deletedRegex = `^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Deleted ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`
-var errorRegex = `^Error: (.*)$`
+var (
+	creatingRegex  = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Creating ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)\.{3}$`)
+	readingRegex   = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Looks like there are no changes for ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`)
+	patchingRegex  = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Patching ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`)
+	deletingRegex  = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Deleting ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`)
+	completedRegex = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Status ([a-zA-Z0-9]+) is ready: ([a-zA-Z0-9._\/-]+)$`)
+	deletedRegex   = regexp.MustCompile(`^[a-zA-Z0-9]+\.go:[0-9]+: \[debug\] Deleted ([a-zA-Z0-9]+) ([a-zA-Z0-9._\/-]+)$`)
+	errorRegex     = regexp.MustCompile(`^Error: (.*)$`)
+)
 
 func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverClient, deploymentId string, stream io.Reader) error {
 	_, span := otel.Tracer("xo").Start(ctx, "provisioners.helm.ReportProgressFromLogs")
@@ -52,7 +54,7 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 
 		if event != nil {
 			event.Metadata.Version = helmVersion
-			err = client.PublishEventToSNS(event)
+			err = client.PublishEvent(event)
 			if err != nil {
 				util.LogError(err, span, "an error occurred while sending resource status to massdriver")
 			}
@@ -64,8 +66,7 @@ func ReportProgressFromLogs(ctx context.Context, client *massdriver.MassdriverCl
 
 func convertLogToMassdriverEvent(span trace.Span, logLine, deploymentId string) (*massdriver.Event, error) {
 
-	matchErrorRegex, err := regexp.Match(errorRegex, []byte(logLine))
-	if matchErrorRegex && err == nil {
+	if errorRegex.Match([]byte(logLine)) {
 		return parseErrorLog(span, logLine, deploymentId)
 	} else {
 		return parseResourceUpdateLog(span, logLine, deploymentId)
@@ -74,11 +75,7 @@ func convertLogToMassdriverEvent(span trace.Span, logLine, deploymentId string) 
 
 func parseErrorLog(span trace.Span, logLine, deploymentId string) (*massdriver.Event, error) {
 
-	re, err := regexp.Compile(errorRegex)
-	if err != nil {
-		return nil, err
-	}
-	result := re.FindStringSubmatch(logLine)
+	result := errorRegex.FindStringSubmatch(logLine)
 
 	helmError := result[1]
 
@@ -97,25 +94,20 @@ func parseErrorLog(span trace.Span, logLine, deploymentId string) (*massdriver.E
 
 func parseResourceUpdateLog(span trace.Span, logLine, deploymentId string) (*massdriver.Event, error) {
 
-	eventToRegex := map[string]string{
-		creatingRegex:  massdriver.EVENT_TYPE_RESOURCE_CREATE_RUNNING,
-		patchingRegex:  massdriver.EVENT_TYPE_RESOURCE_UPDATE_RUNNING,
-		deletingRegex:  massdriver.EVENT_TYPE_RESOURCE_DELETE_RUNNING,
-		completedRegex: massdriver.EVENT_TYPE_RESOURCE_CREATE_COMPLETED,
-		deletedRegex:   massdriver.EVENT_TYPE_RESOURCE_DELETE_COMPLETED,
+	eventToRegex := map[string]*regexp.Regexp{
+		massdriver.EVENT_TYPE_RESOURCE_CREATE_RUNNING:   creatingRegex,
+		massdriver.EVENT_TYPE_RESOURCE_UPDATE_RUNNING:   patchingRegex,
+		massdriver.EVENT_TYPE_RESOURCE_DELETE_RUNNING:   deletingRegex,
+		massdriver.EVENT_TYPE_RESOURCE_CREATE_COMPLETED: completedRegex,
+		massdriver.EVENT_TYPE_RESOURCE_DELETE_COMPLETED: deletedRegex,
 	}
 
-	for pattern, eventType := range eventToRegex {
-		matchRegex, _ := regexp.Match(pattern, []byte(logLine))
-		if !matchRegex {
+	for eventType, pattern := range eventToRegex {
+		if !pattern.Match([]byte(logLine)) {
 			continue
 		}
 
-		re, err := regexp.Compile(pattern)
-		if err != nil {
-			return nil, err
-		}
-		results := re.FindStringSubmatch(logLine)
+		results := pattern.FindStringSubmatch(logLine)
 
 		resourceType := results[1]
 		resourceName := strings.TrimPrefix(results[2], "/")
