@@ -1,0 +1,27 @@
+FROM golang:1.21-alpine as builder
+WORKDIR /app
+
+RUN apk update && apk add unzip curl wget && \
+    # Do not bump this above 1.5.x as that's when the license changed
+    curl -sSL https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip > terraform.zip && \
+    unzip -d /app/ terraform.zip && rm *.zip && \
+    wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /app/yq && \
+    chmod +x /app/yq
+
+# pre-copy/cache go.mod for pre-downloading dependencies and only redownloading them in subsequent builds if they change
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY . .
+RUN go build -o /app
+
+FROM alpine:3.18
+WORKDIR /bundle
+# The script uses some bash features so add it in
+RUN apk add --upgrade --no-cache bash git openssh
+COPY --from=builder /app/scripts/run.sh /usr/local/bin
+COPY --from=builder /app/scripts/safe-gitconfig /root/.gitconfig
+COPY --from=builder /app/yq /usr/local/bin
+COPY --from=builder /app/xo /usr/local/bin
+COPY --from=builder /app/terraform /usr/local/bin
+CMD [ "run.sh" ]

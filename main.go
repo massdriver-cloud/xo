@@ -10,9 +10,6 @@ import (
 )
 
 func main() {
-	exitCode := 0
-	defer func() { os.Exit(exitCode) }()
-
 	// Setup Tracing
 	if os.Getenv("HONEYCOMB_API_KEY") != "" {
 		bsp := honeycomb.NewBaggageSpanProcessor()
@@ -29,7 +26,6 @@ func main() {
 
 	// Run application
 	if err := cmd.Execute(); err != nil {
-		exitCode = 1
-		return
+		log.Fatal(err)
 	}
 }
