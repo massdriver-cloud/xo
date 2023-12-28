@@ -6,6 +6,7 @@ import (
 	"os"
 	"xo/src/massdriver"
 	"xo/src/provisioners"
+	"xo/src/provisioners/helm"
 	"xo/src/provisioners/opa"
 	tf "xo/src/provisioners/terraform"
 	"xo/src/telemetry"
@@ -34,6 +35,19 @@ var provisionerAuthCmd = &cobra.Command{
 	RunE:  runProvisionerAuth,
 }
 
+var provisionerHelmCmd = &cobra.Command{
+	Use:   "helm",
+	Short: "Commands specific to helm provisioner",
+	Long:  ``,
+}
+
+var provisionerHelmReportCmd = &cobra.Command{
+	Use:   "report-progress",
+	Short: "Report Helm provisioner progress to Massdriver",
+	Long:  ``,
+	RunE:  runProvisionerHelmReport,
+}
+
 var provisionerOPACmd = &cobra.Command{
 	Use:   "opa",
 	Short: "Commands specific to opa provisioner",
@@ -55,7 +69,7 @@ var provisionerTerraformCmd = &cobra.Command{
 
 var provisionerTerraformReportCmd = &cobra.Command{
 	Use:   "report-progress",
-	Short: "Report provisioner progress to Massdriver",
+	Short: "Report Terraform provisioner progress to Massdriver",
 	Long:  ``,
 	RunE:  runProvisionerTerraformReport,
 }
@@ -87,6 +101,11 @@ func init() {
 	provisionerOPACmd.AddCommand(provisionerOPAReportCmd)
 	provisionerOPAReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
 	provisionerOPAReportCmd.MarkFlagRequired("file")
+
+	provisionerCmd.AddCommand(provisionerHelmCmd)
+	provisionerHelmCmd.AddCommand(provisionerHelmReportCmd)
+	provisionerHelmReportCmd.Flags().StringP("file", "f", "", "File to extract ('-' for stdin)")
+	provisionerHelmReportCmd.MarkFlagRequired("file")
 
 	provisionerCmd.AddCommand(provisionerTerraformCmd)
 
@@ -180,6 +199,55 @@ func runProvisionerAuth(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msg("Credentials generated.")
+
+	return nil
+}
+
+func runProvisionerHelmReport(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerHelmReport")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
+
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	if deploymentId == "" {
+		log.Warn().Msg("Deployment ID is empty (nothing in MASSDRIVER_DEPLOYMENT_ID environment variable)")
+	}
+
+	var input io.Reader
+	if file == "-" {
+		input = os.Stdin
+	} else {
+		inputFile, err := os.Open(file)
+		if err != nil {
+			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			return err
+		}
+		defer inputFile.Close()
+		input = inputFile
+	}
+
+	mdClient, err := massdriver.InitializeMassdriverClient()
+	if err != nil {
+		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
+	err = helm.ReportProgressFromLogs(ctx, mdClient, deploymentId, input)
+	if err != nil {
+		log.Error().Err(err).Msg("an error occurred while reporting progress")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		return err
+	}
 
 	return nil
 }
