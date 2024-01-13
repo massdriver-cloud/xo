@@ -27,10 +27,6 @@ func TestValidate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
-			// massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
-			// testClient := testmass.NewMassdriverTestClient(tc.deploymentId)
-
 			schemasBytes, err := os.ReadFile(tc.schemaPath)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
@@ -39,7 +35,6 @@ func TestValidate(t *testing.T) {
 
 			artifactBuffer := bytes.NewBufferString(tc.artifact)
 
-			//input := bytes.NewBuffer([]byte(tc.artifact))
 			got, err := artifact.Validate(tc.field, artifactBuffer, schemasBuffer)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
@@ -47,11 +42,6 @@ func TestValidate(t *testing.T) {
 			if got != tc.want {
 				t.Fatalf("want: %v, got: %v", tc.want, got)
 			}
-
-			// got := testClient.GetSNSMessages()
-			// if got[0] != tc.want {
-			// 	t.Fatalf("want: %v, got: %v", tc.want, got[0])
-			// }
 		})
 	}
 }
