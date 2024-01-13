@@ -1,10 +1,10 @@
-package bundles_test
+package bundle_test
 
 import (
 	"fmt"
 	"io/ioutil"
 	"testing"
-	"xo/src/bundles"
+	"xo/src/bundle"
 
 	"gopkg.in/yaml.v3"
 )
@@ -20,7 +20,7 @@ func TestTransformations(t *testing.T) {
 		{
 			name:           "md_set_id",
 			schemaPath:     "./testdata/transformation-md_set_id.yaml",
-			transformation: bundles.AddSetIdToObjectArrays,
+			transformation: bundle.AddSetIdToObjectArrays,
 			expected: map[string]interface{}{
 				"params": map[string]interface{}{
 					"properties": map[string]interface{}{
@@ -54,7 +54,7 @@ func TestTransformations(t *testing.T) {
 		{
 			name:           "additionalProperties",
 			schemaPath:     "./testdata/transformation-additional_properties.yaml",
-			transformation: bundles.DisableAdditionalPropertiesInObjects,
+			transformation: bundle.DisableAdditionalPropertiesInObjects,
 			expected: map[string]interface{}{
 				"params": map[string]interface{}{
 					"properties": map[string]interface{}{
@@ -94,7 +94,7 @@ func TestTransformations(t *testing.T) {
 				t.Fatalf("%d, unexpected error", err)
 			}
 
-			err = bundles.ApplyTransformations(got, []func(map[string]interface{}) error{tc.transformation})
+			err = bundle.ApplyTransformations(got, []func(map[string]interface{}) error{tc.transformation})
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}

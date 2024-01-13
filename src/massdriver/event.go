@@ -11,7 +11,9 @@ const EVENT_TYPE_PROVISION_FAILED string = "provision_failed"
 const EVENT_TYPE_DECOMMISSION_STARTED string = "decommission_started"
 const EVENT_TYPE_DECOMMISSION_COMPLETED string = "decommission_completed"
 const EVENT_TYPE_DECOMMISSION_FAILED string = "decommission_failed"
-const EVENT_TYPE_ARTIFACT_UPDATE string = "artifact_update"
+const EVENT_TYPE_ARTIFACT_CREATED string = "artifact_created"
+const EVENT_TYPE_ARTIFACT_UPDATED string = "artifact_updated"
+const EVENT_TYPE_ARTIFACT_DELETED string = "artifact_deleted"
 
 const EVENT_TYPE_PROVISIONER_VIOLATION string = "provisioner_violation"
 
@@ -55,9 +57,9 @@ type EventPayloadResourceProgress struct {
 	ResourceId   string `json:"resource_id,omitempty"`
 }
 
-type EventPayloadArtifacts struct {
-	DeploymentId string                   `json:"deployment_id"`
-	Artifacts    []map[string]interface{} `json:"artifacts"`
+type EventPayloadArtifact struct {
+	DeploymentId string                 `json:"deployment_id"`
+	Artifact     map[string]interface{} `json:"artifact"`
 }
 
 type EventPayloadDiagnostic struct {

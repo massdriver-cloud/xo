@@ -39,8 +39,12 @@ func init() {
 }
 
 func runSchemaValidate(cmd *cobra.Command, args []string) error {
-	schema, _ := cmd.Flags().GetString("schema")
-	document, _ := cmd.Flags().GetString("document")
+	schemaPath, _ := cmd.Flags().GetString("schema")
+	documentPath, _ := cmd.Flags().GetString("document")
+
+	schema := jsonschema.Load(schemaPath)
+	document := jsonschema.Load(documentPath)
+
 	_, err := jsonschema.Validate(schema, document)
 	return err
 }

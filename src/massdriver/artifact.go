@@ -1,28 +1,28 @@
 package massdriver
 
-import (
-	"encoding/json"
-	ioutil "io/ioutil"
-	"os"
-)
+// func (c *MassdriverClient) UploadArtifactFile(file string) error {
+// 	artifactHandle, err := os.Open(file)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer artifactHandle.Close()
 
-func (c *MassdriverClient) UploadArtifactFile(file string, id string) error {
-	artifactHandle, err := os.Open(file)
-	if err != nil {
-		return err
-	}
-	defer artifactHandle.Close()
+// 	var artifact map[string]interface{}
+// 	bytes, _ := io.ReadAll(artifactHandle)
+// 	json.Unmarshal(bytes, &artifact)
 
-	var artifacts []map[string]interface{}
-	bytes, _ := ioutil.ReadAll(artifactHandle)
-	json.Unmarshal(bytes, &artifacts)
+// 	err = c.UploadArtifact(artifact)
+// 	return err
+// }
 
-	err = c.UploadArtifact(artifacts, id)
-	return err
+func PublishArtifact(c *MassdriverClient, artifact map[string]interface{}) error {
+	event := NewEvent(EVENT_TYPE_ARTIFACT_UPDATED)
+	event.Payload = EventPayloadArtifact{DeploymentId: c.Specification.DeploymentID, Artifact: artifact}
+	return c.PublishEvent(event)
 }
 
-func (c *MassdriverClient) UploadArtifact(artifacts []map[string]interface{}, id string) error {
-	event := NewEvent(EVENT_TYPE_ARTIFACT_UPDATE)
-	event.Payload = EventPayloadArtifacts{DeploymentId: id, Artifacts: artifacts}
+func DeleteArtifact(c *MassdriverClient, artifact map[string]interface{}) error {
+	event := NewEvent(EVENT_TYPE_ARTIFACT_DELETED)
+	event.Payload = EventPayloadArtifact{DeploymentId: c.Specification.DeploymentID, Artifact: artifact}
 	return c.PublishEvent(event)
 }
