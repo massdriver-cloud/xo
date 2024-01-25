@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"xo/src/bundles"
+	"xo/src/bundle"
 	"xo/src/generator"
 	"xo/src/provisioners/terraform"
 	"xo/src/telemetry"
@@ -70,19 +70,19 @@ func runBundleBuild(cmd *cobra.Command, args []string) error {
 
 	log.Info().Str("bundle", bundlePath).Msg("building bundle")
 
-	bundle, err := bundles.ParseBundle(bundlePath)
+	bun, err := bundle.ParseBundle(bundlePath)
 	if err != nil {
 		log.Error().Err(err).Str("bundle", bundlePath).Msg("an error occurred while building bundle")
 		return err
 	}
 
-	err = bundle.GenerateSchemas(output)
+	err = bun.GenerateSchemas(output)
 	if err != nil {
 		log.Error().Err(err).Str("bundle", bundlePath).Msg("an error occurred while generating bundle schema files")
 		return err
 	}
 
-	for _, step := range bundle.Steps {
+	for _, step := range bun.Steps {
 		switch step.Provisioner {
 		case "terraform":
 			err = terraform.GenerateFiles(output, step.Path)
@@ -165,7 +165,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msg("pulling bundle")
-	err := bundles.Pull(ctx, bundleBucket, bundleOwnerOrganizationId, bundleId)
+	err := bundle.Pull(ctx, bundleBucket, bundleOwnerOrganizationId, bundleId)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while pulling bundle")
 		span.RecordError(err)

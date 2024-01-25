@@ -1,0 +1,78 @@
+{
+    "properties": {
+        "one": {
+            "properties": {
+                "data": {
+                    "properties": {
+                        "foo": {
+                            "properties": {
+                                "bar": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "bar"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "foo"
+                    ]
+                },
+                "specs": {
+                    "properties": {
+                        "hello": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "hello"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "data"
+            ]
+        },
+        "two": {
+            "properties": {
+                "data": {
+                    "properties": {
+                        "baz": {
+                            "properties": {
+                                "bing": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "bing"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "baz"
+                    ]
+                },
+                "specs": {
+                    "properties": {
+                        "hola": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "hola"
+                    ],
+                    "type": "object"
+                }
+            },
+            "required": [
+                "data"
+            ]
+        }
+    },
+    "required": [
+        "one",
+        "two"
+    ]
+}

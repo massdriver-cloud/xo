@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 	"path"
-	"xo/src/bundles"
+	"xo/src/bundle"
 	"xo/src/jsonschema"
 )
 
@@ -22,7 +22,7 @@ func GenerateFiles(bundlePath string, srcDir string) error {
 	if err != nil {
 		return err
 	}
-	err = Compile(path.Join(bundlePath, bundles.ParamsSchemaFilename), paramsVariablesFile)
+	err = Compile(path.Join(bundlePath, bundle.ParamsSchemaFilename), paramsVariablesFile)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func GenerateFiles(bundlePath string, srcDir string) error {
 	if err != nil {
 		return err
 	}
-	err = Compile(path.Join(bundlePath, bundles.ConnectionsSchemaFilename), connectionsVariablesFile)
+	err = Compile(path.Join(bundlePath, bundle.ConnectionsSchemaFilename), connectionsVariablesFile)
 	if err != nil {
 		return err
 	}

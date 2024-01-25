@@ -1,4 +1,4 @@
-package bundles_test
+package bundle_test
 
 import (
 	"bytes"
@@ -7,11 +7,11 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"xo/src/bundles"
+	"xo/src/bundle"
 )
 
 func TestGenerateSchemas(t *testing.T) {
-	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
+	var bundle, _ = bundle.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	_ = bundle.GenerateSchemas("./tmp/")
 
 	gotDir, _ := os.ReadDir("./tmp")
@@ -31,10 +31,10 @@ func TestGenerateSchemas(t *testing.T) {
 }
 
 func TestGenerateSchema(t *testing.T) {
-	var bundle, _ = bundles.ParseBundle("./testdata/bundle.Build/bundle.yaml")
+	var bun, _ = bundle.ParseBundle("./testdata/bundle.Build/bundle.yaml")
 	var inputIo bytes.Buffer
 
-	bundles.GenerateSchema(bundle.Params, bundle.Metadata("params"), &inputIo)
+	bundle.GenerateSchema(bun.Params, bun.Metadata("params"), &inputIo)
 	var gotJson = &map[string]interface{}{}
 	_ = json.Unmarshal(inputIo.Bytes(), gotJson)
 
@@ -48,8 +48,8 @@ func TestGenerateSchema(t *testing.T) {
 }
 
 func TestParseBundle(t *testing.T) {
-	var got, _ = bundles.ParseBundle("./testdata/bundle.yaml")
-	var want = bundles.Bundle{
+	var got, _ = bundle.ParseBundle("./testdata/bundle.yaml")
+	var want = bundle.Bundle{
 		Schema:      "draft-07",
 		Name:        "aws-vpc",
 		Description: "Something",

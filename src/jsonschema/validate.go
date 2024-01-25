@@ -9,22 +9,17 @@ import (
 )
 
 // Validate the input object against the schema
-func Validate(schemaPath string, documentPath string) (bool, error) {
-	log.Debug().
-		Str("schemaPath", schemaPath).
-		Str("documentPath", documentPath).Msg("Validating schema.")
+func Validate(schema, document gojsonschema.JSONLoader) (bool, error) {
+	log.Debug().Msg("Validating schema.")
 
-	sl := Load(schemaPath)
-	dl := Load(documentPath)
-
-	result, err := gojsonschema.Validate(sl, dl)
+	result, err := gojsonschema.Validate(schema, document)
 	if err != nil {
 		log.Error().Err(err).Msg("Validator failed.")
 		return false, err
 	}
 
 	if !result.Valid() {
-		msg := fmt.Sprintf("The document failed validation:\n\tDocument: %s\n\tSchema: %s\nErrors:\n", documentPath, schemaPath)
+		msg := "The document failed validation:\nErrors:\n"
 		for _, desc := range result.Errors() {
 			msg = msg + fmt.Sprintf("\t- %s\n", desc)
 		}
