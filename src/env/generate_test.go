@@ -1,6 +1,7 @@
 package env_test
 
 import (
+	"context"
 	"reflect"
 	"testing"
 	"xo/src/env"
@@ -46,7 +47,7 @@ func TestGenerateEnvs(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := env.GenerateEnvs(tc.envs, tc.params, tc.connections)
+			got, err := env.GenerateEnvs(context.Background(), tc.envs, tc.params, tc.connections)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}

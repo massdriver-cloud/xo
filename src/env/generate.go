@@ -1,10 +1,18 @@
 package env
 
 import (
+	"context"
+	"xo/src/telemetry"
+
 	"github.com/itchyny/gojq"
+	"go.opentelemetry.io/otel"
 )
 
-func GenerateEnvs(envs map[string]string, params, connections map[string]interface{}) (map[string]string, error) {
+func GenerateEnvs(ctx context.Context, envs map[string]string, params, connections map[string]interface{}) (map[string]string, error) {
+	_, span := otel.Tracer("xo").Start(ctx, "GenerateEnvs")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
+
 	result := map[string]string{}
 
 	combined := map[string]interface{}{
@@ -13,12 +21,12 @@ func GenerateEnvs(envs map[string]string, params, connections map[string]interfa
 	}
 
 	for name, query := range envs {
-		foo, err := gojq.Parse(query)
+		gojqQuery, err := gojq.Parse(query)
 		if err != nil {
 			return result, err
 		}
 
-		iter := foo.Run(combined)
+		iter := gojqQuery.Run(combined)
 
 		value, ok := iter.Next()
 		if !ok {
