@@ -25,12 +25,23 @@ type BundleStep struct {
 	Path        string `json:"path" yaml:"path"`
 	Provisioner string `json:"provisioner" yaml:"provisioner"`
 }
+type SecretsBlock struct {
+	Required    bool   `json:"required" yaml:"required"`
+	Title       string `json:"title" yaml:"title"`
+	Description string `json:"description" yaml:"description"`
+}
+type AppBlock struct {
+	Envs     map[string]string       `json:"envs" yaml:"envs"`
+	Policies []string                `json:"policies" yaml:"policies"`
+	Secrets  map[string]SecretsBlock `json:"secrets" yaml:"secrets"`
+}
 
 type Bundle struct {
 	Schema      string                 `json:"schema" yaml:"schema"`
 	Name        string                 `json:"name" yaml:"name"`
 	Description string                 `json:"description" yaml:"description"`
 	Type        string                 `json:"type" yaml:"type"`
+	App         *AppBlock              `json:"app" yaml:"app"`
 	Steps       []BundleStep           `json:"steps" yaml:"steps"`
 	Artifacts   map[string]interface{} `json:"artifacts" yaml:"artifacts"`
 	Params      map[string]interface{} `json:"params" yaml:"params"`
