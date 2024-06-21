@@ -81,7 +81,12 @@ do
             echo "executing terraform apply"
             terraform apply $tf_flags -json tf.plan | xo provisioner terraform report-progress -f -
             ;;
-
+        bicep )
+            region_query=$(echo $step | yq '.region_query')
+            service_principal_query=$(echo $step | yq '.service_principal_query // ""')
+            delete_resource_group=$(echo $step | yq '.delete_resource_group // false')
+            bicep_provision.sh $action $path $region_query $delete_resource_group $service_principal_query
+            ;;
         *)
             echo "Unsupported provisioner: $provisioner"
             exit 1
