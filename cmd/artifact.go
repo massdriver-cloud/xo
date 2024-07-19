@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"xo/src/artifact"
 	"xo/src/bundle"
@@ -104,6 +105,11 @@ func runArtifactPublish(cmd *cobra.Command, args []string) error {
 		}
 		defer artFile.Close()
 	}
+	artifactBytes, err := io.ReadAll(artFile)
+	if err != nil {
+		log.Error().Err(err).Msg("unable to open artifact file")
+		return err
+	}
 
 	schemasFile, err := os.Open(schemasPath)
 	if err != nil {
@@ -112,7 +118,7 @@ func runArtifactPublish(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msg("Validating artifact " + field + "...")
-	valid, err := artifact.Validate(field, artFile, schemasFile)
+	valid, err := artifact.Validate(field, artifactBytes, schemasFile)
 	if !valid || err != nil {
 		log.Error().Err(err).Msg("artifact is invalid")
 		return err
@@ -134,7 +140,7 @@ func runArtifactPublish(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = artifact.Publish(ctx, mdClient, artFile, &bun, field, artName)
+	err = artifact.Publish(ctx, mdClient, artifactBytes, &bun, field, artName)
 	if err != nil {
 		log.Error().Err(err).Msg("an error occurred while publishing artifact")
 		return err

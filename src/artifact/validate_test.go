@@ -12,7 +12,7 @@ func TestValidate(t *testing.T) {
 		name       string
 		field      string
 		schemaPath string
-		artifact   string
+		artifact   []byte
 		want       bool
 	}
 	tests := []testData{
@@ -20,7 +20,7 @@ func TestValidate(t *testing.T) {
 			name:       "pass",
 			field:      "one",
 			schemaPath: "testdata/schema-artifacts.json",
-			artifact:   `{"data":{"foo":{"bar":"baz"}},"specs":{"hello":"world"}}`,
+			artifact:   []byte(`{"data":{"foo":{"bar":"baz"}},"specs":{"hello":"world"}}`),
 			want:       true,
 		},
 	}
@@ -33,9 +33,7 @@ func TestValidate(t *testing.T) {
 			}
 			schemasBuffer := bytes.NewBuffer(schemasBytes)
 
-			artifactBuffer := bytes.NewBufferString(tc.artifact)
-
-			got, err := artifact.Validate(tc.field, artifactBuffer, schemasBuffer)
+			got, err := artifact.Validate(tc.field, tc.artifact, schemasBuffer)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}

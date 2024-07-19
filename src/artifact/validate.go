@@ -13,12 +13,8 @@ type artifactSchema struct {
 	Properties map[string]interface{} `json:"properties"`
 }
 
-func Validate(field string, artifactIn, schemasIn io.Reader) (bool, error) {
+func Validate(field string, artifact []byte, schemasIn io.Reader) (bool, error) {
 
-	artifactBytes, err := io.ReadAll(artifactIn)
-	if err != nil {
-		return false, err
-	}
 	schemaBytes, err := io.ReadAll(schemasIn)
 	if err != nil {
 		return false, err
@@ -35,7 +31,7 @@ func Validate(field string, artifactIn, schemasIn io.Reader) (bool, error) {
 	}
 
 	sl := gojsonschema.NewGoLoader(specificSchema.(map[string]interface{}))
-	dl := gojsonschema.NewBytesLoader(artifactBytes)
+	dl := gojsonschema.NewBytesLoader(artifact)
 
 	return jsonschema.Validate(sl, dl)
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io"
 	"xo/src/bundle"
 	"xo/src/massdriver"
 	"xo/src/telemetry"
@@ -14,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-func Publish(ctx context.Context, c *massdriver.MassdriverClient, artifact io.Reader, bun *bundle.Bundle, field, name string) error {
+func Publish(ctx context.Context, c *massdriver.MassdriverClient, artifact []byte, bun *bundle.Bundle, field, name string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ArtifactPublish")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
@@ -38,16 +37,9 @@ func Publish(ctx context.Context, c *massdriver.MassdriverClient, artifact io.Re
 	// this here is a bit clunky. We're nesting the metadata object WITHIN the artifact. However, the schemas don't expect
 	// the metadata block. So after validation we need to unmarshal the artifact to a map so we can add the metadata in
 	var unmarshaledArtifact map[string]interface{}
-
-	artifactBytes, err := io.ReadAll(artifact)
+	err = json.Unmarshal(artifact, &unmarshaledArtifact)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	err = json.Unmarshal(artifactBytes, &unmarshaledArtifact)
-	if err != nil {
+		fmt.Println(string(artifact))
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
