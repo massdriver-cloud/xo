@@ -1,7 +1,6 @@
 package artifact_test
 
 import (
-	"bytes"
 	"context"
 	"testing"
 	"xo/src/artifact"
@@ -18,7 +17,7 @@ func TestPublish(t *testing.T) {
 		bun          bundle.Bundle
 		field        string
 		artifactName string
-		artifact     string
+		artifact     []byte
 		want         string
 	}
 	tests := []testData{
@@ -28,7 +27,7 @@ func TestPublish(t *testing.T) {
 			bun:          bundle.Bundle{Artifacts: map[string]interface{}{"properties": map[string]interface{}{"foobar": map[string]interface{}{"$ref": "massdriver/artifact-type"}}}},
 			field:        "foobar",
 			artifactName: "artName",
-			artifact:     `{"foo":"bar"}`,
+			artifact:     []byte(`{"foo":"bar"}`),
 			want:         `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"artifact_updated"},"payload":{"deployment_id":"depId","artifact":{"foo":"bar","metadata":{"field":"foobar","provider_resource_id":"c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2","type":"massdriver/artifact-type","name":"artName"}}}}`,
 		},
 	}
@@ -39,8 +38,7 @@ func TestPublish(t *testing.T) {
 			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
 			testClient := testmass.NewMassdriverTestClient(tc.deploymentId)
 
-			input := bytes.NewBuffer([]byte(tc.artifact))
-			err := artifact.Publish(context.TODO(), &testClient.MassClient, input, &tc.bun, tc.field, tc.artifactName)
+			err := artifact.Publish(context.TODO(), &testClient.MassClient, tc.artifact, &tc.bun, tc.field, tc.artifactName)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
