@@ -87,6 +87,13 @@ var provisionerTerraformBackendS3Cmd = &cobra.Command{
 	RunE:  runProvisionerTerraformBackendS3,
 }
 
+var provisionerTerraformBackendHTTPCmd = &cobra.Command{
+	Use:   "http",
+	Short: "Generate a terraform HTTP backend config",
+	Long:  ``,
+	RunE:  runProvisionerTerraformBackendHTTP,
+}
+
 func init() {
 	rootCmd.AddCommand(provisionerCmd)
 
@@ -118,6 +125,9 @@ func init() {
 	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendS3Cmd)
 	provisionerTerraformBackendS3Cmd.Flags().StringP("step", "s", "", "Bundle Step")
 	provisionerTerraformBackendS3Cmd.MarkFlagRequired("step")
+	provisionerTerraformBackendCmd.AddCommand(provisionerTerraformBackendHTTPCmd)
+	provisionerTerraformBackendHTTPCmd.Flags().StringP("step", "s", "", "Bundle Step")
+	provisionerTerraformBackendHTTPCmd.MarkFlagRequired("step")
 }
 
 func runProvisionerAuth(cmd *cobra.Command, args []string) error {
@@ -377,4 +387,30 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 		Str("dynamodb-table", spec.DynamoDBStateLockTableArn).Msg("Generating state file")
 
 	return tf.GenerateBackendS3File(ctx, output, spec, step)
+}
+
+func runProvisionerTerraformBackendHTTP(cmd *cobra.Command, args []string) error {
+	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runProvisionerTerraformBackendHTTP")
+	telemetry.SetSpanAttributes(span)
+	defer span.End()
+
+	output, _ := cmd.Flags().GetString("output")
+	step, _ := cmd.Flags().GetString("step")
+
+	spec, specErr := massdriver.GetSpecification()
+	if specErr != nil {
+		log.Error().Err(specErr).Msg("an error occurred while extracting Massdriver specification")
+		span.RecordError(specErr)
+		span.SetStatus(codes.Error, specErr.Error())
+		return specErr
+	}
+
+	log.Info().
+		Str("provisioner", "terraform").
+		Str("output", output).
+		Str("step", step).
+		Str("organization-id", spec.OrganizationID).
+		Str("package-id", spec.PackageID).Msg("Generating state file")
+
+	return tf.GenerateBackendHTTPFile(ctx, output, spec, step)
 }
