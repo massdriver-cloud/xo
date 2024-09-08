@@ -122,22 +122,22 @@ func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 
 	deploymentStatus := cmd.Parent().Use + "_" + cmd.Use
 
-	log.Info().Str("deployment", deploymentId).Msg("sending deployment status event: deploymentStatus")
+	log.Info().Msgf("sending deployment status event: %s", deploymentStatus)
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending deployment status event: deploymentStatus")
+		log.Error().Err(err).Msgf("an error occurred while sending deployment status event: %s", deploymentStatus)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 	err = mdClient.ReportDeploymentStatus(ctx, deploymentId, deploymentStatus)
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while sending deployment status event: deploymentStatus")
+		log.Error().Err(err).Msgf("an error occurred while sending deployment status event: %s", deploymentStatus)
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
 
-	log.Info().Str("deployment", deploymentId).Msg("deployment status event sent: deploymentStatus")
+	log.Info().Msgf("deployment status event sent: %s", deploymentStatus)
 	return nil
 }
