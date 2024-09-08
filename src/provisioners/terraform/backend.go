@@ -140,7 +140,7 @@ func GenerateBackendHTTPFile(ctx context.Context, output string, spec *massdrive
 func GenerateJSONBackendHTTPConfig(spec *massdriver.Specification, bundleStep string) ([]byte, error) {
 	httpbb := new(HTTPBackendBlock)
 
-	httpbb.Username = spec.OrganizationID
+	httpbb.Username = spec.DeploymentID
 	httpbb.Password = spec.Token
 	httpbb.Address = fmt.Sprintf("https://api.massdriver.cloud/state/%s/%s", spec.PackageID, bundleStep)
 	httpbb.LockAddress = httpbb.Address

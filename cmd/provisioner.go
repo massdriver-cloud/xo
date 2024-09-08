@@ -235,7 +235,7 @@ func runProvisionerHelmReport(cmd *cobra.Command, args []string) error {
 	} else {
 		inputFile, err := os.Open(file)
 		if err != nil {
-			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			log.Error().Err(err).Msg("an error occurred while opening file")
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return err
@@ -246,7 +246,7 @@ func runProvisionerHelmReport(cmd *cobra.Command, args []string) error {
 
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		log.Error().Err(err).Msg("an error occurred while initializing Massdriver client")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
@@ -284,7 +284,7 @@ func runProvisionerOPAReport(cmd *cobra.Command, args []string) error {
 	} else {
 		inputFile, err := os.Open(file)
 		if err != nil {
-			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			log.Error().Err(err).Msg("an error occurred while opening file")
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return err
@@ -295,7 +295,7 @@ func runProvisionerOPAReport(cmd *cobra.Command, args []string) error {
 
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		log.Error().Err(err).Msg("an error occurred while initializing Massdriver client")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
@@ -333,7 +333,7 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 	} else {
 		inputFile, err := os.Open(file)
 		if err != nil {
-			log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while opening file")
+			log.Error().Err(err).Msg("an error occurred while opening file")
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			return err
@@ -344,7 +344,7 @@ func runProvisionerTerraformReport(cmd *cobra.Command, args []string) error {
 
 	mdClient, err := massdriver.InitializeMassdriverClient()
 	if err != nil {
-		log.Error().Err(err).Str("deployment", deploymentId).Msg("an error occurred while initializing Massdriver client")
+		log.Error().Err(err).Msg("an error occurred while initializing Massdriver client")
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
@@ -376,15 +376,7 @@ func runProvisionerTerraformBackendS3(cmd *cobra.Command, args []string) error {
 		return specErr
 	}
 
-	log.Info().
-		Str("provisioner", "terraform").
-		Str("output", output).
-		Str("step", step).
-		Str("bucket", spec.S3StateBucket).
-		Str("organization-id", spec.OrganizationID).
-		Str("package-id", spec.PackageID).
-		Str("region", spec.S3StateRegion).
-		Str("dynamodb-table", spec.DynamoDBStateLockTableArn).Msg("Generating state file")
+	log.Info().Msg("Generating state file")
 
 	return tf.GenerateBackendS3File(ctx, output, spec, step)
 }
@@ -405,12 +397,7 @@ func runProvisionerTerraformBackendHTTP(cmd *cobra.Command, args []string) error
 		return specErr
 	}
 
-	log.Info().
-		Str("provisioner", "terraform").
-		Str("output", output).
-		Str("step", step).
-		Str("organization-id", spec.OrganizationID).
-		Str("package-id", spec.PackageID).Msg("Generating state file")
+	log.Info().Msg("Generating state file")
 
 	return tf.GenerateBackendHTTPFile(ctx, output, spec, step)
 }

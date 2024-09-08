@@ -3,6 +3,8 @@ package terraform
 import (
 	"testing"
 	"xo/src/massdriver"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestGenerateJSONBackendS3Config(t *testing.T) {
@@ -29,9 +31,33 @@ func TestGenerateJSONBackendS3Config(t *testing.T) {
 	}
 `)
 
-	if string(got) != want {
-		t.Errorf("got %s want %s", got, want)
+	require.JSONEq(t, string(got), want)
+}
+
+func TestGenerateJSONBackendHTTPConfig(t *testing.T) {
+	spec := massdriver.Specification{
+		DeploymentID: "depId",
+		Token:        "token",
+		PackageID:    "pkgId",
 	}
+	got, _ := GenerateJSONBackendHTTPConfig(&spec, "step")
+	want := doc(`
+	{
+		"terraform": {
+			"backend": {
+				"http": {
+					"username": "depId",
+					"password": "token",
+					"address": "https://api.massdriver.cloud/state/pkgId/step",
+					"lock_address": "https://api.massdriver.cloud/state/pkgId/step",
+					"unlock_address": "https://api.massdriver.cloud/state/pkgId/step"
+				}
+			}
+		}
+	}
+`)
+
+	require.JSONEq(t, string(got), want)
 }
 
 func TestGetS3StateKey(t *testing.T) {
