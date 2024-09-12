@@ -142,11 +142,16 @@ func GenerateJSONBackendHTTPConfig(spec *massdriver.Specification, bundleStep st
 
 	httpbb.Username = spec.DeploymentID
 	httpbb.Password = spec.Token
-	httpbb.Address = fmt.Sprintf("https://api.massdriver.cloud/state/%s/%s", spec.PackageID, bundleStep)
+	httpbb.Address = fmt.Sprintf("https://api.massdriver.cloud/state/%s/%s", getPackageNameShort(spec.PackageName), bundleStep)
 	httpbb.LockAddress = httpbb.Address
 	httpbb.UnlockAddress = httpbb.Address
 
 	topBlock := &TopLevelBlock{Terraform: &TerraformBlock{BackendBlock: &BackendBlock{HTTPBackendBlock: httpbb}}}
 
 	return json.MarshalIndent(topBlock, "", "  ")
+}
+
+func getPackageNameShort(packageId string) string {
+	parts := strings.Split(packageId, "-")
+	return strings.Join(parts[:len(parts)-1], "-")
 }
