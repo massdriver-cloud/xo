@@ -44,7 +44,7 @@ type Specification struct {
 	ManifestID                string `envconfig:"MANIFEST_ID"`
 	OrganizationID            string `envconfig:"ORGANIZATION_ID" required:"true"`
 	PackageID                 string `envconfig:"PACKAGE_ID" required:"true"`
-	PackageName               string `envconfig:"PACKAGE_NAME"`
+	PackageName               string `envconfig:"PACKAGE_NAME" required:"true"`
 	S3StateBucket             string `envconfig:"S3_STATE_BUCKET" required:"true"`
 	S3StateRegion             string `envconfig:"S3_STATE_REGION" required:"true"`
 	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME" required:"true"`

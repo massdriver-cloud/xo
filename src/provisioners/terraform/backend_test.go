@@ -38,7 +38,7 @@ func TestGenerateJSONBackendHTTPConfig(t *testing.T) {
 	spec := massdriver.Specification{
 		DeploymentID: "depId",
 		Token:        "token",
-		PackageID:    "pkgId",
+		PackageName:  "pkg-id-long-0000",
 	}
 	got, _ := GenerateJSONBackendHTTPConfig(&spec, "step")
 	want := doc(`
@@ -48,9 +48,9 @@ func TestGenerateJSONBackendHTTPConfig(t *testing.T) {
 				"http": {
 					"username": "depId",
 					"password": "token",
-					"address": "https://api.massdriver.cloud/state/pkgId/step",
-					"lock_address": "https://api.massdriver.cloud/state/pkgId/step",
-					"unlock_address": "https://api.massdriver.cloud/state/pkgId/step"
+					"address": "https://api.massdriver.cloud/state/pkg-id-long/step",
+					"lock_address": "https://api.massdriver.cloud/state/pkg-id-long/step",
+					"unlock_address": "https://api.massdriver.cloud/state/pkg-id-long/step"
 				}
 			}
 		}
