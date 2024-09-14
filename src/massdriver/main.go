@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"xo/src/api"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -25,6 +27,7 @@ type SnsInterface interface {
 }
 
 type MassdriverClient struct {
+	GQLCLient      graphql.Client
 	Specification  *Specification
 	Publisher      EventPublisher
 	DynamoDBClient DynamoDBInterface
@@ -61,6 +64,8 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	if specErr != nil {
 		return nil, specErr
 	}
+
+	client.GQLCLient = api.NewClient(client.Specification.URL, client.Specification.DeploymentID, client.Specification.Token)
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {

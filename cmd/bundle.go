@@ -1,13 +1,8 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
 	"xo/src/bundle"
-	"xo/src/generator"
-	"xo/src/provisioners/terraform"
+	"xo/src/massdriver"
 	"xo/src/telemetry"
 
 	"github.com/rs/zerolog/log"
@@ -22,19 +17,6 @@ var bundleCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var bundleBuildCmd = &cobra.Command{
-	Use:   "build [Path to bundle.yaml]",
-	Short: "Builds bundle JSON Schemas",
-	Args:  cobra.ExactArgs(1),
-	RunE:  runBundleBuild,
-}
-
-var bundleGenerateCmd = &cobra.Command{
-	Use:   "generate",
-	Short: "Generates a new bundle",
-	RunE:  runBundleGenerate,
-}
-
 var bundlePullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pulls a bundle from S3",
@@ -44,95 +26,7 @@ var bundlePullCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(bundleCmd)
 
-	bundleCmd.AddCommand(bundleBuildCmd)
-	bundleBuildCmd.Flags().StringP("output", "o", "", "Path to output directory (default is bundle.yaml directory)")
-
-	bundleCmd.AddCommand(bundleGenerateCmd)
-	bundleGenerateCmd.Flags().StringP("template-dir", "t", "./generators/xo-bundle-template", "Path to template directory")
-	bundleGenerateCmd.Flags().StringP("bundle-dir", "b", "./bundles", "Path to bundle directory")
-
 	bundleCmd.AddCommand(bundlePullCmd)
-}
-
-func runBundleBuild(cmd *cobra.Command, args []string) error {
-	var err error
-	bundlePath := args[0]
-
-	// default the output to the path of the bundle.yaml file
-	output, err := cmd.Flags().GetString("output")
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while building bundle")
-		return err
-	}
-	if output == "" {
-		output = filepath.Dir(bundlePath)
-	}
-
-	log.Info().Msg("building bundle")
-
-	bun, err := bundle.ParseBundle(bundlePath)
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while building bundle")
-		return err
-	}
-
-	err = bun.GenerateSchemas(output)
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while generating bundle schema files")
-		return err
-	}
-
-	for _, step := range bun.Steps {
-		switch step.Provisioner {
-		case "terraform":
-			err = terraform.GenerateFiles(output, step.Path)
-			if err != nil {
-				log.Error().Err(err).Msg("an error occurred while generating provisioner files")
-				return err
-			}
-		case "exec":
-			// No-op (Golang doesn't not fallthrough unless explicitly stated)
-		default:
-			log.Error().Msg("unknown provisioner: " + step.Provisioner)
-			return fmt.Errorf("unknown provisioner: %v", step.Provisioner)
-		}
-	}
-
-	log.Info().Msg("bundle built")
-
-	return err
-}
-
-func runBundleGenerate(cmd *cobra.Command, args []string) error {
-	var err error
-
-	bundleDir, err := cmd.Flags().GetString("bundle-dir")
-	if err != nil {
-		return err
-	}
-
-	templateDir, err := cmd.Flags().GetString("template-dir")
-	if err != nil {
-		return err
-	}
-
-	templateData := generator.TemplateData{
-		BundleDir:   bundleDir,
-		TemplateDir: templateDir,
-		Type:        "bundle",
-	}
-
-	err = generator.RunPrompt(&templateData)
-	if err != nil {
-		return err
-	}
-
-	err = generator.Generate(&templateData)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
@@ -140,37 +34,21 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	bundleBucket := os.Getenv("MASSDRIVER_BUNDLE_BUCKET")
-	if bundleBucket == "" {
-		err := errors.New("MASSDRIVER_BUNDLE_BUCKET environment variable must be set")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	bundleId := os.Getenv("MASSDRIVER_BUNDLE_ID")
-	if bundleId == "" {
-		err := errors.New("MASSDRIVER_BUNDLE_ID environment variable must be set")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
-	bundleOwnerOrganizationId := os.Getenv("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID")
-	if bundleOwnerOrganizationId == "" {
-		err := errors.New("MASSDRIVER_BUNDLE_OWNER_ORGANIZATION_ID environment variable must be set")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+	client, initErr := massdriver.InitializeMassdriverClient()
+	if initErr != nil {
+		log.Error().Err(initErr).Msg("an error occurred while initializing massdriver client")
+		span.RecordError(initErr)
+		span.SetStatus(codes.Error, initErr.Error())
+		return initErr
 	}
 
 	log.Info().Msg("pulling bundle")
-	err := bundle.Pull(ctx, bundleBucket, bundleOwnerOrganizationId, bundleId)
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while pulling bundle")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+	pullErr := bundle.Pull(ctx, client)
+	if pullErr != nil {
+		log.Error().Err(pullErr).Msg("an error occurred while pulling bundle")
+		span.RecordError(pullErr)
+		span.SetStatus(codes.Error, pullErr.Error())
+		return pullErr
 	}
 	log.Info().Msg("bundle pulled")
 
