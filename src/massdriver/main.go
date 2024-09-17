@@ -16,6 +16,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+var MassdriverURL = "https://api.massdriver.cloud/api/"
+
 // EventPublisher will know how to publish an event to a specific target (sns, logs etc.)
 type EventPublisher interface {
 	Publish(ctx context.Context, event *Event) error
@@ -53,7 +55,7 @@ type Specification struct {
 	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME" required:"true"`
 	TargetMode                string `envconfig:"TARGET_MODE"`
 	Token                     string `envconfig:"TOKEN" required:"true"`
-	URL                       string `envconfig:"URL" required:"true"`
+	URL                       string `envconfig:"URL"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {
@@ -63,6 +65,10 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	client.Specification, specErr = GetSpecification()
 	if specErr != nil {
 		return nil, specErr
+	}
+
+	if client.Specification.URL == "" {
+		client.Specification.URL = MassdriverURL
 	}
 
 	client.GQLCLient = api.NewClient(client.Specification.URL, client.Specification.DeploymentID, client.Specification.Token)
