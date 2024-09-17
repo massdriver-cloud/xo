@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"xo/src/api"
 
+	"github.com/Khan/genqlient/graphql"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -13,6 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
+
+var MassdriverURL = "https://api.massdriver.cloud/api/"
 
 // EventPublisher will know how to publish an event to a specific target (sns, logs etc.)
 type EventPublisher interface {
@@ -25,6 +29,7 @@ type SnsInterface interface {
 }
 
 type MassdriverClient struct {
+	GQLCLient      graphql.Client
 	Specification  *Specification
 	Publisher      EventPublisher
 	DynamoDBClient DynamoDBInterface
@@ -50,7 +55,7 @@ type Specification struct {
 	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME" required:"true"`
 	TargetMode                string `envconfig:"TARGET_MODE"`
 	Token                     string `envconfig:"TOKEN" required:"true"`
-	URL                       string `envconfig:"URL" required:"true"`
+	URL                       string `envconfig:"URL"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {
@@ -61,6 +66,12 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	if specErr != nil {
 		return nil, specErr
 	}
+
+	if client.Specification.URL == "" {
+		client.Specification.URL = MassdriverURL
+	}
+
+	client.GQLCLient = api.NewClient(client.Specification.URL, client.Specification.DeploymentID, client.Specification.Token)
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {

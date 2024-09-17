@@ -15,3 +15,7 @@ hack.build-to-massdriver:
 
 local.build-to-m1:
 	GOOS=darwin GOARCH=arm64 go build
+
+.PHONY: generate
+generate:
+	cd src/api && go generate

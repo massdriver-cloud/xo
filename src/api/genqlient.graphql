@@ -1,0 +1,5 @@
+query bundleSourceCode($id: ID!, $organizationId: ID!) {
+  bundleSourceCode(id: $id, organizationId: $organizationId) {
+    source
+  }
+}
