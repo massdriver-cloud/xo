@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"xo/src/api"
 
@@ -16,7 +17,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-var MassdriverURL = "https://api.massdriver.cloud/api/"
+var MassdriverURL = "https://api.massdriver.cloud/"
 
 // EventPublisher will know how to publish an event to a specific target (sns, logs etc.)
 type EventPublisher interface {
@@ -71,7 +72,11 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 		client.Specification.URL = MassdriverURL
 	}
 
-	client.GQLCLient = api.NewClient(client.Specification.URL, client.Specification.DeploymentID, client.Specification.Token)
+	graphqlEndpoint, gqlErr := url.JoinPath(client.Specification.URL, "api")
+	if gqlErr != nil {
+		return nil, gqlErr
+	}
+	client.GQLCLient = api.NewClient(graphqlEndpoint, client.Specification.DeploymentID, client.Specification.Token)
 
 	cfg, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
