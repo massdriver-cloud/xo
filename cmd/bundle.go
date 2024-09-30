@@ -52,7 +52,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 	}
 	defer outFile.Close()
 
-	log.Info().Msg("pulling bundle")
+	log.Info().Msg("pulling bundle...")
 	pullErr := bundle.Pull(ctx, client, outFile)
 	if pullErr != nil {
 		log.Error().Err(pullErr).Msg("an error occurred while pulling bundle")
