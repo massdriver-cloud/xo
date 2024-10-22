@@ -42,7 +42,6 @@ func TestGenerateProvisionerAWSCredentials(t *testing.T) {
 		DeploymentID:              "deploymentId",
 		DynamoDBStateLockTableArn: "aws:aws:dynamodb:table/some-table",
 		BundleBucket:              "bundleBucket",
-		BundleOwnerOrganizationID: "bundleOrgId",
 		BundleID:                  "bundleId",
 	}
 
