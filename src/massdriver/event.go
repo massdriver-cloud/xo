@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+const EVENT_TYPE_PLAN_STARTED string = "plan_started"
+const EVENT_TYPE_PLAN_COMPLETED string = "plan_completed"
+const EVENT_TYPE_PLAN_FAILED string = "plan_failed"
 const EVENT_TYPE_PROVISION_STARTED string = "provision_started"
 const EVENT_TYPE_PROVISION_COMPLETED string = "provision_completed"
 const EVENT_TYPE_PROVISION_FAILED string = "provision_failed"

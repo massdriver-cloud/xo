@@ -16,6 +16,12 @@ func (c *MassdriverClient) ReportDeploymentStatus(ctx context.Context, deploymen
 
 	var event *Event
 	switch status {
+	case "plan_start":
+		event = NewEvent(EVENT_TYPE_PLAN_STARTED)
+	case "plan_complete":
+		event = NewEvent(EVENT_TYPE_PLAN_COMPLETED)
+	case "plan_fail":
+		event = NewEvent(EVENT_TYPE_PLAN_FAILED)
 	case "provision_start":
 		event = NewEvent(EVENT_TYPE_PROVISION_STARTED)
 	case "provision_complete":
