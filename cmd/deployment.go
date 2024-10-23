@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"errors"
-	"os"
 	"xo/src/massdriver"
 	"xo/src/telemetry"
 
@@ -34,7 +32,7 @@ var deploymentCmd = &cobra.Command{
 
 var deploymentPlanCmd = &cobra.Command{
 	Use:   "plan",
-	Short: "Manage Massdriver decommission events",
+	Short: "Manage Massdriver plan events",
 	Long:  ``,
 }
 
@@ -127,6 +125,7 @@ var deploymentDecommissionFailCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
+	deploymentCmd.AddCommand(deploymentPlanCmd)
 	deploymentCmd.AddCommand(deploymentProvisionCmd)
 	deploymentCmd.AddCommand(deploymentDecommissionCmd)
 
@@ -148,14 +147,6 @@ func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	deploymentId := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
-	if deploymentId == "" {
-		err := errors.New("MASSDRIVER_DEPLOYMENT_ID environment variable must be set")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-
 	deploymentStatus := cmd.Parent().Use + "_" + cmd.Use
 
 	log.Info().Msgf("sending deployment status event: %s", deploymentStatus)
@@ -166,7 +157,7 @@ func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	err = mdClient.ReportDeploymentStatus(ctx, deploymentId, deploymentStatus)
+	err = mdClient.ReportDeploymentStatus(ctx, mdClient.Specification.DeploymentID, deploymentStatus)
 	if err != nil {
 		log.Error().Err(err).Msgf("an error occurred while sending deployment status event: %s", deploymentStatus)
 		span.RecordError(err)
