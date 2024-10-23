@@ -32,16 +32,48 @@ var deploymentCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var deploymentProvisionCmd = &cobra.Command{
-	Use:   "provision",
-	Short: "Manage Massdriver provision events",
+var deploymentPlanCmd = &cobra.Command{
+	Use:   "plan",
+	Short: "Manage Massdriver decommission events",
 	Long:  ``,
 }
 
+var deploymentProvisionCmd = &cobra.Command{
+	Use:     "provision",
+	Aliases: []string{"apply"},
+	Short:   "Manage Massdriver provision events",
+	Long:    ``,
+}
+
 var deploymentDecommissionCmd = &cobra.Command{
-	Use:   "decommission",
-	Short: "Manage Massdriver decommission events",
-	Long:  ``,
+	Use:     "decommission",
+	Aliases: []string{"destroy"},
+	Short:   "Manage Massdriver decommission events",
+	Long:    ``,
+}
+
+var deploymentPlanStartCmd = &cobra.Command{
+	Use:                   "start",
+	Short:                 "Generate event notifying Massdriver the plan has started",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentStatus,
+	DisableFlagsInUseLine: true,
+}
+
+var deploymentPlanCompleteCmd = &cobra.Command{
+	Use:                   "complete",
+	Short:                 "Generate event notifying Massdriver the plan has completed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentStatus,
+	DisableFlagsInUseLine: true,
+}
+
+var deploymentPlanFailCmd = &cobra.Command{
+	Use:                   "fail",
+	Short:                 "Generate event notifying Massdriver the plan has failed",
+	Long:                  descritionLong,
+	RunE:                  RunDeploymentStatus,
+	DisableFlagsInUseLine: true,
 }
 
 var deploymentProvisionStartCmd = &cobra.Command{
@@ -97,6 +129,10 @@ func init() {
 
 	deploymentCmd.AddCommand(deploymentProvisionCmd)
 	deploymentCmd.AddCommand(deploymentDecommissionCmd)
+
+	deploymentPlanCmd.AddCommand(deploymentPlanStartCmd)
+	deploymentPlanCmd.AddCommand(deploymentPlanCompleteCmd)
+	deploymentPlanCmd.AddCommand(deploymentPlanFailCmd)
 
 	deploymentProvisionCmd.AddCommand(deploymentProvisionStartCmd)
 	deploymentProvisionCmd.AddCommand(deploymentProvisionCompleteCmd)
