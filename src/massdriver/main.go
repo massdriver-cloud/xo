@@ -10,8 +10,6 @@ import (
 
 	"github.com/Khan/genqlient/graphql"
 	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
@@ -30,32 +28,25 @@ type SnsInterface interface {
 }
 
 type MassdriverClient struct {
-	GQLCLient      graphql.Client
-	Specification  *Specification
-	Publisher      EventPublisher
-	DynamoDBClient DynamoDBInterface
-	KMSClient      KMSInterface
+	GQLCLient     graphql.Client
+	Specification *Specification
+	Publisher     EventPublisher
 }
 
 type Specification struct {
-	Action                    string `envconfig:"ACTION"`
-	BundleBucket              string `envconfig:"BUNDLE_BUCKET"`
-	BundleID                  string `envconfig:"BUNDLE_ID" required:"true"`
-	BundleName                string `envconfig:"BUNDLE_NAME"`
-	BundleType                string `envconfig:"BUNDLE_TYPE"`
-	DeploymentID              string `envconfig:"DEPLOYMENT_ID" required:"true"`
-	DynamoDBStateLockTableArn string `envconfig:"DYNAMODB_STATE_LOCK_TABLE_ARN"`
-	EventTopicARN             string `envconfig:"EVENT_TOPIC_ARN" required:"true"`
-	ManifestID                string `envconfig:"MANIFEST_ID"`
-	OrganizationID            string `envconfig:"ORGANIZATION_ID" required:"true"`
-	PackageID                 string `envconfig:"PACKAGE_ID" required:"true"`
-	PackageName               string `envconfig:"PACKAGE_NAME" required:"true"`
-	S3StateBucket             string `envconfig:"S3_STATE_BUCKET" required:"true"`
-	S3StateRegion             string `envconfig:"S3_STATE_REGION"`
-	SecretsTableName          string `envconfig:"SECRETS_TABLE_NAME"`
-	TargetMode                string `envconfig:"TARGET_MODE"`
-	Token                     string `envconfig:"TOKEN" required:"true"`
-	URL                       string `envconfig:"URL"`
+	Action         string `envconfig:"ACTION"`
+	BundleID       string `envconfig:"BUNDLE_ID" required:"true"`
+	BundleName     string `envconfig:"BUNDLE_NAME"`
+	BundleType     string `envconfig:"BUNDLE_TYPE"`
+	DeploymentID   string `envconfig:"DEPLOYMENT_ID" required:"true"`
+	EventTopicARN  string `envconfig:"EVENT_TOPIC_ARN" required:"true"`
+	ManifestID     string `envconfig:"MANIFEST_ID"`
+	OrganizationID string `envconfig:"ORGANIZATION_ID" required:"true"`
+	PackageID      string `envconfig:"PACKAGE_ID" required:"true"`
+	PackageName    string `envconfig:"PACKAGE_NAME" required:"true"`
+	TargetMode     string `envconfig:"TARGET_MODE"`
+	Token          string `envconfig:"TOKEN" required:"true"`
+	URL            string `envconfig:"URL"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {
@@ -90,8 +81,6 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 			SNSClient:     sns.NewFromConfig(cfg),
 			Specification: client.Specification,
 		}
-		client.DynamoDBClient = dynamodb.NewFromConfig(cfg)
-		client.KMSClient = kms.NewFromConfig(cfg)
 	}
 
 	return client, nil

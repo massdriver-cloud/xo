@@ -6,7 +6,7 @@ ARG RUN_IMG=alpine:3.18
 #############
 # Base stage
 #############
-FROM ${BASE_IMG} as base
+FROM ${BASE_IMG} AS base
 
 RUN DEBIAN_FRONTEND=noninteractive \
   apt-get update && apt-get install -y tzdata && \
@@ -28,7 +28,7 @@ RUN adduser \
 #############
 # Compile stage
 #############
-FROM ${BASE_IMG} as compile
+FROM ${BASE_IMG} AS compile
 
 WORKDIR /go/src/github.com/massdriver-cloud/xo
 COPY . .

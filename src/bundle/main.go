@@ -1,9 +1,7 @@
 package bundle
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"xo/src/jsonschema"
+	"os"
 
 	"gopkg.in/yaml.v3"
 )
@@ -41,15 +39,10 @@ type Bundle struct {
 	Ui          map[string]interface{} `json:"ui" yaml:"ui"`
 }
 
-// ParseBundle parses a bundle from a YAML file
-// bundle, err := ParseBundle("./bundle.yaml")
-// Generate the files in this directory
-// bundle.Build(".")
 func ParseBundle(path string) (Bundle, error) {
 	bundle := Bundle{}
-	cwd := filepath.Dir(path)
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return bundle, err
 	}
@@ -59,44 +52,18 @@ func ParseBundle(path string) (Bundle, error) {
 		return bundle, err
 	}
 
-	hydratedArtifacts, err := jsonschema.Hydrate(bundle.Artifacts, cwd)
-	if err != nil {
-		return bundle, err
+	// Check and initialize any nil maps in the bundle
+	if bundle.Artifacts == nil {
+		bundle.Artifacts = map[string]interface{}{}
 	}
-	bundle.Artifacts = hydratedArtifacts.(map[string]interface{})
-	err = ApplyTransformations(bundle.Artifacts, artifactsTransformations)
-	if err != nil {
-		return bundle, err
+	if bundle.Params == nil {
+		bundle.Params = map[string]interface{}{}
 	}
-
-	hydratedParams, err := jsonschema.Hydrate(bundle.Params, cwd)
-	if err != nil {
-		return bundle, err
+	if bundle.Connections == nil {
+		bundle.Connections = map[string]interface{}{}
 	}
-	bundle.Params = hydratedParams.(map[string]interface{})
-	err = ApplyTransformations(bundle.Params, paramsTransformations)
-	if err != nil {
-		return bundle, err
-	}
-
-	hydratedConnections, err := jsonschema.Hydrate(bundle.Connections, cwd)
-	if err != nil {
-		return bundle, err
-	}
-	bundle.Connections = hydratedConnections.(map[string]interface{})
-	err = ApplyTransformations(bundle.Connections, connectionsTransformations)
-	if err != nil {
-		return bundle, err
-	}
-
-	hydratedUi, err := jsonschema.Hydrate(bundle.Ui, cwd)
-	if err != nil {
-		return bundle, err
-	}
-	bundle.Ui = hydratedUi.(map[string]interface{})
-	err = ApplyTransformations(bundle.Ui, uiTransformations)
-	if err != nil {
-		return bundle, err
+	if bundle.Ui == nil {
+		bundle.Ui = map[string]interface{}{}
 	}
 
 	return bundle, nil
