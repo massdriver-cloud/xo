@@ -5,7 +5,7 @@ release:
 
 builds:
   - id: linux-build
-    binary: mass
+    binary: xo
     env:
       - CGO_ENABLED=0
     goos:
@@ -15,7 +15,7 @@ builds:
       - arm64
 
   - id: darwin-build
-    binary: mass
+    binary: xo
     env:
       - CGO_ENABLED=0
     goos:
