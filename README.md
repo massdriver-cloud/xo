@@ -1,30 +1,65 @@
 # xo - eXecution Orchestrator
 
-`xo` is a small tool to provisioning and developing Massdriver bundles.
+`xo` is a small utility to facilitate communication between a Massdriver provisioner and the Massdriver platform.
 
-## Development
+Many of the capabilities here also exist in `mass`, the [Massdriver CLI](https://github.com/massdriver-cloud/mass). You should use `mass` locally for any interactions with the Massdriver platform. `xo` is only intended to be used within provisioners.
 
-### Building
+## Usage
 
-XO is built using go:
+### Pulling a Bundle
 
-```shell
-go build
+```bash
+xo bundle pull
 ```
 
-If you encounter an error: `fatal: could not read Username for 'https://github.com': terminal prompts disabled`, you can globally configure git:
+Used by the [initialization provisioner](https://github.com/massdriver-cloud/provisioner-init) to pull the bundle for all the subsequent steps.
 
-```shell
-git config --global --add url."git@github.com:".insteadOf "https://github.com/"
-go build
+### Managing Artifacts
+
+This should be included in the provisioner script. Refer [Massdriver's offical provisioners](https://docs.massdriver.cloud/provisioners/overview) for examples.
+
+```bash
+xo artifact publish -d artifact_name -n "Artifact description" -f artifact.json
 ```
 
-### Adding Commands
+```bash
+xo artifact delete -d artifact_name -n "Artifact description"
+```
 
-Add commands using the [Cobra Generator](https://github.com/spf13/cobra/blob/master/cobra/README.md).
+### Reporting Deployment Status
 
-Commands should be scoped (subcommand) under a parent "command" to facilitate organization.
+#### Deployment Started
 
-Blogs on writing Cobra commands:
+This is handled automatically by the [initialization provisioner](https://github.com/massdriver-cloud/provisioner-init).
 
-* https://towardsdatascience.com/how-to-create-a-cli-in-golang-with-cobra-d729641c7177
+```bash
+xo deployment provision start
+```
+
+```bash
+xo deployment decommission start
+```
+
+#### Deployment Completed
+
+This is handled automatically by Massdriver's workflow orchestrator.
+
+```bash
+xo deployment provision complete
+```
+
+```bash
+xo deployment decommission complete
+```
+
+#### Deployment Failed
+
+This is handled automatically by Massdriver's workflow orchestrator.
+
+```bash
+xo deployment provision fail
+```
+
+```bash
+xo deployment decommission fail
+```
