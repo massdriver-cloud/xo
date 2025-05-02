@@ -1,16 +1,17 @@
 package artifact
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"xo/src/bundle"
+
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/artifacts"
 )
 
-type artifactMetadata struct {
-	Field              string `json:"field"`
-	ProviderResourceID string `json:"provider_resource_id"`
-	Type               string `json:"type"`
-	Name               string `json:"name"`
+type ArtifactService interface {
+	CreateArtifact(ctx context.Context, a *artifacts.Artifact) (*artifacts.Artifact, error)
+	DeleteArtifact(ctx context.Context, id, field string) error
 }
 
 func getArtifactTypeFromBundle(bun *bundle.Bundle, field string) (string, error) {

@@ -1,36 +1,20 @@
 package massdriver
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"os"
 	"xo/src/api"
 
 	"github.com/Khan/genqlient/graphql"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/service/sns"
-	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 )
 
 var MassdriverURL = "https://api.massdriver.cloud/"
 
-// EventPublisher will know how to publish an event to a specific target (sns, logs etc.)
-type EventPublisher interface {
-	Publish(ctx context.Context, event *Event) error
-}
-
-// SnsInterface allows for mocking the sns client in the tests without needing aws
-type SnsInterface interface {
-	Publish(ctx context.Context, params *sns.PublishInput, optFns ...func(*sns.Options)) (*sns.PublishOutput, error)
-}
-
 type MassdriverClient struct {
 	GQLCLient     graphql.Client
 	Specification *Specification
-	Publisher     EventPublisher
 }
 
 type Specification struct {
@@ -68,19 +52,11 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	}
 	client.GQLCLient = api.NewClient(graphqlEndpoint, client.Specification.DeploymentID, client.Specification.Token)
 
-	cfg, err := config.LoadDefaultConfig(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-
-	// If the ARN doesn't exist, assume we are running locally
-	if os.Getenv("MASSDRIVER_EVENT_TOPIC_ARN") == "" {
-		client.Publisher = &localPublisher{}
-	} else {
-		client.Publisher = &SNSPublisher{
-			SNSClient:     sns.NewFromConfig(cfg),
-			Specification: client.Specification,
-		}
+	// TODO need to rework auth, for now just assume deployment id and token are present
+	deployment_id := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
+	deployment_token := os.Getenv("MASSDRIVER_TOKEN")
+	if deployment_id == "" || deployment_token == "" {
+		return nil, fmt.Errorf("MASSDRIVER_DEPLOYMENT_ID and MASSDRIVER_TOKEN must be set")
 	}
 
 	return client, nil
@@ -94,44 +70,4 @@ func GetSpecification() (*Specification, error) {
 	spec := Specification{}
 	err := envconfig.Process("massdriver", &spec)
 	return &spec, err
-}
-
-func (c MassdriverClient) PublishEvent(event *Event) error {
-	return c.Publisher.Publish(context.Background(), event)
-}
-
-type SNSPublisher struct {
-	Specification *Specification
-	SNSClient     SnsInterface
-}
-
-func (l *SNSPublisher) Publish(ctx context.Context, event *Event) error {
-	jsonBytes, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-	jsonString := string(jsonBytes)
-
-	deduplicationId := uuid.New().String()
-
-	input := sns.PublishInput{
-		Message:                &jsonString,
-		MessageDeduplicationId: &deduplicationId,
-		MessageGroupId:         &l.Specification.DeploymentID,
-		TopicArn:               &l.Specification.EventTopicARN,
-	}
-
-	_, err = l.SNSClient.Publish(context.Background(), &input)
-	return err
-}
-
-type localPublisher struct{}
-
-func (l *localPublisher) Publish(ctx context.Context, event *Event) error {
-	out, err := json.Marshal(event)
-	if err != nil {
-		return err
-	}
-	fmt.Println(string(out))
-	return nil
 }

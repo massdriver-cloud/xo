@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 )
 
 var provisionerCmd = &cobra.Command{
@@ -59,13 +58,15 @@ func runProvisionerTerraformBackendHTTP(cmd *cobra.Command, args []string) error
 
 	spec, specErr := massdriver.GetSpecification()
 	if specErr != nil {
-		log.Error().Err(specErr).Msg("an error occurred while extracting Massdriver specification")
-		span.RecordError(specErr)
-		span.SetStatus(codes.Error, specErr.Error())
-		return specErr
+		return telemetry.LogError(span, specErr, "an error occurred while extracting Massdriver specification")
 	}
 
-	log.Info().Msg("Generating state file")
+	log.Info().Msg("Generating state file...")
 
-	return tf.GenerateBackendHTTPFile(ctx, output, spec, step)
+	generateErr := tf.GenerateBackendHTTPFile(ctx, output, spec, step)
+	if generateErr != nil {
+		return telemetry.LogError(span, generateErr, "an error occurred while generating backend file")
+	}
+	log.Info().Msg("State file generated")
+	return nil
 }

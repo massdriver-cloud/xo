@@ -2,18 +2,17 @@ package artifact
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"xo/src/bundle"
-	"xo/src/massdriver"
 	"xo/src/telemetry"
 
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/artifacts"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 )
 
-func Publish(ctx context.Context, c *massdriver.MassdriverClient, artifact []byte, bun *bundle.Bundle, field, name string) error {
+func Publish(ctx context.Context, svc ArtifactService, artifactBytes []byte, bun *bundle.Bundle, field, name string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ArtifactPublish")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
@@ -25,28 +24,28 @@ func Publish(ctx context.Context, c *massdriver.MassdriverClient, artifact []byt
 		return err
 	}
 
-	// Just hashing the field name for now. Eventually this will either be moved or repurposed.
-	providerResourceId := fmt.Sprintf("%x", sha256.Sum256([]byte(field)))
-	metadata := artifactMetadata{
-		Field:              field,
-		ProviderResourceID: providerResourceId,
-		Type:               artifactType,
-		Name:               name,
+	metadata := artifacts.Metadata{
+		Field: field,
+		Type:  artifactType,
+		Name:  name,
 	}
 
-	// this here is a bit clunky. We're nesting the metadata object WITHIN the artifact. However, the schemas don't expect
-	// the metadata block. So after validation we need to unmarshal the artifact to a map so we can add the metadata in
-	var unmarshaledArtifact map[string]interface{}
-	err = json.Unmarshal(artifact, &unmarshaledArtifact)
+	art := artifacts.Artifact{}
+	err = json.Unmarshal(artifactBytes, &art)
 	if err != nil {
-		fmt.Println(string(artifact))
+		fmt.Println(string(artifactBytes))
 		span.RecordError(err)
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	unmarshaledArtifact["metadata"] = metadata
+	art.Metadata = &metadata
 
-	massdriver.PublishArtifact(c, unmarshaledArtifact)
+	_, createErr := svc.CreateArtifact(ctx, &art)
+	if createErr != nil {
+		span.RecordError(createErr)
+		span.SetStatus(codes.Error, createErr.Error())
+		return createErr
+	}
 
 	return nil
 }

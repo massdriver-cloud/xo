@@ -6,13 +6,13 @@ import (
 	"os"
 	"xo/src/artifact"
 	"xo/src/bundle"
-	"xo/src/massdriver"
 	"xo/src/telemetry"
 
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/artifacts"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 )
 
 var artifactCmd = &cobra.Command{
@@ -22,15 +22,19 @@ var artifactCmd = &cobra.Command{
 }
 
 var artifactPublishCmd = &cobra.Command{
-	Use:   "publish",
-	Short: "Publishes an artifact during provisioning",
-	RunE:  runArtifactPublish,
+	Use:           "publish",
+	Short:         "Publishes an artifact during provisioning",
+	RunE:          runArtifactPublish,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 var artifactDeleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "Deletes an artifact during decommission",
-	RunE:  runArtifactDelete,
+	Use:           "delete",
+	Short:         "Deletes an artifact during decommission",
+	RunE:          runArtifactDelete,
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 func init() {
@@ -48,10 +52,9 @@ func init() {
 
 	artifactCmd.AddCommand(artifactDeleteCmd)
 	artifactDeleteCmd.Flags().StringP("field", "d", "", "Artifact field in the massdriver.yaml file")
-	artifactDeleteCmd.Flags().StringP("name", "n", "", "Human friendly name of the artifact")
+	artifactDeleteCmd.Flags().StringP("id", "i", "", "Artifact identifier")
 	artifactDeleteCmd.Flags().StringP("massdriver-file", "m", "../massdriver.yaml", "Path to massdriver.yaml file")
 	artifactDeleteCmd.MarkFlagRequired("field")
-	artifactDeleteCmd.MarkFlagRequired("name")
 }
 
 func runArtifactPublish(cmd *cobra.Command, args []string) error {
@@ -61,38 +64,23 @@ func runArtifactPublish(cmd *cobra.Command, args []string) error {
 
 	artFilePath, err := cmd.Flags().GetString("file")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read file flag")
 	}
 	field, err := cmd.Flags().GetString("field")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read field flag")
 	}
 	artName, err := cmd.Flags().GetString("name")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read name flag")
 	}
 	massYamlPath, err := cmd.Flags().GetString("massdriver-file")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read massdriver.yaml file flag")
 	}
 	schemasPath, err := cmd.Flags().GetString("schema-file")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read schema file flag")
 	}
 
 	var artFile *os.File
@@ -101,49 +89,43 @@ func runArtifactPublish(cmd *cobra.Command, args []string) error {
 	} else {
 		artFile, err = os.Open(artFilePath)
 		if err != nil {
-			fmt.Println(err)
+			return telemetry.LogError(span, err, "unable to open artifact file")
 		}
 		defer artFile.Close()
 	}
 	artifactBytes, err := io.ReadAll(artFile)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to open artifact file")
-		return err
+		return telemetry.LogError(span, err, "unable to read artifact file")
 	}
 
 	schemasFile, err := os.Open(schemasPath)
 	if err != nil {
-		log.Error().Err(err).Msg("unable to open artifacts schemas file")
-		return err
+		return telemetry.LogError(span, err, "unable to open artifacts schemas file")
 	}
 
 	log.Info().Msg("Validating artifact " + field + "...")
 	valid, err := artifact.Validate(field, artifactBytes, schemasFile)
 	if !valid || err != nil {
-		log.Error().Err(err).Msg("artifact is invalid")
-		return err
+		return telemetry.LogError(span, err, "artifact is invalid")
 	}
 	log.Info().Msg("Artifact is valid!")
 
 	log.Info().Msg("Publishing artifact " + field + "...")
 	bun, err := bundle.ParseBundle(massYamlPath)
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while opening massdriver.yaml")
-		return err
+		return telemetry.LogError(span, err, "unable to open massdriver.yaml")
 	}
 
-	mdClient, err := massdriver.InitializeMassdriverClient()
+	mdClient, err := client.New()
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while initializing Massdriver client")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
-	err = artifact.Publish(ctx, mdClient, artifactBytes, &bun, field, artName)
+	artifactService := artifacts.NewService(mdClient)
+
+	err = artifact.Publish(ctx, artifactService, artifactBytes, &bun, field, artName)
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while publishing artifact")
-		return err
+		return telemetry.LogError(span, err, "an error occurred while publishing artifact")
 	}
 	log.Info().Msg("Artifact " + field + " published")
 
@@ -155,49 +137,38 @@ func runArtifactDelete(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
+	id, err := cmd.Flags().GetString("id")
+	if err != nil {
+		return telemetry.LogError(span, err, "unable to read id flag")
+	}
 	field, err := cmd.Flags().GetString("field")
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while deleting artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-	artName, err := cmd.Flags().GetString("name")
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while deleting artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
-	}
-	massYamlPath, err := cmd.Flags().GetString("massdriver-file")
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while deleting artifact")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "unable to read field flag")
 	}
 
-	log.Info().Msg("Deleting artifact " + field + "...")
-	bun, err := bundle.ParseBundle(massYamlPath)
-	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while opening massdriver.yaml")
-		return err
+	if id == "" {
+		packageName := os.Getenv("MASSDRIVER_PACKAGE_NAME")
+		if packageName == "" {
+			missingErr := fmt.Errorf("id field not set and MASSDRIVER_PACKAGE_NAME environment variable is not set")
+			return telemetry.LogError(span, missingErr, "an error occurred while deleting artifact")
+		}
+		id = packageName + "-" + field
 	}
 
-	mdClient, err := massdriver.InitializeMassdriverClient()
+	log.Info().Msg("Deleting artifact " + id + "...")
+
+	mdClient, err := client.New()
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while initializing Massdriver client")
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
-	err = artifact.Delete(ctx, mdClient, &bun, field, artName)
+	artifactService := artifacts.NewService(mdClient)
+
+	err = artifact.Delete(ctx, artifactService, id, field)
 	if err != nil {
-		log.Error().Err(err).Msg("an error occurred while deleting artifact")
-		return err
+		return telemetry.LogError(span, err, "an error occurred while deleting artifact")
 	}
-	log.Info().Msg("Artifact " + field + " deleted")
+	log.Info().Msg("Artifact " + id + " deleted")
 
 	return err
 }

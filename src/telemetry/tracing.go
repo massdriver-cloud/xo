@@ -4,8 +4,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
@@ -36,4 +38,11 @@ func SetSpanAttributes(span trace.Span) {
 		attribute.String("massdriver.bundle_access", os.Getenv("MASSDRIVER_BUNDLE_ACCESS")),
 		attribute.String("massdriver.bundle_name", os.Getenv("MASSDRIVER_BUNDLE_NAME")),
 	)
+}
+
+func LogError(span trace.Span, err error, message string) error {
+	log.Error().Err(err).Msg(message)
+	span.RecordError(err)
+	span.SetStatus(codes.Error, err.Error())
+	return err
 }

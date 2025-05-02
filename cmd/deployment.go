@@ -1,13 +1,16 @@
 package cmd
 
 import (
-	"xo/src/massdriver"
+	"fmt"
+	"os"
+	"xo/src/deployment"
 	"xo/src/telemetry"
 
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/deployments"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 )
 
 var descritionLong = `
@@ -30,116 +33,43 @@ var deploymentCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var deploymentPlanCmd = &cobra.Command{
-	Use:   "plan",
-	Short: "Manage Massdriver plan events",
-	Long:  ``,
-}
-
-var deploymentProvisionCmd = &cobra.Command{
-	Use:     "provision",
-	Aliases: []string{"apply"},
-	Short:   "Manage Massdriver provision events",
-	Long:    ``,
-}
-
-var deploymentDecommissionCmd = &cobra.Command{
-	Use:     "decommission",
-	Aliases: []string{"destroy"},
-	Short:   "Manage Massdriver decommission events",
-	Long:    ``,
-}
-
-var deploymentPlanStartCmd = &cobra.Command{
+var deploymentStartCmd = &cobra.Command{
 	Use:                   "start",
 	Short:                 "Generate event notifying Massdriver the plan has started",
 	Long:                  descritionLong,
 	RunE:                  RunDeploymentStatus,
+	SilenceUsage:          true,
+	SilenceErrors:         true,
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentPlanCompleteCmd = &cobra.Command{
+var deploymentCompleteCmd = &cobra.Command{
 	Use:                   "complete",
 	Short:                 "Generate event notifying Massdriver the plan has completed",
 	Long:                  descritionLong,
 	RunE:                  RunDeploymentStatus,
+	SilenceUsage:          true,
+	SilenceErrors:         true,
 	DisableFlagsInUseLine: true,
 }
 
-var deploymentPlanFailCmd = &cobra.Command{
+var deploymentFailCmd = &cobra.Command{
 	Use:                   "fail",
 	Short:                 "Generate event notifying Massdriver the plan has failed",
 	Long:                  descritionLong,
 	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentProvisionStartCmd = &cobra.Command{
-	Use:                   "start",
-	Short:                 "Generate event notifying Massdriver the provision has started",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentProvisionCompleteCmd = &cobra.Command{
-	Use:                   "complete",
-	Short:                 "Generate event notifying Massdriver the provision has completed",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentProvisionFailCmd = &cobra.Command{
-	Use:                   "fail",
-	Short:                 "Generate event notifying Massdriver the provision has failed",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentDecommissionStartCmd = &cobra.Command{
-	Use:                   "start",
-	Short:                 "Generate event notifying Massdriver the decommission has started",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentDecommissionCompleteCmd = &cobra.Command{
-	Use:                   "complete",
-	Short:                 "Generate event notifying Massdriver the decommission has completed",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
-	DisableFlagsInUseLine: true,
-}
-
-var deploymentDecommissionFailCmd = &cobra.Command{
-	Use:                   "fail",
-	Short:                 "Generate event notifying Massdriver the decommission has failed",
-	Long:                  descritionLong,
-	RunE:                  RunDeploymentStatus,
+	SilenceUsage:          true,
+	SilenceErrors:         true,
 	DisableFlagsInUseLine: true,
 }
 
 func init() {
 	rootCmd.AddCommand(deploymentCmd)
 
-	deploymentCmd.AddCommand(deploymentPlanCmd)
-	deploymentCmd.AddCommand(deploymentProvisionCmd)
-	deploymentCmd.AddCommand(deploymentDecommissionCmd)
-
-	deploymentPlanCmd.AddCommand(deploymentPlanStartCmd)
-	deploymentPlanCmd.AddCommand(deploymentPlanCompleteCmd)
-	deploymentPlanCmd.AddCommand(deploymentPlanFailCmd)
-
-	deploymentProvisionCmd.AddCommand(deploymentProvisionStartCmd)
-	deploymentProvisionCmd.AddCommand(deploymentProvisionCompleteCmd)
-	deploymentProvisionCmd.AddCommand(deploymentProvisionFailCmd)
-
-	deploymentDecommissionCmd.AddCommand(deploymentDecommissionStartCmd)
-	deploymentDecommissionCmd.AddCommand(deploymentDecommissionCompleteCmd)
-	deploymentDecommissionCmd.AddCommand(deploymentDecommissionFailCmd)
+	deploymentCmd.AddCommand(deploymentStartCmd)
+	deploymentCmd.AddCommand(deploymentCompleteCmd)
+	deploymentCmd.AddCommand(deploymentFailCmd)
+	deploymentCmd.PersistentFlags().StringP("id", "i", os.Getenv("MASSDRIVER_DEPLOYMENT_ID"), "Massdriver deployment ID")
 }
 
 func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
@@ -147,24 +77,39 @@ func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	deploymentStatus := cmd.Parent().Use + "_" + cmd.Use
-
-	log.Info().Msgf("sending deployment status event: %s", deploymentStatus)
-	mdClient, err := massdriver.InitializeMassdriverClient()
-	if err != nil {
-		log.Error().Err(err).Msgf("an error occurred while sending deployment status event: %s", deploymentStatus)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+	deploymentID, getErr := cmd.Flags().GetString("id")
+	if getErr != nil {
+		return telemetry.LogError(span, getErr, "unable to read id flag")
 	}
-	err = mdClient.ReportDeploymentStatus(ctx, mdClient.Specification.DeploymentID, deploymentStatus)
-	if err != nil {
-		log.Error().Err(err).Msgf("an error occurred while sending deployment status event: %s", deploymentStatus)
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+	if deploymentID == "" {
+		missingErr := fmt.Errorf("deployment ID not set and MASSDRIVER_DEPLOYMENT_ID environment variable is not set")
+		return telemetry.LogError(span, missingErr, "an error occurred while updating deployment status")
 	}
 
-	log.Info().Msgf("deployment status event sent: %s", deploymentStatus)
+	var status deployments.Status
+	switch cmd.Name() {
+	case "start":
+		status = deployments.StatusRunning
+	case "complete":
+		status = deployments.StatusCompleted
+	case "fail":
+		status = deployments.StatusFailed
+	default:
+		return fmt.Errorf("unknown deployment status: %s", cmd.Name())
+	}
+
+	log.Info().Msgf("sending deployment status: %s", status)
+	mdClient, err := client.New()
+	if err != nil {
+		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
+	}
+
+	service := deployments.NewService(mdClient)
+	updateErr := deployment.UpdateDeploymentStatus(ctx, service, deploymentID, status)
+	if updateErr != nil {
+		return telemetry.LogError(span, updateErr, "an error occurred while reporting deployment status")
+	}
+
+	log.Info().Msgf("deployment status event sent: %s", status)
 	return nil
 }

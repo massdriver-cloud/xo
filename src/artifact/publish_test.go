@@ -2,50 +2,54 @@ package artifact_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"xo/src/artifact"
 	"xo/src/bundle"
-	"xo/src/massdriver"
 
-	testmass "xo/test"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/artifacts"
+	"github.com/stretchr/testify/require"
 )
+
+func (f *fakeArtifactService) CreateArtifact(ctx context.Context, a *artifacts.Artifact) (*artifacts.Artifact, error) {
+	f.CreateCalled = true
+	if f.ShouldError {
+		return nil, fmt.Errorf("simulated failure")
+	}
+	return &artifacts.Artifact{ID: "test-id"}, nil
+}
 
 func TestPublish(t *testing.T) {
 	type testData struct {
-		name         string
-		deploymentId string
-		bun          bundle.Bundle
-		field        string
-		artifactName string
-		artifact     []byte
-		want         string
+		name    string
+		service *fakeArtifactService
+		wantErr bool
 	}
 	tests := []testData{
 		{
-			name:         "basic",
-			deploymentId: "depId",
-			bun:          bundle.Bundle{Artifacts: map[string]interface{}{"properties": map[string]interface{}{"foobar": map[string]interface{}{"$ref": "massdriver/artifact-type"}}}},
-			field:        "foobar",
-			artifactName: "artName",
-			artifact:     []byte(`{"foo":"bar"}`),
-			want:         `{"metadata":{"timestamp":"2021-01-01 12:00:00.1234","provisioner":"testaform","event_type":"artifact_updated"},"payload":{"deployment_id":"depId","artifact":{"foo":"bar","metadata":{"field":"foobar","provider_resource_id":"c3ab8ff13720e8ad9047dd39466b3c8974e592c2fa383d4a3960714caef0c4f2","type":"massdriver/artifact-type","name":"artName"}}}}`,
+			name:    "success",
+			service: &fakeArtifactService{ShouldError: false},
+			wantErr: false,
+		},
+		{
+			name:    "failure",
+			service: &fakeArtifactService{ShouldError: true},
+			wantErr: true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Setenv("MASSDRIVER_PROVISIONER", "testaform")
-			massdriver.EventTimeString = func() string { return "2021-01-01 12:00:00.1234" }
-			testClient := testmass.NewMassdriverTestClient(tc.deploymentId)
+			artifactBytes := []byte(`{"foo":"bar"}`)
+			bun := &bundle.Bundle{Artifacts: map[string]interface{}{"properties": map[string]interface{}{"foobar": map[string]interface{}{"$ref": "massdriver/artifact-type"}}}}
+			err := artifact.Publish(context.Background(), tc.service, artifactBytes, bun, "foobar", "artName")
 
-			err := artifact.Publish(context.TODO(), &testClient.MassClient, tc.artifact, &tc.bun, tc.field, tc.artifactName)
-			if err != nil {
-				t.Fatalf("%d, unexpected error", err)
-			}
+			require.True(t, tc.service.CreateCalled, "expected DeleteArtifact to be called")
 
-			got := testClient.GetSNSMessages()
-			if got[0] != tc.want {
-				t.Fatalf("want: %v, got: %v", tc.want, got[0])
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}
