@@ -12,7 +12,7 @@ require (
 	github.com/honeycombio/otel-config-go v1.17.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/massdriver-cloud/mass v0.0.0-20240819225958-4ef28e971211
-	github.com/massdriver-cloud/massdriver-sdk-go v0.0.0-20250502231442-a3af0b6e565e
+	github.com/massdriver-cloud/massdriver-sdk-go v0.0.0
 	github.com/massdriver-cloud/terraform-config-inspect v0.0.0-20240906041648-e5461c213cea
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/rs/zerolog v1.33.0

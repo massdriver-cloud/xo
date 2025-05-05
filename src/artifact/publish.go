@@ -24,12 +24,6 @@ func Publish(ctx context.Context, svc ArtifactService, artifactBytes []byte, bun
 		return err
 	}
 
-	metadata := artifacts.Metadata{
-		Field: field,
-		Type:  artifactType,
-		Name:  name,
-	}
-
 	art := artifacts.Artifact{}
 	err = json.Unmarshal(artifactBytes, &art)
 	if err != nil {
@@ -38,7 +32,9 @@ func Publish(ctx context.Context, svc ArtifactService, artifactBytes []byte, bun
 		span.SetStatus(codes.Error, err.Error())
 		return err
 	}
-	art.Metadata = &metadata
+	art.Name = name
+	art.Field = field
+	art.Type = artifactType
 
 	_, createErr := svc.CreateArtifact(ctx, &art)
 	if createErr != nil {
