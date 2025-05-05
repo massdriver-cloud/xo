@@ -25,7 +25,8 @@ func main() {
 	}
 
 	// Run application
-	if err := cmd.Execute(); err != nil {
-		log.Fatal(err)
+	err := cmd.Execute()
+	if err != nil {
+		os.Exit(1)
 	}
 }
