@@ -22,19 +22,15 @@ var artifactCmd = &cobra.Command{
 }
 
 var artifactPublishCmd = &cobra.Command{
-	Use:           "publish",
-	Short:         "Publishes an artifact during provisioning",
-	RunE:          runArtifactPublish,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+	Use:   "publish",
+	Short: "Publishes an artifact during provisioning",
+	RunE:  runArtifactPublish,
 }
 
 var artifactDeleteCmd = &cobra.Command{
-	Use:           "delete",
-	Short:         "Deletes an artifact during decommission",
-	RunE:          runArtifactDelete,
-	SilenceUsage:  true,
-	SilenceErrors: true,
+	Use:   "delete",
+	Short: "Deletes an artifact during decommission",
+	RunE:  runArtifactDelete,
 }
 
 func init() {
@@ -136,7 +132,6 @@ func runArtifactDelete(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runArtifactDelete")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
-
 	id, err := cmd.Flags().GetString("id")
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read id flag")
