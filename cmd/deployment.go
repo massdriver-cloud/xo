@@ -13,20 +13,6 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-var descritionLong = `
-	Publishes an event to AWS SNS, which distributes the event to SQS subscribers.
-
-	This command is designed to be executed in automation, and therefore takes inputs
-	from environment variables. Specifically, the following environment variables
-	are read and used to populate event data:
-
-	MASSDRIVER_DEPLOYMENT_ID
-	MASSDRIVER_EVENT_TOPIC_ARN
-	MASSDRIVER_PROVISIONER
-
-	Be sure these environment variables are set, and you have access to the SNS topic.
-	`
-
 var deploymentCmd = &cobra.Command{
 	Use:   "deployment",
 	Short: "Manage Massdriver deployment events",
@@ -35,8 +21,7 @@ var deploymentCmd = &cobra.Command{
 
 var deploymentStartCmd = &cobra.Command{
 	Use:                   "start",
-	Short:                 "Generate event notifying Massdriver the plan has started",
-	Long:                  descritionLong,
+	Short:                 "Generate event notifying Massdriver the deployment has started",
 	RunE:                  RunDeploymentStatus,
 	SilenceUsage:          true,
 	SilenceErrors:         true,
@@ -45,8 +30,7 @@ var deploymentStartCmd = &cobra.Command{
 
 var deploymentCompleteCmd = &cobra.Command{
 	Use:                   "complete",
-	Short:                 "Generate event notifying Massdriver the plan has completed",
-	Long:                  descritionLong,
+	Short:                 "Generate event notifying Massdriver the deployment has completed",
 	RunE:                  RunDeploymentStatus,
 	SilenceUsage:          true,
 	SilenceErrors:         true,
@@ -55,8 +39,7 @@ var deploymentCompleteCmd = &cobra.Command{
 
 var deploymentFailCmd = &cobra.Command{
 	Use:                   "fail",
-	Short:                 "Generate event notifying Massdriver the plan has failed",
-	Long:                  descritionLong,
+	Short:                 "Generate event notifying Massdriver the deployment has failed",
 	RunE:                  RunDeploymentStatus,
 	SilenceUsage:          true,
 	SilenceErrors:         true,
