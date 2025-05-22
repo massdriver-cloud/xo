@@ -23,7 +23,6 @@ type Specification struct {
 	BundleName     string `envconfig:"BUNDLE_NAME"`
 	BundleType     string `envconfig:"BUNDLE_TYPE"`
 	DeploymentID   string `envconfig:"DEPLOYMENT_ID" required:"true"`
-	EventTopicARN  string `envconfig:"EVENT_TOPIC_ARN" required:"true"`
 	ManifestID     string `envconfig:"MANIFEST_ID"`
 	OrganizationID string `envconfig:"ORGANIZATION_ID" required:"true"`
 	PackageID      string `envconfig:"PACKAGE_ID" required:"true"`
@@ -63,10 +62,6 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 }
 
 func GetSpecification() (*Specification, error) {
-	// If the ARN doesn't exist, assume we are running locally
-	if os.Getenv("MASSDRIVER_EVENT_TOPIC_ARN") == "" {
-		return &Specification{}, nil
-	}
 	spec := Specification{}
 	err := envconfig.Process("massdriver", &spec)
 	return &spec, err
