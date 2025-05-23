@@ -29,11 +29,11 @@ type BackendBlock struct {
 }
 
 type HTTPBackendBlock struct {
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-	Address       string `json:"address"`
-	LockAddress   string `json:"lock_address"`
-	UnlockAddress string `json:"unlock_address"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Address  string `json:"address"`
+	// LockAddress   string `json:"lock_address"`
+	// UnlockAddress string `json:"unlock_address"`
 }
 
 func writeBackend(config []byte, out io.Writer) error {
@@ -86,8 +86,8 @@ func GenerateJSONBackendHTTPConfig(spec *massdriver.Specification, bundleStep st
 	httpbb.Username = spec.DeploymentID
 	httpbb.Password = spec.Token
 	httpbb.Address = fmt.Sprintf("https://api.massdriver.cloud/state/%s/%s", getPackageNameShort(spec.PackageName), bundleStep)
-	httpbb.LockAddress = httpbb.Address
-	httpbb.UnlockAddress = httpbb.Address
+	// httpbb.LockAddress = httpbb.Address
+	// httpbb.UnlockAddress = httpbb.Address
 
 	topBlock := &TopLevelBlock{Terraform: &TerraformBlock{BackendBlock: &BackendBlock{HTTPBackendBlock: httpbb}}}
 
