@@ -11,7 +11,6 @@ import (
 	"xo/src/telemetry"
 
 	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/config"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -60,12 +59,7 @@ func PullV1(ctx context.Context, repo oras.Target, target oras.Target, tag strin
 }
 
 func GetRepo(mdClient *client.Client, organizationSlug string, bundleName string) (oras.Target, error) {
-	if mdClient.Auth.Method != config.AuthAPIKey {
-		return nil, fmt.Errorf("bundle publish requires API key auth")
-	}
-	// reg := mdClient.Auth.URL
-	// repo, repoErr := remote.NewRepository(filepath.Join(reg, mdClient.Auth.AccountID, b.Name))
-	reg := "2d67-47-229-209-228.ngrok-free.app"
+	reg := mdClient.Auth.BaseURL
 	repo, repoErr := remote.NewRepository(filepath.Join(reg, organizationSlug, bundleName))
 	if repoErr != nil {
 		return nil, repoErr
