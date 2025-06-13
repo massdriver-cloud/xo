@@ -85,7 +85,7 @@ func GenerateJSONBackendHTTPConfig(spec *massdriver.Specification, bundleStep st
 
 	httpbb.Username = spec.DeploymentID
 	httpbb.Password = spec.Token
-	httpbb.Address = fmt.Sprintf("https://api.massdriver.cloud/state/%s/%s", getPackageNameShort(spec.PackageName), bundleStep)
+	httpbb.Address = fmt.Sprintf("%s/state/%s/%s", spec.URL, getPackageNameShort(spec.PackageName), bundleStep)
 	httpbb.LockAddress = httpbb.Address
 	httpbb.UnlockAddress = httpbb.Address
 

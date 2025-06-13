@@ -12,6 +12,7 @@ func TestGenerateJSONBackendHTTPConfig(t *testing.T) {
 		DeploymentID: "depId",
 		Token:        "token",
 		PackageName:  "pkg-id-long-0000",
+		URL:          "https://foo.massdriver.cloud",
 	}
 	got, _ := GenerateJSONBackendHTTPConfig(&spec, "step")
 	want := `
@@ -21,9 +22,9 @@ func TestGenerateJSONBackendHTTPConfig(t *testing.T) {
 				"http": {
 					"username": "depId",
 					"password": "token",
-					"address": "https://api.massdriver.cloud/state/pkg-id-long/step",
-					"lock_address": "https://api.massdriver.cloud/state/pkg-id-long/step",
-					"unlock_address": "https://api.massdriver.cloud/state/pkg-id-long/step"
+					"address": "https://foo.massdriver.cloud/state/pkg-id-long/step",
+					"lock_address": "https://foo.massdriver.cloud/state/pkg-id-long/step",
+					"unlock_address": "https://foo.massdriver.cloud/state/pkg-id-long/step"
 				}
 			}
 		}
