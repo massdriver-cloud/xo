@@ -44,7 +44,7 @@ func init() {
 	bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
 	viper.BindPFlag("bundle.tag", bundlePullCmd.Flags().Lookup("tag"))
 	viper.BindPFlag("bundle.name", bundlePullCmd.Flags().Lookup("name"))
-	viper.BindPFlag("organization.id", bundlePullCmd.Flags().Lookup("organization"))
+	viper.BindPFlag("organization.slug", bundlePullCmd.Flags().Lookup("organization"))
 }
 
 func runBundlePullv0(cmd *cobra.Command, args []string) error {
@@ -78,7 +78,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	organizationSlug := viper.GetString("organization.id")
+	organizationSlug := viper.GetString("organization.slug")
 	if organizationSlug == "" {
 		return fmt.Errorf("required flag organization must be set via flag or environment variable")
 	}
