@@ -41,8 +41,8 @@ func TestPullV0(t *testing.T) {
 			client := massdriver.MassdriverClient{
 				GQLCLient: gqlClient,
 				Specification: &massdriver.Specification{
-					BundleID:       "bundleuuid1",
-					OrganizationID: "orguuid1",
+					BundleID:         "bundleuuid1",
+					OrganizationUUID: "orguuid1",
 				},
 			}
 
