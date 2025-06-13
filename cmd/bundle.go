@@ -8,6 +8,7 @@ import (
 	"xo/src/telemetry"
 
 	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
+	sdkbundle "github.com/massdriver-cloud/massdriver-sdk-go/massdriver/platform/bundle"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -93,7 +94,7 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		return clientErr
 	}
 
-	repo, repoErr := bundle.GetRepo(mdClient, organizationSlug, bundleName)
+	repo, repoErr := sdkbundle.GetBundleRepository(mdClient, bundleName)
 	if repoErr != nil {
 		return repoErr
 	}
