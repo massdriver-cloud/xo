@@ -18,18 +18,19 @@ type MassdriverClient struct {
 }
 
 type Specification struct {
-	Action         string `envconfig:"ACTION"`
-	BundleID       string `envconfig:"BUNDLE_ID" required:"true"`
-	BundleName     string `envconfig:"BUNDLE_NAME"`
-	BundleType     string `envconfig:"BUNDLE_TYPE"`
-	DeploymentID   string `envconfig:"DEPLOYMENT_ID" required:"true"`
-	ManifestID     string `envconfig:"MANIFEST_ID"`
-	OrganizationID string `envconfig:"ORGANIZATION_ID" required:"true"`
-	PackageID      string `envconfig:"PACKAGE_ID" required:"true"`
-	PackageName    string `envconfig:"PACKAGE_NAME" required:"true"`
-	TargetMode     string `envconfig:"TARGET_MODE"`
-	Token          string `envconfig:"TOKEN" required:"true"`
-	URL            string `envconfig:"URL"`
+	Action           string `envconfig:"ACTION"`
+	BundleID         string `envconfig:"BUNDLE_ID" required:"true"`
+	BundleName       string `envconfig:"BUNDLE_NAME"`
+	BundleType       string `envconfig:"BUNDLE_TYPE"`
+	DeploymentID     string `envconfig:"DEPLOYMENT_ID" required:"true"`
+	ManifestID       string `envconfig:"MANIFEST_ID"`
+	OrganizationUUID string `envconfig:"ORGANIZATION_UUID" required:"true"`
+	OrganizationID   string `envconfig:"ORGANIZATION_ID" required:"true"`
+	PackageID        string `envconfig:"PACKAGE_ID" required:"true"`
+	PackageName      string `envconfig:"PACKAGE_NAME" required:"true"`
+	TargetMode       string `envconfig:"TARGET_MODE"`
+	Token            string `envconfig:"TOKEN" required:"true"`
+	URL              string `envconfig:"URL"`
 }
 
 func InitializeMassdriverClient() (*MassdriverClient, error) {

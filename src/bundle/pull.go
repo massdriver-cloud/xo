@@ -21,7 +21,7 @@ func PullV0(ctx context.Context, client *massdriver.MassdriverClient, outFile io
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	bundleBytes, getErr := api.GetBundleSourceCode(client.GQLCLient, client.Specification.BundleID, client.Specification.OrganizationID)
+	bundleBytes, getErr := api.GetBundleSourceCode(client.GQLCLient, client.Specification.BundleID, client.Specification.OrganizationUUID)
 	if getErr != nil {
 		span.RecordError(getErr)
 		span.SetStatus(codes.Error, getErr.Error())
