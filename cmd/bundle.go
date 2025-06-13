@@ -22,9 +22,9 @@ var bundleCmd = &cobra.Command{
 }
 
 var bundlePullv0Cmd = &cobra.Command{
-	Use:   "pullV0",
+	Use:   "pullv0",
 	Short: "Pulls a bundle from Massdriver",
-	RunE:  runBundlePullV0,
+	RunE:  runBundlePullv0,
 }
 
 var bundlePullCmd = &cobra.Command{
@@ -47,7 +47,7 @@ func init() {
 	viper.BindPFlag("organization.id", bundlePullCmd.Flags().Lookup("organization"))
 }
 
-func runBundlePullV0(cmd *cobra.Command, args []string) error {
+func runBundlePullv0(cmd *cobra.Command, args []string) error {
 	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runBundlePull")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
