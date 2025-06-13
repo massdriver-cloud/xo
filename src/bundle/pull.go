@@ -5,20 +5,15 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"path/filepath"
 	"xo/src/api"
 	"xo/src/massdriver"
 	"xo/src/telemetry"
 
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 
 	oras "oras.land/oras-go/v2"
-	"oras.land/oras-go/v2/registry/remote"
-	"oras.land/oras-go/v2/registry/remote/auth"
-	"oras.land/oras-go/v2/registry/remote/retry"
 )
 
 func PullV0(ctx context.Context, client *massdriver.MassdriverClient, outFile io.Writer) error {
@@ -56,23 +51,4 @@ func PullV1(ctx context.Context, repo oras.Target, target oras.Target, tag strin
 	defer span.End()
 
 	return oras.Copy(ctx, repo, tag, target, tag, oras.DefaultCopyOptions)
-}
-
-func GetRepo(mdClient *client.Client, organizationSlug string, bundleName string) (oras.Target, error) {
-	reg := mdClient.Auth.BaseURL
-	repo, repoErr := remote.NewRepository(filepath.Join(reg, organizationSlug, bundleName))
-	if repoErr != nil {
-		return nil, repoErr
-	}
-
-	repo.Client = &auth.Client{
-		Client: retry.DefaultClient,
-		Cache:  auth.NewCache(),
-		Credential: auth.StaticCredential(reg, auth.Credential{
-			Username: "myuser",
-			Password: "mypass",
-		}),
-	}
-
-	return repo, nil
 }
