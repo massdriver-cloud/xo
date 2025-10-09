@@ -82,7 +82,7 @@ func TestPull(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			desc, pullErr := bundle.Pull(ctx, tc.sourceRepo, tc.target, tc.tag)
 			if (pullErr != nil) != tc.wantErr {
-				t.Fatalf("PullV1WithRepo() error = %v, wantErr %v", pullErr, tc.wantErr)
+				t.Fatalf("Pull error = %v, wantErr %v", pullErr, tc.wantErr)
 			}
 			if tc.wantErr {
 				return

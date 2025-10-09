@@ -11,7 +11,7 @@ import (
 )
 
 func Pull(ctx context.Context, repo oras.Target, target oras.Target, tag string) (v1.Descriptor, error) {
-	_, span := otel.Tracer("xo").Start(ctx, "BundlePullV1")
+	_, span := otel.Tracer("xo").Start(ctx, "BundlePull")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
