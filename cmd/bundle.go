@@ -30,7 +30,7 @@ func init() {
 	rootCmd.AddCommand(bundleCmd)
 
 	bundleCmd.AddCommand(bundlePullCmd)
-	bundlePullCmd.Flags().StringP("version", "v", "latest", "Bundle version (defaults to 'latest')")
+	bundlePullCmd.Flags().StringP("version", "v", "0.0.0", "Bundle version (defaults to '0.0.0')")
 	bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
 	viper.BindPFlag("bundle.version", bundlePullCmd.Flags().Lookup("version"))
 	viper.BindPFlag("bundle.name", bundlePullCmd.Flags().Lookup("name"))
