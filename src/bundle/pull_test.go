@@ -3,67 +3,17 @@ package bundle_test
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"testing"
 	"xo/src/bundle"
-	"xo/src/massdriver"
 
-	"github.com/massdriver-cloud/mass/pkg/gqlmock"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	oras "oras.land/oras-go/v2"
 	"oras.land/oras-go/v2/content"
 	"oras.land/oras-go/v2/content/memory"
 )
 
-func TestPullV0(t *testing.T) {
-	type testData struct {
-		name string
-		data []byte
-	}
-	tests := []testData{
-		{
-			name: "basic",
-			data: []byte(`data`),
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			gqlClient := gqlmock.NewClientWithSingleJSONResponse(map[string]interface{}{
-				"data": map[string]interface{}{
-					"bundleSourceCode": map[string]interface{}{
-						"source": base64.StdEncoding.EncodeToString(tc.data),
-					},
-				},
-			})
-
-			client := massdriver.MassdriverClient{
-				GQLCLient: gqlClient,
-				Specification: &massdriver.Specification{
-					BundleID:         "bundleuuid1",
-					OrganizationUUID: "orguuid1",
-				},
-			}
-
-			buf := new(bytes.Buffer)
-
-			pullErr := bundle.PullV0(context.Background(), &client, buf)
-			if pullErr != nil {
-				t.Errorf("pull failed: %v", pullErr)
-			}
-
-			got := buf.String()
-			want := string(tc.data)
-			if got != want {
-				t.Errorf("got %v, want %v", got, want)
-			}
-		})
-	}
-
-}
-
-func TestPullV1(t *testing.T) {
+func TestPull(t *testing.T) {
 	ctx := context.Background()
 
 	// Pre-populate source store with fake files
@@ -130,7 +80,7 @@ func TestPullV1(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			desc, pullErr := bundle.PullV1(ctx, tc.sourceRepo, tc.target, tc.tag)
+			desc, pullErr := bundle.Pull(ctx, tc.sourceRepo, tc.target, tc.tag)
 			if (pullErr != nil) != tc.wantErr {
 				t.Fatalf("PullV1WithRepo() error = %v, wantErr %v", pullErr, tc.wantErr)
 			}
