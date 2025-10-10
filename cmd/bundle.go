@@ -2,9 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"xo/src/bundle"
-	"xo/src/massdriver"
 	"xo/src/telemetry"
 
 	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
@@ -22,12 +20,6 @@ var bundleCmd = &cobra.Command{
 	Long:  ``,
 }
 
-var bundlePullv0Cmd = &cobra.Command{
-	Use:   "pullv0",
-	Short: "Pulls a bundle from Massdriver",
-	RunE:  runBundlePullv0,
-}
-
 var bundlePullCmd = &cobra.Command{
 	Use:   "pull",
 	Short: "Pulls a bundle from Massdriver",
@@ -37,39 +29,11 @@ var bundlePullCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(bundleCmd)
 
-	bundleCmd.AddCommand(bundlePullv0Cmd)
-
 	bundleCmd.AddCommand(bundlePullCmd)
-	bundlePullCmd.Flags().StringP("tag", "t", "latest", "Bundle tag (defaults to 'latest')")
+	bundlePullCmd.Flags().StringP("version", "v", "", "Bundle version")
 	bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
-	viper.BindPFlag("bundle.tag", bundlePullCmd.Flags().Lookup("tag"))
+	viper.BindPFlag("bundle.version", bundlePullCmd.Flags().Lookup("version"))
 	viper.BindPFlag("bundle.name", bundlePullCmd.Flags().Lookup("name"))
-}
-
-func runBundlePullv0(cmd *cobra.Command, args []string) error {
-	ctx, span := otel.Tracer("xo").Start(telemetry.GetContextWithTraceParentFromEnv(), "runBundlePull")
-	telemetry.SetSpanAttributes(span)
-	defer span.End()
-
-	client, initErr := massdriver.InitializeMassdriverClient()
-	if initErr != nil {
-		return telemetry.LogError(span, initErr, "an error occurred while initializing massdriver client")
-	}
-
-	outFile, openErr := os.OpenFile("bundle.tar.gz", os.O_CREATE|os.O_WRONLY, 0644)
-	if openErr != nil {
-		return telemetry.LogError(span, openErr, "unable to open bundle.tar.gz file")
-	}
-	defer outFile.Close()
-
-	log.Info().Msg("pulling bundle...")
-	pullErr := bundle.PullV0(ctx, client, outFile)
-	if pullErr != nil {
-		return telemetry.LogError(span, pullErr, "an error occurred while pulling bundle")
-	}
-	log.Info().Msg("bundle pulled")
-
-	return nil
 }
 
 func runBundlePull(cmd *cobra.Command, args []string) error {
@@ -79,9 +43,12 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 
 	bundleName := viper.GetString("bundle.name")
 	if bundleName == "" {
-		return fmt.Errorf("required flag bundleName must be set via flag or environment variable")
+		return telemetry.LogError(span, fmt.Errorf("required flag bundleName must be set via flag or environment variable"), "an error occurred while pulling bundle")
 	}
-	tag := viper.GetString("bundle.tag")
+	bundleVersion := viper.GetString("bundle.version")
+	if bundleVersion == "" {
+		return telemetry.LogError(span, fmt.Errorf("required flag bundleVersion must be set via flag or environment variable"), "an error occurred while pulling bundle")
+	}
 
 	mdClient, clientErr := client.New()
 	if clientErr != nil {
@@ -90,17 +57,17 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 
 	repo, repoErr := sdkbundle.GetBundleRepository(mdClient, bundleName)
 	if repoErr != nil {
-		return repoErr
+		return telemetry.LogError(span, repoErr, "an error occurred while getting bundle repository")
 	}
 
 	fileStore, fileErr := file.New("bundle")
 	if fileErr != nil {
-		return fileErr
+		return telemetry.LogError(span, fileErr, "an error occurred while creating file store")
 	}
 	defer fileStore.Close()
 
-	log.Info().Msg("pulling bundle...")
-	desc, pullErr := bundle.PullV1(ctx, repo, fileStore, tag)
+	log.Info().Msgf("pulling bundle %s:%s...", bundleName, bundleVersion)
+	desc, pullErr := bundle.Pull(ctx, repo, fileStore, bundleVersion)
 	if pullErr != nil {
 		return telemetry.LogError(span, pullErr, "an error occurred while pulling bundle")
 	}

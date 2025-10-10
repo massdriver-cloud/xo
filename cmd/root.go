@@ -83,5 +83,13 @@ func initLogging() {
 	default:
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	}
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
+	log.Logger = log.Output(zerolog.ConsoleWriter{
+		Out: os.Stdout,
+		FormatTimestamp: func(i interface{}) string {
+			return ""
+		},
+		FormatLevel: func(i interface{}) string {
+			return ""
+		},
+	})
 }
