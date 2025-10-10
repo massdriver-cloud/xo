@@ -30,7 +30,7 @@ func init() {
 	rootCmd.AddCommand(bundleCmd)
 
 	bundleCmd.AddCommand(bundlePullCmd)
-	bundlePullCmd.Flags().StringP("version", "v", "0.0.0", "Bundle version (defaults to '0.0.0')")
+	bundlePullCmd.Flags().StringP("version", "v", "", "Bundle version")
 	bundlePullCmd.Flags().StringP("name", "n", "", "Bundle name")
 	viper.BindPFlag("bundle.version", bundlePullCmd.Flags().Lookup("version"))
 	viper.BindPFlag("bundle.name", bundlePullCmd.Flags().Lookup("name"))
@@ -43,9 +43,12 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 
 	bundleName := viper.GetString("bundle.name")
 	if bundleName == "" {
-		return fmt.Errorf("required flag bundleName must be set via flag or environment variable")
+		return telemetry.LogError(span, fmt.Errorf("required flag bundleName must be set via flag or environment variable"), "an error occurred while pulling bundle")
 	}
 	bundleVersion := viper.GetString("bundle.version")
+	if bundleVersion == "" {
+		return telemetry.LogError(span, fmt.Errorf("required flag bundleVersion must be set via flag or environment variable"), "an error occurred while pulling bundle")
+	}
 
 	mdClient, clientErr := client.New()
 	if clientErr != nil {
@@ -54,12 +57,12 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 
 	repo, repoErr := sdkbundle.GetBundleRepository(mdClient, bundleName)
 	if repoErr != nil {
-		return repoErr
+		return telemetry.LogError(span, repoErr, "an error occurred while getting bundle repository")
 	}
 
 	fileStore, fileErr := file.New("bundle")
 	if fileErr != nil {
-		return fileErr
+		return telemetry.LogError(span, fileErr, "an error occurred while creating file store")
 	}
 	defer fileStore.Close()
 
