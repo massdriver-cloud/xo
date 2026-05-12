@@ -21,8 +21,10 @@ type Specification struct {
 	Action         string `envconfig:"ACTION"`
 	BundleName     string `envconfig:"BUNDLE_NAME"`
 	DeploymentID   string `envconfig:"DEPLOYMENT_ID" required:"true"`
+	// TODO: make this required once PACKAGE_NAME is fully deprecated
+	InstanceID     string `envconfig:"INSTANCE_ID"`
 	OrganizationID string `envconfig:"ORGANIZATION_ID" required:"true"`
-	PackageName    string `envconfig:"PACKAGE_NAME" required:"true"`
+	PackageName    string `envconfig:"PACKAGE_NAME"`
 	Token          string `envconfig:"TOKEN" required:"true"`
 	URL            string `envconfig:"URL"`
 }
