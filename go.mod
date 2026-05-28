@@ -3,7 +3,6 @@ module xo
 go 1.24.2
 
 require (
-	github.com/Khan/genqlient v0.8.1
 	github.com/honeycombio/honeycomb-opentelemetry-go v0.11.0
 	github.com/honeycombio/otel-config-go v1.17.0
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -23,6 +22,7 @@ require (
 )
 
 require (
+	github.com/Khan/genqlient v0.8.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/alexflint/go-arg v1.5.1 // indirect

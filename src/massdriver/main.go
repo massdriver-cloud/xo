@@ -2,25 +2,21 @@ package massdriver
 
 import (
 	"fmt"
-	"net/url"
 	"os"
-	"xo/src/api"
 
-	"github.com/Khan/genqlient/graphql"
 	"github.com/kelseyhightower/envconfig"
 )
 
 var MassdriverURL = "https://api.massdriver.cloud/"
 
 type MassdriverClient struct {
-	GQLCLient     graphql.Client
 	Specification *Specification
 }
 
 type Specification struct {
-	Action         string `envconfig:"ACTION"`
-	BundleName     string `envconfig:"BUNDLE_NAME"`
-	DeploymentID   string `envconfig:"DEPLOYMENT_ID" required:"true"`
+	Action       string `envconfig:"ACTION"`
+	BundleName   string `envconfig:"BUNDLE_NAME"`
+	DeploymentID string `envconfig:"DEPLOYMENT_ID" required:"true"`
 	// TODO: make this required once PACKAGE_NAME is fully deprecated
 	InstanceID     string `envconfig:"INSTANCE_ID"`
 	OrganizationID string `envconfig:"ORGANIZATION_ID" required:"true"`
@@ -41,12 +37,6 @@ func InitializeMassdriverClient() (*MassdriverClient, error) {
 	if client.Specification.URL == "" {
 		client.Specification.URL = MassdriverURL
 	}
-
-	graphqlEndpoint, gqlErr := url.JoinPath(client.Specification.URL, "api")
-	if gqlErr != nil {
-		return nil, gqlErr
-	}
-	client.GQLCLient = api.NewClient(graphqlEndpoint, client.Specification.DeploymentID, client.Specification.Token)
 
 	// TODO need to rework auth, for now just assume deployment id and token are present
 	deployment_id := os.Getenv("MASSDRIVER_DEPLOYMENT_ID")
