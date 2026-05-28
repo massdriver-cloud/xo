@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"xo/src/bundle"
 	"xo/src/resource"
 	"xo/src/telemetry"
@@ -146,12 +147,16 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	if id == "" {
-		packageName := os.Getenv("MASSDRIVER_PACKAGE_NAME")
-		if packageName == "" {
-			missingErr := fmt.Errorf("id field not set and MASSDRIVER_PACKAGE_NAME environment variable is not set")
-			return telemetry.LogError(span, missingErr, "an error occurred while deleting resource")
+		instanceId := os.Getenv("MASSDRIVER_INSTANCE_ID")
+		if instanceId == "" {
+			packageName := os.Getenv("MASSDRIVER_PACKAGE_NAME")
+			if packageName == "" {
+				missingErr := fmt.Errorf("id field not set and both MASSDRIVER_INSTANCE_ID and MASSDRIVER_PACKAGE_NAME environment variables are not set")
+				return telemetry.LogError(span, missingErr, "an error occurred while deleting resource")
+			}
+			instanceId = packageName[:strings.LastIndex(packageName, "-")]
 		}
-		id = packageName + "-" + field
+		id = instanceId + "-" + field
 	}
 
 	log.Info().Msg("Deleting resource " + id + "...")
@@ -161,7 +166,7 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
-	err = resource.Delete(ctx, provClient.Resources, id, field)
+	err = resource.Delete(ctx, provClient.Resources, id)
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while deleting resource")
 	}

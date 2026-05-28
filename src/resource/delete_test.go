@@ -40,7 +40,7 @@ func TestDelete(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := resource.Delete(context.Background(), tc.service, tc.id, tc.field)
+			err := resource.Delete(context.Background(), tc.service, tc.id)
 
 			if tc.wantErr {
 				require.Error(t, err)
