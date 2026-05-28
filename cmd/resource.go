@@ -60,7 +60,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	artFilePath, err := cmd.Flags().GetString("file")
+	resourceFilePath, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read file flag")
 	}
@@ -68,7 +68,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read field flag")
 	}
-	artName, err := cmd.Flags().GetString("name")
+	resourceName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read name flag")
 	}
@@ -81,17 +81,17 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "unable to read schema file flag")
 	}
 
-	var artFile *os.File
-	if artFilePath == "-" {
-		artFile = os.Stdin
+	var resourceFile *os.File
+	if resourceFilePath == "-" {
+		resourceFile = os.Stdin
 	} else {
-		artFile, err = os.Open(artFilePath)
+		resourceFile, err = os.Open(resourceFilePath)
 		if err != nil {
 			return telemetry.LogError(span, err, "unable to open resource file")
 		}
-		defer artFile.Close()
+		defer resourceFile.Close()
 	}
-	resourceBytes, err := io.ReadAll(artFile)
+	resourceBytes, err := io.ReadAll(resourceFile)
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read resource file")
 	}
@@ -100,6 +100,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to open schemas file")
 	}
+	defer schemasFile.Close()
 
 	log.Info().Msg("Validating resource " + field + "...")
 	valid, err := resource.Validate(field, resourceBytes, schemasFile)
@@ -124,13 +125,13 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
-	err = resource.Publish(ctx, provClient.Resources, resourceMap, &bun, field, artName)
+	err = resource.Publish(ctx, provClient.Resources, resourceMap, &bun, field, resourceName)
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while publishing resource")
 	}
 	log.Info().Msg("Resource " + field + " published")
 
-	return err
+	return nil
 }
 
 func runResourceDelete(cmd *cobra.Command, args []string) error {
@@ -172,5 +173,5 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 	}
 	log.Info().Msg("Resource " + id + " deleted")
 
-	return err
+	return nil
 }
