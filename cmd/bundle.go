@@ -5,8 +5,7 @@ import (
 	"xo/src/bundle"
 	"xo/src/telemetry"
 
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
-	sdkbundle "github.com/massdriver-cloud/massdriver-sdk-go/massdriver/platform/bundle"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -50,12 +49,12 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, fmt.Errorf("required flag bundleVersion must be set via flag or environment variable"), "an error occurred while pulling bundle")
 	}
 
-	mdClient, clientErr := client.New()
-	if clientErr != nil {
-		return clientErr
+	mdClient, err := massdriver.NewClient()
+	if err != nil {
+		return fmt.Errorf("error initializing massdriver client: %w", err)
 	}
 
-	repo, repoErr := sdkbundle.GetBundleRepository(mdClient, bundleName)
+	repo, repoErr := mdClient.OciRepos.Target(bundleName)
 	if repoErr != nil {
 		return telemetry.LogError(span, repoErr, "an error occurred while getting bundle repository")
 	}

@@ -6,8 +6,8 @@ import (
 	"xo/src/deployment"
 	"xo/src/telemetry"
 
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/client"
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/deployments"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning/deployments"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
@@ -82,13 +82,12 @@ func RunDeploymentStatus(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msgf("sending deployment status: %s", status)
-	mdClient, err := client.New()
+	provClient, err := provisioning.NewClient()
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
-	service := deployments.NewService(mdClient)
-	updateErr := deployment.UpdateDeploymentStatus(ctx, service, deploymentID, status)
+	updateErr := deployment.UpdateDeploymentStatus(ctx, provClient.Deployments, deploymentID, status)
 	if updateErr != nil {
 		return telemetry.LogError(span, updateErr, "an error occurred while reporting deployment status")
 	}

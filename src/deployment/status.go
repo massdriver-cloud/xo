@@ -3,7 +3,7 @@ package deployment
 import (
 	"context"
 
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/deployments"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning/deployments"
 	"github.com/rs/zerolog/log"
 )
 

@@ -1,26 +1,17 @@
-package artifact_test
+package resource_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
-	"xo/src/artifact"
+	"xo/src/resource"
 
 	"github.com/stretchr/testify/require"
 )
 
-func (f *fakeArtifactService) DeleteArtifact(ctx context.Context, id, field string) error {
-	f.DeleteCalled = true
-	if f.ShouldError {
-		return fmt.Errorf("simulated delete failure")
-	}
-	return nil
-}
-
 func TestDelete(t *testing.T) {
 	type testData struct {
 		name    string
-		service *fakeArtifactService
+		service *fakeResourceService
 		id      string
 		field   string
 		wantErr bool
@@ -29,7 +20,7 @@ func TestDelete(t *testing.T) {
 	tests := []testData{
 		{
 			name: "basic delete success",
-			service: &fakeArtifactService{
+			service: &fakeResourceService{
 				ShouldError: false,
 			},
 			id:      "artId",
@@ -38,7 +29,7 @@ func TestDelete(t *testing.T) {
 		},
 		{
 			name: "delete failure",
-			service: &fakeArtifactService{
+			service: &fakeResourceService{
 				ShouldError: true,
 			},
 			id:      "artId",
@@ -49,7 +40,7 @@ func TestDelete(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := artifact.Delete(context.Background(), tc.service, tc.id, tc.field)
+			err := resource.Delete(context.Background(), tc.service, tc.id)
 
 			if tc.wantErr {
 				require.Error(t, err)
@@ -57,7 +48,7 @@ func TestDelete(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			require.True(t, tc.service.DeleteCalled, "expected DeleteArtifact to be called")
+			require.True(t, tc.service.DeleteCalled, "expected DeleteResource to be called")
 		})
 	}
 }

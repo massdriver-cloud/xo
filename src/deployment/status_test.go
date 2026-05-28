@@ -6,7 +6,7 @@ import (
 	"testing"
 	"xo/src/deployment"
 
-	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/services/deployments"
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning/deployments"
 )
 
 type fakeDeploymentService struct {

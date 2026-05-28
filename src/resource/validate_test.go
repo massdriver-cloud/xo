@@ -1,10 +1,10 @@
-package artifact_test
+package resource_test
 
 import (
 	"bytes"
 	"os"
 	"testing"
-	"xo/src/artifact"
+	"xo/src/resource"
 )
 
 func TestValidate(t *testing.T) {
@@ -12,7 +12,7 @@ func TestValidate(t *testing.T) {
 		name       string
 		field      string
 		schemaPath string
-		artifact   []byte
+		resource   []byte
 		want       bool
 	}
 	tests := []testData{
@@ -20,7 +20,7 @@ func TestValidate(t *testing.T) {
 			name:       "pass",
 			field:      "one",
 			schemaPath: "testdata/schema-artifacts.json",
-			artifact:   []byte(`{"data":{"foo":{"bar":"baz"}},"specs":{"hello":"world"}}`),
+			resource:   []byte(`{"data":{"foo":{"bar":"baz"}},"specs":{"hello":"world"}}`),
 			want:       true,
 		},
 	}
@@ -33,7 +33,7 @@ func TestValidate(t *testing.T) {
 			}
 			schemasBuffer := bytes.NewBuffer(schemasBytes)
 
-			got, err := artifact.Validate(tc.field, tc.artifact, schemasBuffer)
+			got, err := resource.Validate(tc.field, tc.resource, schemasBuffer)
 			if err != nil {
 				t.Fatalf("%d, unexpected error", err)
 			}
