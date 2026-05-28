@@ -61,12 +61,11 @@ func runProvisionerTerraformBackendHTTP(cmd *cobra.Command, args []string) error
 		return telemetry.LogError(span, specErr, "an error occurred while extracting Massdriver specification")
 	}
 
-	log.Info().Msg("Generating state file...")
+	log.Info().Msg("Checking for an existing terraform backend configuration...")
 
 	generateErr := tf.GenerateBackendHTTPFile(ctx, output, spec, step)
 	if generateErr != nil {
-		return telemetry.LogError(span, generateErr, "an error occurred while generating backend file")
+		return telemetry.LogError(span, generateErr, "an error occurred while generating terraform backend file")
 	}
-	log.Info().Msg("State file generated")
 	return nil
 }

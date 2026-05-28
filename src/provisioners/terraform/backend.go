@@ -62,22 +62,29 @@ func GenerateBackendHTTPFile(ctx context.Context, output string, spec *massdrive
 		return err
 	}
 	if skip {
-		log.Info().Msg("Existing backend configuration detected. Skipping generation.")
+		log.Info().Msg("Existing terraform backend configuration detected. Skipping generation.")
 		return nil
 	}
+	log.Info().Msg("No terraform backend configuration detected. Generating new configuration.")
 
-	outputHandle, err := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
+	outputHandle, openErr := os.OpenFile(output, os.O_CREATE|os.O_WRONLY, 0644)
+	if openErr != nil {
+		return openErr
 	}
 	defer outputHandle.Close()
 
-	config, err := GenerateJSONBackendHTTPConfig(spec, bundleStep)
-	if err != nil {
-		return err
+	config, generateErr := GenerateJSONBackendHTTPConfig(spec, bundleStep)
+	if generateErr != nil {
+		return generateErr
 	}
 
-	return writeBackend(config, outputHandle)
+	writeErr := writeBackend(config, outputHandle)
+	if writeErr != nil {
+		return writeErr
+	}
+
+	log.Info().Msgf("Terraform backend configuration successfully written to %s", output)
+	return nil
 }
 
 func GenerateJSONBackendHTTPConfig(spec *massdriver.Specification, bundleStep string) ([]byte, error) {
