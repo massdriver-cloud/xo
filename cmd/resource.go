@@ -102,7 +102,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	}
 	defer schemasFile.Close()
 
-	log.Info().Msg("Validating resource " + field + "...")
+	log.Info().Msg("Validating resource \"" + field + "\"...")
 	valid, err := resource.Validate(field, resourceBytes, schemasFile)
 	if !valid || err != nil {
 		return telemetry.LogError(span, err, "resource is invalid")
@@ -112,9 +112,9 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if unmarshalErr != nil {
 		return telemetry.LogError(span, unmarshalErr, "unable to unmarshal resource bytes")
 	}
-	log.Info().Msg("Resource is valid!")
+	log.Info().Msg("Resource \"" + field + "\" is valid!")
 
-	log.Info().Msg("Publishing resource " + field + "...")
+	log.Info().Msg("Publishing resource \"" + field + "\"...")
 	bun, err := bundle.ParseBundle(massYamlPath)
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to open massdriver.yaml")
@@ -129,7 +129,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while publishing resource")
 	}
-	log.Info().Msg("Resource " + field + " published")
+	log.Info().Msg("Resource \"" + field + "\" published")
 
 	return nil
 }
@@ -160,7 +160,7 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 		id = instanceId + "-" + field
 	}
 
-	log.Info().Msg("Deleting resource " + id + "...")
+	log.Info().Msg("Deleting resource \"" + id + "\"...")
 
 	provClient, err := provisioning.NewClient()
 	if err != nil {
@@ -171,7 +171,7 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while deleting resource")
 	}
-	log.Info().Msg("Resource " + id + " deleted")
+	log.Info().Msg("Resource \"" + id + "\" deleted")
 
 	return nil
 }
