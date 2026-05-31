@@ -81,6 +81,11 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "unable to read schema file flag")
 	}
 
+	provClient, err := provisioning.NewClient()
+	if err != nil {
+		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
+	}
+
 	var resourceFile *os.File
 	if resourceFilePath == "-" {
 		resourceFile = os.Stdin
@@ -102,7 +107,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	}
 	defer schemasFile.Close()
 
-	log.Info().Msg("Validating resource " + field + "...")
+	log.Info().Msg("Validating resource...")
 	valid, err := resource.Validate(field, resourceBytes, schemasFile)
 	if !valid || err != nil {
 		return telemetry.LogError(span, err, "resource is invalid")
@@ -114,22 +119,17 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	}
 	log.Info().Msg("Resource is valid!")
 
-	log.Info().Msg("Publishing resource " + field + "...")
+	log.Info().Msg("Publishing resource...")
 	bun, err := bundle.ParseBundle(massYamlPath)
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to open massdriver.yaml")
-	}
-
-	provClient, err := provisioning.NewClient()
-	if err != nil {
-		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
 	}
 
 	err = resource.Publish(ctx, provClient.Resources, resourceMap, &bun, field, resourceName)
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while publishing resource")
 	}
-	log.Info().Msg("Resource " + field + " published")
+	log.Info().Msgf("Resource \"%s-%s\" published", provClient.Config().InstanceID, field)
 
 	return nil
 }
@@ -147,8 +147,14 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "unable to read field flag")
 	}
 
+	provClient, err := provisioning.NewClient()
+	if err != nil {
+		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
+	}
+
 	if id == "" {
-		instanceId := os.Getenv("MASSDRIVER_INSTANCE_ID")
+		instanceId := provClient.Config().InstanceID
+		// TODO: This can be removed once self-hosted users are updated
 		if instanceId == "" {
 			packageName := os.Getenv("MASSDRIVER_PACKAGE_NAME")
 			if packageName == "" {
@@ -160,18 +166,12 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 		id = instanceId + "-" + field
 	}
 
-	log.Info().Msg("Deleting resource " + id + "...")
-
-	provClient, err := provisioning.NewClient()
-	if err != nil {
-		return telemetry.LogError(span, err, "an error occurred while initializing Massdriver client")
-	}
-
+	log.Info().Msg("Deleting resource...")
 	err = resource.Delete(ctx, provClient.Resources, id)
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while deleting resource")
 	}
-	log.Info().Msg("Resource " + id + " deleted")
+	log.Info().Msgf("Resource \"%s\" deleted", id)
 
 	return nil
 }
