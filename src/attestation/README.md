@@ -1,116 +1,77 @@
-# Bundle Attestations
+# Attestations
 
-This directory contains the attestation implementation for Massdriver bundles. Attestations use the [in-toto attestation framework](https://github.com/in-toto/attestation) to create cryptographically verifiable statements about bundles and their deployed resources.
+Cryptographically verifiable [in-toto](https://github.com/in-toto/attestation)
+statements about deployments. Built on the canonical
+`github.com/in-toto/attestation/go/v1` types. See [`DESIGN.md`](./DESIGN.md) for
+the full model (three-tier subjects, storage, signing); this README is the quick
+reference.
 
-## Overview
+## Model in one paragraph
 
-Attestations are stored as OCI artifacts in the same registry as the bundle, using the [OCI Referrers API](https://github.com/opencontainers/distribution-spec/blob/main/spec.md#listing-referrers) to link attestations to specific bundle versions.
+An attestation is a signed claim — `subject` (what it's about) + `predicate`
+(the claim). Both deployment-tier attestations are published to the Massdriver
+API and indexed by deployment ID. Two types:
 
-## Attestation Types
-
-### Inventory Attestation
-
-Records the infrastructure resources created by a bundle deployment.
-
-**Predicate Type**: `https://massdriver.cloud/attestations/inventory/v1`
-
-**Fields**:
-- `deploymentId`: Unique identifier for the deployment
-- `bundleName`: Name of the bundle
-- `bundleVersion`: Version of the bundle deployed
-- `project`: Project name
-- `environment`: Environment name (e.g., production, staging)
-- `account`: Cloud account information
-  - `cloud`: Cloud provider (aws, azure, gcp)
-  - `accountId`: Cloud account identifier
-  - `region`: Cloud region
-- `resources`: Array of created resources
-  - `type`: Resource type (e.g., `aws:rds:db-instance`)
-  - `id`: Resource identifier
-  - `name`: Resource name
-  - `tags`: Key-value tags
-- `generatedAt`: Timestamp when inventory was collected
-- `producer`: Tool that generated the inventory
-  - `tool`: Tool name (e.g., terraform, pulumi)
-  - `version`: Tool version
+- **Provenance** (`https://slsa.dev/provenance/v1`) — genuine SLSA provenance.
+  The deployment apply is the build; its inputs (params/connections, bundle) and
+  the versioned provisioner are the predicate, and the **produced cloud resources
+  are the subjects** (each digested by its deploy-time config). One signed
+  statement is both "how it was made" and "what it produced."
+- **Compliance** (`https://massdriver.cloud/attestations/compliance/v1`) — the
+  security posture at deploy time; embeds scanner output (SARIF). Subject is the
+  deployment.
 
 ## Usage
 
-### Creating an Inventory Attestation
+Provenance has a subcommand per provisioner; each reads that tool's state/output
+and emits the same SLSA provenance:
 
 ```bash
-# Create an inventory JSON file (see examples/inventory/example-inventory.json)
-xo attest inventory \
-  --name my-bundle \
-  --version v1.2.3 \
-  --inventory-file ./inventory.json
+# Terraform / OpenTofu
+terraform show -json > tfshow.json
+xo attest provenance terraform --id "$MASSDRIVER_DEPLOYMENT_ID" --state-file ./tfshow.json
+
+# Helm
+helm get manifest my-release > manifest.yaml
+xo attest provenance helm --id "$MASSDRIVER_DEPLOYMENT_ID" --manifest-file ./manifest.yaml
+
+# Bicep (Azure deployment stacks)
+az stack group show -n my-stack -g my-rg -o json > stack.json
+xo attest provenance bicep --id "$MASSDRIVER_DEPLOYMENT_ID" --stack-file ./stack.json
+
+# Generic — custom provisioner supplies its own subjects (or none)
+xo attest provenance generic --id "$MASSDRIVER_DEPLOYMENT_ID" --provisioner my-tool --subjects-file ./subjects.json
+
+# Compliance — wrap a scanner's SARIF output
+xo attest compliance --id "$MASSDRIVER_DEPLOYMENT_ID" --scanner checkov --results-file ./checkov.sarif.json
 ```
 
-### Inventory JSON Format
+Common deployment-context flags (`--id/--instance/--name/--version/--project/
+--environment/--organization`) are shared across all `attest` commands and
+default from the orchestrator environment (`MASSDRIVER_DEPLOYMENT_ID`,
+`MASSDRIVER_PACKAGE_ID`, `MASSDRIVER_BUNDLE_NAME`, `MASSDRIVER_ORGANIZATION_ID`).
+See `examples/attestations/` for sample inputs.
 
-See `examples/inventory/example-inventory.json` for a complete example:
+## Layout
 
-```json
-{
-  "deploymentId": "deploy-abc123",
-  "bundleName": "my-rds-bundle",
-  "bundleVersion": "v1.2.3",
-  "project": "my-project",
-  "environment": "production",
-  "account": {
-    "cloud": "aws",
-    "accountId": "123456789012",
-    "region": "us-east-1"
-  },
-  "resources": [
-    {
-      "type": "aws:rds:db-instance",
-      "id": "my-production-db",
-      "name": "production-database",
-      "tags": {
-        "Environment": "production"
-      }
-    }
-  ],
-  "generatedAt": "2025-12-10T00:00:00Z",
-  "producer": {
-    "tool": "terraform",
-    "version": "1.5.0"
-  }
-}
-```
+Shared `attestation/` package:
 
-## Architecture
+- `statement.go` — statement/subject helpers, predicate `structpb` building
+- `context.go` — shared deployment identity envelope + `DeploymentURI`
+- `publish.go` — publish attestations to the Massdriver API
+- `oci.go` — push attestations to OCI (for future bundle-tier attestations)
 
-### Files
+Per-type subpackages:
 
-- `statement.go`: Core in-toto statement structure
-- `inventory.go`: Inventory predicate definition and statement creation
-- `oci.go`: OCI artifact operations for pushing attestations
-- `*_test.go`: Unit tests
+- `provenance/` — SLSA provenance predicate, statement builder, shared subject helpers + an `Extractor` interface, with one subpackage per provisioner:
+  - `provenance/terraform`, `provenance/helm`, `provenance/bicep`, `provenance/generic`
+- `compliance/` — compliance predicate, SARIF summarization
 
-### OCI Storage
+## Not yet implemented
 
-Attestations are stored as OCI artifacts with:
-- **Artifact Type**: `application/vnd.massdriver.attestation.inventory.v1+json`
-- **Subject**: References the bundle manifest digest
-- **Annotations**: 
-  - `cloud.massdriver.attestation-type`: Type of attestation
-  - `cloud.massdriver.bundle-name`: Bundle name
-  - `cloud.massdriver.bundle-version`: Bundle version
-
-## Future Enhancements
-
-1. **Signing**: Add cryptographic signatures using Sigstore/cosign
-2. **Compliance Attestations**: Add security/compliance scan results
-3. **Query/Discovery**: Tools to query and filter attestations
-4. **Verification**: Verify attestation integrity and signatures
-5. **SBOM**: Software Bill of Materials for bundle dependencies
-6. **Provenance**: Build provenance using SLSA
-
-## Resources
-
-- [in-toto Attestation Framework](https://github.com/in-toto/attestation)
-- [in-toto Statement Spec](https://github.com/in-toto/attestation/blob/main/spec/v1/statement.md)
-- [OCI Distribution Spec](https://github.com/opencontainers/distribution-spec)
-- [SLSA Provenance](https://slsa.dev/provenance/)
+- **Signing** — statements are not yet wrapped in a DSSE envelope / signed
+  (cosign). Until then they are verifiable records, not tamper-evident.
+- **API endpoints** — `publish.go` is a stub; it serializes and logs the payload
+  in place of the (not-yet-existing) API call.
+- **Compliance summary** — `summary` is not yet computed from SARIF.
+- **Bundle-tier attestations** — SBOM and SLSA build provenance (OCI Referrers).

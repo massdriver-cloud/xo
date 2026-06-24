@@ -3,11 +3,12 @@ package attestation
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
+	intoto "github.com/in-toto/attestation/go/v1"
 	"github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"google.golang.org/protobuf/encoding/protojson"
 	"oras.land/oras-go/v2"
 	"oras.land/oras-go/v2/content"
 	"oras.land/oras-go/v2/content/memory"
@@ -20,7 +21,7 @@ import (
 // artifactType: OCI artifact type for the attestation
 // stmt: the attestation statement to push
 // annotations: optional manifest annotations
-func PushStatement(ctx context.Context, repoRef string, subjectDigest string, artifactType string, stmt *Statement, annotations map[string]string) (ocispec.Descriptor, error) {
+func PushStatement(ctx context.Context, repoRef string, subjectDigest string, artifactType string, stmt *intoto.Statement, annotations map[string]string) (ocispec.Descriptor, error) {
 	if repoRef == "" {
 		return ocispec.Descriptor{}, fmt.Errorf("repoRef is required")
 	}
@@ -36,7 +37,7 @@ func PushStatement(ctx context.Context, repoRef string, subjectDigest string, ar
 
 	store := memory.New()
 
-	stmtBytes, err := json.Marshal(stmt)
+	stmtBytes, err := protojson.Marshal(stmt)
 	if err != nil {
 		return ocispec.Descriptor{}, fmt.Errorf("failed to marshal statement: %w", err)
 	}

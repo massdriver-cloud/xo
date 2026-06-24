@@ -1,0 +1,32 @@
+{
+  "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/azure-staging-xxxx/providers/Microsoft.Resources/deploymentStacks/azure-staging-xxxx-storage-account",
+  "name": "azure-staging-xxxx-storage-account",
+  "type": "Microsoft.Resources/deploymentStacks",
+  "provisioningState": "succeeded",
+  "resourceGroup": "azure-staging-xxxx",
+  "deploymentId": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/azure-staging-xxxx/providers/Microsoft.Resources/deployments/azure-staging-xxxx-storage-account",
+  "duration": "PT5.3S",
+  "actionOnUnmanage": { "managementGroups": "delete", "resourceGroups": "delete", "resources": "delete" },
+  "denySettings": { "applyToChildScopes": false, "excludedActions": [], "excludedPrincipals": [], "mode": "none" },
+  "deletedResources": [],
+  "detachedResources": [],
+  "failedResources": [],
+  "outputs": {
+    "storageAccountId": {
+      "type": "String",
+      "value": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/azure-staging-xxxx/providers/Microsoft.Storage/storageAccounts/azurestagingxxxx"
+    }
+  },
+  "resources": [
+    {
+      "apiVersion": null,
+      "denyStatus": "none",
+      "extension": null,
+      "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/azure-staging-xxxx/providers/Microsoft.Storage/storageAccounts/azurestagingxxxx",
+      "identifiers": null,
+      "resourceGroup": "azure-staging-xxxx",
+      "status": "managed",
+      "type": null
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "format_version": "1.0",
+  "terraform_version": "1.5.0",
+  "values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "aws_db_instance.main",
+          "mode": "managed",
+          "type": "aws_db_instance",
+          "name": "main",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "id": "my-production-db",
+            "name": "production-database",
+            "instance_class": "db.t3.micro",
+            "engine": "postgres"
+          }
+        },
+        {
+          "address": "aws_db_subnet_group.default",
+          "mode": "managed",
+          "type": "aws_db_subnet_group",
+          "name": "default",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": {
+            "id": "my-db-subnet-group",
+            "name": "production-db-subnets"
+          }
+        },
+        {
+          "address": "data.aws_availability_zones.available",
+          "mode": "data",
+          "type": "aws_availability_zones",
+          "name": "available",
+          "provider_name": "registry.terraform.io/hashicorp/aws",
+          "values": { "id": "us-east-1" }
+        }
+      ],
+      "child_modules": [
+        {
+          "address": "module.network",
+          "resources": [
+            {
+              "address": "module.network.aws_security_group.db",
+              "mode": "managed",
+              "type": "aws_security_group",
+              "name": "db",
+              "provider_name": "registry.terraform.io/hashicorp/aws",
+              "values": {
+                "id": "sg-abc123def456",
+                "name": "db-security-group"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

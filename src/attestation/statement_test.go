@@ -1,69 +1,74 @@
 package attestation
 
 import (
-	"encoding/json"
 	"testing"
+
+	v1 "github.com/in-toto/attestation/go/v1"
 )
 
-func TestStatement_Marshal(t *testing.T) {
-	stmt := Statement{
-		Type:          StatementTypeV1,
-		PredicateType: "https://example.com/predicate/v1",
-		Subject: []Subject{
-			{
-				Name: "test-artifact",
-				Digest: map[string]string{
-					"sha256": "abc123",
-				},
-			},
-		},
-		Predicate: json.RawMessage(`{"key":"value"}`),
+func TestStructFromJSON(t *testing.T) {
+	type sample struct {
+		A string `json:"a"`
+		B int    `json:"b"`
 	}
 
-	data, err := json.Marshal(stmt)
+	s, err := StructFromJSON(sample{A: "x", B: 2})
 	if err != nil {
-		t.Fatalf("failed to marshal statement: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-
-	var unmarshaled Statement
-	if err := json.Unmarshal(data, &unmarshaled); err != nil {
-		t.Fatalf("failed to unmarshal statement: %v", err)
+	if s.Fields["a"].GetStringValue() != "x" {
+		t.Errorf("expected a=x, got %v", s.Fields["a"])
 	}
-
-	if unmarshaled.Type != stmt.Type {
-		t.Errorf("expected Type %s, got %s", stmt.Type, unmarshaled.Type)
-	}
-	if unmarshaled.PredicateType != stmt.PredicateType {
-		t.Errorf("expected PredicateType %s, got %s", stmt.PredicateType, unmarshaled.PredicateType)
-	}
-	if len(unmarshaled.Subject) != len(stmt.Subject) {
-		t.Errorf("expected %d subjects, got %d", len(stmt.Subject), len(unmarshaled.Subject))
+	if s.Fields["b"].GetNumberValue() != 2 {
+		t.Errorf("expected b=2, got %v", s.Fields["b"])
 	}
 }
 
-func TestSubject_RequiredFields(t *testing.T) {
-	subject := Subject{
-		Name: "artifact",
-		Digest: map[string]string{
-			"sha256": "abc123",
-		},
-	}
-
-	data, err := json.Marshal(subject)
+func TestDescriptorsToValue(t *testing.T) {
+	got, err := DescriptorsToValue([]*v1.ResourceDescriptor{
+		{Uri: "pkg:bundle/foo@v1", Digest: map[string]string{"sha256": "abc"}},
+	})
 	if err != nil {
-		t.Fatalf("failed to marshal subject: %v", err)
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 1 {
+		t.Fatalf("expected 1 descriptor, got %d", len(got))
+	}
+	m := got[0].(map[string]any)
+	if m["uri"] != "pkg:bundle/foo@v1" {
+		t.Errorf("expected uri preserved, got %v", m["uri"])
 	}
 
-	// Verify that name and digest are present (not omitted)
-	var result map[string]interface{}
-	if err := json.Unmarshal(data, &result); err != nil {
-		t.Fatalf("failed to unmarshal: %v", err)
+	if v, err := DescriptorsToValue(nil); err != nil || v != nil {
+		t.Errorf("expected nil for empty input, got %v (err %v)", v, err)
 	}
+}
 
-	if _, ok := result["name"]; !ok {
-		t.Error("name field should be present")
+func TestDeploymentSubject(t *testing.T) {
+	subs := DeploymentSubject("massdriver://deploy-1")
+	if len(subs) != 1 || subs[0].Uri != "massdriver://deploy-1" {
+		t.Fatalf("unexpected subject: %+v", subs)
 	}
-	if _, ok := result["digest"]; !ok {
-		t.Error("digest field should be present")
+	if len(subs[0].Digest["sha256"]) != 64 {
+		t.Errorf("expected a sha256 digest of the uri, got %q", subs[0].Digest["sha256"])
+	}
+}
+
+func TestDeploymentURI(t *testing.T) {
+	tests := []struct {
+		name string
+		args [5]string
+		want string
+	}{
+		{"full context", [5]string{"org-1", "proj", "prod", "inst-1", "deploy-9"}, "massdriver://org-1/proj/prod/inst-1/deployments/deploy-9"},
+		{"partial context skips empty segments", [5]string{"", "", "", "inst-1", "deploy-9"}, "massdriver://inst-1/deployments/deploy-9"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DeploymentURI(tt.args[0], tt.args[1], tt.args[2], tt.args[3], tt.args[4])
+			if got != tt.want {
+				t.Errorf("expected %q, got %q", tt.want, got)
+			}
+		})
 	}
 }

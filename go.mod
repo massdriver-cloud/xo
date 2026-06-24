@@ -4,20 +4,25 @@ go 1.24.2
 
 require (
 	github.com/Khan/genqlient v0.8.0
+	github.com/hashicorp/terraform-json v0.27.2
 	github.com/honeycombio/honeycomb-opentelemetry-go v0.11.0
 	github.com/honeycombio/otel-config-go v1.17.0
+	github.com/in-toto/attestation v1.2.0
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/massdriver-cloud/massdriver-sdk-go v0.0.8
 	github.com/massdriver-cloud/terraform-config-inspect v0.0.0-20240906041648-e5461c213cea
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
+	github.com/owenrumney/go-sarif/v3 v3.3.0
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/otel v1.30.0
 	go.opentelemetry.io/otel/trace v1.30.0
+	google.golang.org/protobuf v1.36.11
 	gopkg.in/yaml.v3 v3.0.1
 	oras.land/oras-go/v2 v2.6.0
 )
@@ -32,9 +37,10 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-resty/resty/v2 v2.16.5 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.22.0 // indirect
+	github.com/hashicorp/go-version v1.7.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.22.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -44,7 +50,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
@@ -64,7 +69,7 @@ require (
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	github.com/zclconf/go-cty v1.15.0 // indirect
+	github.com/zclconf/go-cty v1.16.4 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.55.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.55.0 // indirect
 	go.opentelemetry.io/contrib/processors/baggage/baggagetrace v0.1.0 // indirect
@@ -92,6 +97,5 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
 	google.golang.org/grpc v1.66.2 // indirect
-	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )

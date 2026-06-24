@@ -1,0 +1,14 @@
+[
+  {
+    "uri": "custom://datacenter/rack-7/server-42",
+    "name": "server-42",
+    "type": "custom:bare-metal:server",
+    "digest": { "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" },
+    "attributes": { "rack": "7" }
+  },
+  {
+    "uri": "custom://datacenter/rack-7/switch-3",
+    "name": "switch-3",
+    "type": "custom:bare-metal:switch"
+  }
+]
