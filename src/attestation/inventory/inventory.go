@@ -12,28 +12,30 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-// PredicateType is the Massdriver-owned inventory predicate: the cloud resources
-// a deployment produced. No ratified standard covers this — CycloneDX and SPDX
-// are software BOMs, not cloud-resource inventories — so we own it explicitly.
+// PredicateType is the Massdriver-owned inventory predicate: the cloud assets a
+// deployment produced. ("Asset" rather than "resource" deliberately — "resource"
+// is a distinct Massdriver platform concept; see DESIGN.md §5.2.) No ratified
+// standard covers this — CycloneDX and SPDX are software BOMs, not cloud-asset
+// inventories — so we own it explicitly.
 const PredicateType = "https://massdriver.cloud/attestations/inventory/v1"
 
-// Extractor turns a provisioner's state/output into the resources a deployment
+// Extractor turns a provisioner's state/output into the assets a deployment
 // produced. One implementation per IaC tool. The result is self-reported: it is
-// "the deployment reported these resources," not independently verified.
+// "the deployment reported these assets," not independently verified.
 type Extractor interface {
-	Resources(input []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error)
+	Assets(input []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error)
 }
 
-// Predicate is the Massdriver inventory: the resources a deployment produced.
-// It embeds the shared deployment context and carries the resource list (the
-// resources are described as in-toto resource descriptors — the same shape that,
+// Predicate is the Massdriver inventory: the assets a deployment produced.
+// It embeds the shared deployment context and carries the asset list (the
+// assets are described as in-toto resource descriptors — the same shape that,
 // before the provenance/inventory split, served as the provenance subjects).
 type Predicate struct {
 	attestation.DeploymentContext
 	Provisioner string `json:"provisioner,omitempty"`
-	// Resources is encoded via protojson (see NewStatement), not encoding/json,
+	// Assets is encoded via protojson (see NewStatement), not encoding/json,
 	// so it is excluded from the struct's JSON marshaling and merged in by hand.
-	Resources []*v1.ResourceDescriptor `json:"-"`
+	Assets []*v1.ResourceDescriptor `json:"-"`
 }
 
 // NewStatement wraps an inventory predicate in an in-toto statement whose subject
@@ -47,7 +49,7 @@ func NewStatement(subjectURI string, predicate Predicate) (*v1.Statement, error)
 		return nil, fmt.Errorf("deployment ID is required")
 	}
 
-	// Marshal the context fields with encoding/json, then graft the resources in
+	// Marshal the context fields with encoding/json, then graft the assets in
 	// via protojson so their digests and annotations serialize correctly.
 	raw, err := json.Marshal(predicate)
 	if err != nil {
@@ -58,14 +60,14 @@ func NewStatement(subjectURI string, predicate Predicate) (*v1.Statement, error)
 		return nil, fmt.Errorf("failed to build predicate: %w", err)
 	}
 
-	resources, err := attestation.DescriptorsToValue(predicate.Resources)
+	assets, err := attestation.DescriptorsToValue(predicate.Assets)
 	if err != nil {
-		return nil, fmt.Errorf("failed to encode resources: %w", err)
+		return nil, fmt.Errorf("failed to encode assets: %w", err)
 	}
-	if resources == nil {
-		resources = []any{}
+	if assets == nil {
+		assets = []any{}
 	}
-	body["resources"] = resources
+	body["assets"] = assets
 
 	predicateStruct, err := structpb.NewStruct(body)
 	if err != nil {
@@ -80,9 +82,9 @@ func NewStatement(subjectURI string, predicate Predicate) (*v1.Statement, error)
 	}, nil
 }
 
-// NewResource builds an in-toto resource descriptor for one produced resource.
-// Extractors use this so resource construction stays uniform across provisioners.
-func NewResource(uri, name string, digest, annotations map[string]string) (*v1.ResourceDescriptor, error) {
+// NewAsset builds an in-toto resource descriptor for one produced asset.
+// Extractors use this so asset construction stays uniform across provisioners.
+func NewAsset(uri, name string, digest, annotations map[string]string) (*v1.ResourceDescriptor, error) {
 	rd := &v1.ResourceDescriptor{Uri: uri, Name: name, Digest: digest}
 	if len(annotations) > 0 {
 		anyMap := make(map[string]any, len(annotations))
@@ -91,7 +93,7 @@ func NewResource(uri, name string, digest, annotations map[string]string) (*v1.R
 		}
 		ann, err := structpb.NewStruct(anyMap)
 		if err != nil {
-			return nil, fmt.Errorf("failed to build resource annotations: %w", err)
+			return nil, fmt.Errorf("failed to build asset annotations: %w", err)
 		}
 		rd.Annotations = ann
 	}
@@ -100,7 +102,7 @@ func NewResource(uri, name string, digest, annotations map[string]string) (*v1.R
 
 // ConfigDigest returns the sha256 of a value's canonical JSON encoding
 // (encoding/json sorts map keys, so it is deterministic). Extractors use it to
-// bind a resource to its deploy-time configuration.
+// bind an asset to its deploy-time configuration.
 func ConfigDigest(v any) (map[string]string, error) {
 	canonical, err := json.Marshal(v)
 	if err != nil {
@@ -110,7 +112,7 @@ func ConfigDigest(v any) (map[string]string, error) {
 	return map[string]string{"sha256": hex.EncodeToString(sum[:])}, nil
 }
 
-// IdentityDigest returns the sha256 of an identifier string, for resources whose
+// IdentityDigest returns the sha256 of an identifier string, for assets whose
 // provisioner output exposes only an id (no recoverable config).
 func IdentityDigest(s string) map[string]string {
 	sum := sha256.Sum256([]byte(s))

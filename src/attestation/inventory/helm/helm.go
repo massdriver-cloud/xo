@@ -1,4 +1,4 @@
-// Package helm extracts inventory resources from `helm get manifest`
+// Package helm extracts inventory assets from `helm get manifest`
 // output (the rendered, multi-document Kubernetes manifest).
 package helm
 
@@ -17,10 +17,10 @@ import (
 // Extractor reads the multi-document YAML emitted by `helm get manifest`.
 type Extractor struct{}
 
-func (Extractor) Resources(manifest []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Assets(manifest []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(manifest))
 
-	var resources []*v1.ResourceDescriptor
+	var assets []*v1.ResourceDescriptor
 	for {
 		var object map[string]any
 		err := decoder.Decode(&object)
@@ -58,14 +58,14 @@ func (Extractor) Resources(manifest []byte, attributes map[string]string) ([]*v1
 			annotations[k] = v
 		}
 
-		resource, err := inventory.NewResource(k8sURI(apiVersion, kind, namespace, name), name, digest, annotations)
+		asset, err := inventory.NewAsset(k8sURI(apiVersion, kind, namespace, name), name, digest, annotations)
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, resource)
+		assets = append(assets, asset)
 	}
 
-	return resources, nil
+	return assets, nil
 }
 
 // k8sType derives a normalized type from a Kubernetes object's group + kind,

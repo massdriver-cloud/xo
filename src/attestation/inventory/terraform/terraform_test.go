@@ -30,40 +30,40 @@ const sampleShowJSON = `{
   }
 }`
 
-func TestExtractorResources(t *testing.T) {
-	resources, err := Extractor{}.Resources([]byte(sampleShowJSON), map[string]string{"md:instance": "inst-1"})
+func TestExtractorAssets(t *testing.T) {
+	assets, err := Extractor{}.Assets([]byte(sampleShowJSON), map[string]string{"md:instance": "inst-1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(resources) != 2 {
-		t.Fatalf("expected 2 resources (data source excluded), got %d", len(resources))
+	if len(assets) != 2 {
+		t.Fatalf("expected 2 assets (data source excluded), got %d", len(assets))
 	}
-	if resources[0].Uri != "my-db-instance" || resources[0].Name != "production-db" {
-		t.Errorf("unexpected first resource: %+v", resources[0])
+	if assets[0].Uri != "my-db-instance" || assets[0].Name != "production-db" {
+		t.Errorf("unexpected first asset: %+v", assets[0])
 	}
-	if len(resources[0].Digest["sha256"]) != 64 {
-		t.Errorf("expected sha256 config digest, got %q", resources[0].Digest["sha256"])
+	if len(assets[0].Digest["sha256"]) != 64 {
+		t.Errorf("expected sha256 config digest, got %q", assets[0].Digest["sha256"])
 	}
-	if got := resources[0].Annotations.Fields["type"].GetStringValue(); got != "aws:db-instance" {
+	if got := assets[0].Annotations.Fields["type"].GetStringValue(); got != "aws:db-instance" {
 		t.Errorf("expected type 'aws:db-instance', got %s", got)
 	}
-	if got := resources[0].Annotations.Fields["md:instance"].GetStringValue(); got != "inst-1" {
+	if got := assets[0].Annotations.Fields["md:instance"].GetStringValue(); got != "inst-1" {
 		t.Errorf("expected md:instance 'inst-1', got %s", got)
 	}
-	if resources[1].Uri != "sg-123456" {
-		t.Errorf("expected child-module resource 'sg-123456', got %s", resources[1].Uri)
+	if assets[1].Uri != "sg-123456" {
+		t.Errorf("expected child-module asset 'sg-123456', got %s", assets[1].Uri)
 	}
 }
 
-func TestExtractorResources_Empty(t *testing.T) {
-	resources, err := Extractor{}.Resources([]byte(`{"format_version":"1.0"}`), nil)
-	if err != nil || len(resources) != 0 {
-		t.Fatalf("expected 0 resources, got %d (err %v)", len(resources), err)
+func TestExtractorAssets_Empty(t *testing.T) {
+	assets, err := Extractor{}.Assets([]byte(`{"format_version":"1.0"}`), nil)
+	if err != nil || len(assets) != 0 {
+		t.Fatalf("expected 0 assets, got %d (err %v)", len(assets), err)
 	}
 }
 
-func TestExtractorResources_InvalidJSON(t *testing.T) {
-	if _, err := (Extractor{}).Resources([]byte(`{bad`), nil); err == nil {
+func TestExtractorAssets_InvalidJSON(t *testing.T) {
+	if _, err := (Extractor{}).Assets([]byte(`{bad`), nil); err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func samplePredicate() Predicate {
-	res, _ := NewResource(
+	res, _ := NewAsset(
 		"arn:aws:rds:::db:prod", "production-db",
 		map[string]string{"sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
 		map[string]string{"type": "aws:db-instance", "md:instance": "inst-1"},
@@ -24,7 +24,7 @@ func samplePredicate() Predicate {
 			Producer:     attestation.ProducerInfo{Tool: "xo"},
 		},
 		Provisioner: "terraform",
-		Resources:   []*v1.ResourceDescriptor{res},
+		Assets:      []*v1.ResourceDescriptor{res},
 	}
 }
 
@@ -58,21 +58,21 @@ func TestNewStatement_Success(t *testing.T) {
 	if pred["provisioner"] != "terraform" {
 		t.Errorf("expected provisioner 'terraform', got %v", pred["provisioner"])
 	}
-	resources, ok := pred["resources"].([]any)
-	if !ok || len(resources) != 1 {
-		t.Fatalf("expected 1 resource in predicate, got %v", pred["resources"])
+	assets, ok := pred["assets"].([]any)
+	if !ok || len(assets) != 1 {
+		t.Fatalf("expected 1 asset in predicate, got %v", pred["assets"])
 	}
-	first := resources[0].(map[string]any)
+	first := assets[0].(map[string]any)
 	if first["uri"] != "arn:aws:rds:::db:prod" {
-		t.Errorf("expected resource uri preserved, got %v", first["uri"])
+		t.Errorf("expected asset uri preserved, got %v", first["uri"])
 	}
 	ann := first["annotations"].(map[string]any)
 	if ann["type"] != "aws:db-instance" {
-		t.Errorf("expected resource type annotation preserved, got %v", ann["type"])
+		t.Errorf("expected asset type annotation preserved, got %v", ann["type"])
 	}
 }
 
-func TestNewStatement_EmptyResources(t *testing.T) {
+func TestNewStatement_EmptyAssets(t *testing.T) {
 	pred := Predicate{DeploymentContext: attestation.DeploymentContext{DeploymentID: "deploy-123"}}
 	stmt, err := NewStatement("massdriver://deploy-123", pred)
 	if err != nil {
@@ -83,9 +83,9 @@ func TestNewStatement_EmptyResources(t *testing.T) {
 	if err := json.Unmarshal(b, &m); err != nil {
 		t.Fatalf("failed to unmarshal: %v", err)
 	}
-	resources := m["predicate"].(map[string]any)["resources"]
-	if got, ok := resources.([]any); !ok || len(got) != 0 {
-		t.Errorf("expected an empty resources array, got %v", resources)
+	assets := m["predicate"].(map[string]any)["assets"]
+	if got, ok := assets.([]any); !ok || len(got) != 0 {
+		t.Errorf("expected an empty assets array, got %v", assets)
 	}
 }
 

@@ -72,7 +72,7 @@ massdriver://<org>/<project>/<env>/<instance-id>/deployments/<deployment-id>
 Anchoring all three to one subject means they compose: the provenance (how it was
 made), the inventory (what it produced), and the compliance (how secure it was)
 are three claims about the same deployment event, joinable by subject. The
-resources a deployment produced are *not* subjects — they live in the inventory
+assets a deployment produced are *not* subjects — they live in the inventory
 predicate body (§5.2).
 
 - **Bundle-tier** subjects use the bundle manifest digest directly.
@@ -91,7 +91,7 @@ A deployment apply *is* the build: its inputs are params/connections and the
 bundle, and its builder is the Massdriver orchestrator. The predicate records
 that production — inputs (`externalParameters`), the bundle
 (`resolvedDependencies`), and the builder. The subject is the deployment (§4),
-not the resources it produced; the resource list moved to the inventory
+not the assets it produced; the asset list moved to the inventory
 predicate (§5.2). Provenance is provisioner-free — one command, no state-file,
 no per-tool subcommand. Because this is real SLSA, security teams can consume it
 as such, and Massdriver can target a SLSA *level* once signing lands (§6).
@@ -123,14 +123,17 @@ as such, and Massdriver can target a SLSA *level* once signing lands (§6).
 ### 5.2 Inventory
 
 Predicate type: `https://massdriver.cloud/attestations/inventory/v1` — a
-Massdriver-owned predicate. No ratified standard covers cloud-resource
+Massdriver-owned predicate. We call the items **assets**, not "resources":
+"resource" is a distinct Massdriver platform concept (the high-level output of an
+instance), and an inventory item is the low-level cloud object an apply created —
+conflating the two would be misleading. No ratified standard covers cloud-asset
 inventories (CycloneDX and SPDX are software BOMs), so we own it explicitly.
 
-The resources a deployment produced, recorded in the predicate body (not as
+The assets a deployment produced, recorded in the predicate body (not as
 subjects). Each is an in-toto `ResourceDescriptor` whose `uri` is the cloud
-resource id and whose `sha256` digest is the hash of that resource's deploy-time
+object's id and whose `sha256` digest is the hash of that object's deploy-time
 configuration. The digest binds the record to that exact config; it is *not*
-recomputable from the live cloud resource — an inherent limit over
+recomputable from the live cloud object — an inherent limit over
 non-content-addressable infrastructure.
 
 ```json
@@ -149,11 +152,11 @@ non-content-addressable infrastructure.
     "project": "my-project",
     "environment": "production",
     "provisioner": "terraform",
-    "resources": [
+    "assets": [
       {
         "uri": "arn:aws:rds:...:db:prod",
         "name": "production-database",
-        "digest": { "sha256": "<hash of the resource's deploy-time config>" },
+        "digest": { "sha256": "<hash of the asset's deploy-time config>" },
         "annotations": { "type": "aws:db-instance", "md:instance": "inst-7f3a", "md:project": "my-project" }
       }
     ]
@@ -161,20 +164,20 @@ non-content-addressable infrastructure.
 }
 ```
 
-- The resources are the low-level cloud objects created — distinct from the
+- The assets are the low-level cloud objects created — distinct from the
   platform's `resource` (the high-level output of an instance). They are a
   point-in-time record of what the apply produced, not a live tracker; drift and
   post-apply mutations are out of scope.
 - The inventory is **self-reported**: it records "the deployment reported these
-  resources," not an independently verified list.
-- Each resource's `annotations` carry **Massdriver-assigned** metadata (the
+  assets," not an independently verified list.
+- Each asset's `annotations` carry **Massdriver-assigned** metadata (the
   normalized `type` and `md:*` attributes), never scraped cloud tags/labels —
   credentials and cloud/account context are not assumed.
 - `type` is normalized from the raw provisioner type (`aws_db_instance` →
   `aws:db-instance`).
-- A deploy that produces no managed resources records an empty `resources` list;
+- A deploy that produces no assets records an empty `assets` list;
   the attestation still anchors to the deployment subject.
-- Resources are extracted per provisioner (Terraform, Helm, Bicep, or a generic
+- Assets are extracted per provisioner (Terraform, Helm, Bicep, or a generic
   caller-supplied list); only this extraction step is provisioner-specific — the
   predicate and envelope are identical across tools. See §7.
 
@@ -229,18 +232,18 @@ Per-type subpackages:
 - `attestation/provenance/` — SLSA provenance predicate and statement builder.
   Provisioner-free; no extractors.
 - `attestation/inventory/` — inventory predicate, statement builder, and the
-  shared resource helpers (`NewResource`, `ConfigDigest`, `IdentityDigest`) plus
-  an `Extractor` interface (`bytes → resources`). Resource extraction is
+  shared asset helpers (`NewAsset`, `ConfigDigest`, `IdentityDigest`) plus
+  an `Extractor` interface (`bytes → assets`). Asset extraction is
   provisioner-pluggable; one subpackage per IaC tool:
   - `inventory/terraform` — `terraform show -json` (via `hashicorp/terraform-json`)
   - `inventory/helm` — `helm get manifest` (rendered Kubernetes objects)
   - `inventory/bicep` — `az stack ... show -o json` (Azure deployment stacks)
-  - `inventory/generic` — caller-supplied resources (custom provisioners), or none
+  - `inventory/generic` — caller-supplied assets (custom provisioners), or none
 - `attestation/compliance/` — compliance predicate and SARIF summarization.
 
 Commands: `xo attest provenance` (provisioner-free; emits SLSA provenance for the
 deployment), `xo attest inventory <terraform|helm|bicep|generic>` (each reads
-that provisioner's state/output and records the produced resources), and
+that provisioner's state/output and records the produced assets), and
 `xo attest compliance` (scanner results → compliance attestation). See
 `examples/attestations/`.
 

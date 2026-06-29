@@ -19,8 +19,9 @@ types:
   (params/connections, bundle) and the orchestrator builder are the predicate.
   Provisioner-free — one command, no state-file.
 - **Inventory** (`https://massdriver.cloud/attestations/inventory/v1`) — what the
-  deployment produced: the cloud resources (each digested by its deploy-time
-  config) recorded in the predicate body. Self-reported, extracted per
+  deployment produced: the cloud **assets** (each digested by its deploy-time
+  config) recorded in the predicate body. Called "assets" to stay distinct from
+  the Massdriver platform's "resource" concept. Self-reported, extracted per
   provisioner.
 - **Compliance** (`https://massdriver.cloud/attestations/compliance/v1`) — the
   security posture at deploy time; embeds scanner output (SARIF).
@@ -34,7 +35,7 @@ xo attest provenance --id "$MASSDRIVER_DEPLOYMENT_ID"
 ```
 
 Inventory has a subcommand per provisioner; each reads that tool's state/output
-and records the produced resources:
+and records the produced assets:
 
 ```bash
 # Terraform / OpenTofu
@@ -49,8 +50,8 @@ xo attest inventory helm --id "$MASSDRIVER_DEPLOYMENT_ID" --manifest-file ./mani
 az stack group show -n my-stack -g my-rg -o json > stack.json
 xo attest inventory bicep --id "$MASSDRIVER_DEPLOYMENT_ID" --stack-file ./stack.json
 
-# Generic — custom provisioner supplies its own resources (or none)
-xo attest inventory generic --id "$MASSDRIVER_DEPLOYMENT_ID" --provisioner my-tool --resources-file ./resources.json
+# Generic — custom provisioner supplies its own assets (or none)
+xo attest inventory generic --id "$MASSDRIVER_DEPLOYMENT_ID" --provisioner my-tool --assets-file ./assets.json
 
 # Compliance — wrap a scanner's SARIF output
 xo attest compliance --id "$MASSDRIVER_DEPLOYMENT_ID" --scanner checkov --results-file ./checkov.sarif.json
@@ -74,7 +75,7 @@ Shared `attestation/` package:
 Per-type subpackages:
 
 - `provenance/` — SLSA provenance predicate and statement builder (provisioner-free)
-- `inventory/` — inventory predicate, statement builder, shared resource helpers + an `Extractor` interface, with one subpackage per provisioner:
+- `inventory/` — inventory predicate, statement builder, shared asset helpers + an `Extractor` interface, with one subpackage per provisioner:
   - `inventory/terraform`, `inventory/helm`, `inventory/bicep`, `inventory/generic`
 - `compliance/` — compliance predicate, SARIF summarization
 

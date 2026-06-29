@@ -17,16 +17,16 @@ const sampleStack = `{
   ]
 }`
 
-func TestExtractorResources(t *testing.T) {
-	resources, err := Extractor{}.Resources([]byte(sampleStack), map[string]string{"md:instance": "inst-1"})
+func TestExtractorAssets(t *testing.T) {
+	assets, err := Extractor{}.Assets([]byte(sampleStack), map[string]string{"md:instance": "inst-1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(resources) != 2 {
-		t.Fatalf("expected 2 resources, got %d", len(resources))
+	if len(assets) != 2 {
+		t.Fatalf("expected 2 assets, got %d", len(assets))
 	}
 
-	db := resources[0]
+	db := assets[0]
 	if db.Name != "mydb" {
 		t.Errorf("expected name 'mydb', got %s", db.Name)
 	}
@@ -40,24 +40,24 @@ func TestExtractorResources(t *testing.T) {
 		t.Errorf("expected md:instance 'inst-1', got %s", got)
 	}
 
-	if got := resources[1].Annotations.Fields["type"].GetStringValue(); got != "azure:microsoft.storage:storageaccounts" {
+	if got := assets[1].Annotations.Fields["type"].GetStringValue(); got != "azure:microsoft.storage:storageaccounts" {
 		t.Errorf("expected storage type, got %s", got)
 	}
 }
 
-func TestExtractorResources_PropertiesFallback(t *testing.T) {
+func TestExtractorAssets_PropertiesFallback(t *testing.T) {
 	data := `{"properties":{"resources":[{"id":"/subscriptions/s/resourceGroups/rg/providers/Microsoft.Web/sites/app"}]}}`
-	resources, err := Extractor{}.Resources([]byte(data), nil)
+	assets, err := Extractor{}.Assets([]byte(data), nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(resources) != 1 || resources[0].Name != "app" {
-		t.Fatalf("expected 1 resource named 'app', got %+v", resources)
+	if len(assets) != 1 || assets[0].Name != "app" {
+		t.Fatalf("expected 1 asset named 'app', got %+v", assets)
 	}
 }
 
-func TestExtractorResources_InvalidJSON(t *testing.T) {
-	if _, err := (Extractor{}).Resources([]byte(`{bad`), nil); err == nil {
+func TestExtractorAssets_InvalidJSON(t *testing.T) {
+	if _, err := (Extractor{}).Assets([]byte(`{bad`), nil); err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
 }

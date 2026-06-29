@@ -31,15 +31,14 @@ var attestCmd = &cobra.Command{
 var attestProvenanceCmd = &cobra.Command{
 	Use:   "provenance",
 	Short: "Attest to the provenance of a deployment",
-	Long: `Create a SLSA provenance attestation describing how a deployment was produced — its inputs, the bundle it ran, and the builder.
-The subject is the deployment; the resources it produced are recorded separately by 'xo attest inventory'.`,
-	RunE: runProvenanceAttest,
+	Long:  `Create a SLSA provenance attestation describing how a deployment was produced — its inputs, the bundle it ran, and the builder.`,
+	RunE:  runProvenanceAttest,
 }
 
 var attestInventoryCmd = &cobra.Command{
 	Use:   "inventory",
-	Short: "Attest to the resources a deployment produced",
-	Long:  `Create an inventory attestation listing the cloud resources a deployment produced. Use the per-provisioner subcommand matching the IaC tool that performed the apply.`,
+	Short: "Attest to the assets a deployment produced",
+	Long:  `Create an inventory attestation listing the cloud assets a deployment produced. Use the per-provisioner subcommand matching the IaC tool that performed the apply.`,
 }
 
 var attestInventoryTerraformCmd = &cobra.Command{
@@ -69,13 +68,13 @@ var attestInventoryBicepCmd = &cobra.Command{
 
 var attestInventoryGenericCmd = &cobra.Command{
 	Use:   "generic",
-	Short: "Inventory for a custom provisioner (resources supplied directly, or none)",
+	Short: "Inventory for a custom provisioner (assets supplied directly, or none)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("provisioner")
 		if name == "" {
 			name = "generic"
 		}
-		return runInventory(cmd, name, generic.Extractor{}, "resources-file", false)
+		return runInventory(cmd, name, generic.Extractor{}, "assets-file", false)
 	},
 }
 
@@ -109,7 +108,7 @@ func init() {
 	attestInventoryTerraformCmd.Flags().StringP("state-file", "s", "", "Path to `terraform show -json` output")
 	attestInventoryHelmCmd.Flags().StringP("manifest-file", "m", "", "Path to `helm get manifest` output")
 	attestInventoryBicepCmd.Flags().String("stack-file", "", "Path to `az stack ... show -o json` output")
-	attestInventoryGenericCmd.Flags().StringP("resources-file", "f", "", "Path to a JSON array of produced resources (optional)")
+	attestInventoryGenericCmd.Flags().StringP("assets-file", "f", "", "Path to a JSON array of produced assets (optional)")
 	attestInventoryGenericCmd.Flags().String("provisioner", "", "Name of the custom provisioner (recorded in the inventory)")
 
 	attestCmd.AddCommand(attestComplianceCmd)
@@ -181,7 +180,7 @@ func runProvenanceAttest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// runInventory extracts the produced resources with the given provisioner
+// runInventory extracts the produced assets with the given provisioner
 // extractor and publishes an inventory attestation. inputFlag names the file
 // flag holding the provisioner's state/output; requireInput errors if it is unset.
 func runInventory(cmd *cobra.Command, provisioner string, extractor inventory.Extractor, inputFlag string, requireInput bool) error {
@@ -205,18 +204,18 @@ func runInventory(cmd *cobra.Command, provisioner string, extractor inventory.Ex
 		return telemetry.LogError(span, fmt.Errorf("required flag --%s must be set", inputFlag), "input file is required")
 	}
 
-	resources, extractErr := extractor.Resources(input, massdriverAttributes(dctx))
+	assets, extractErr := extractor.Assets(input, massdriverAttributes(dctx))
 	if extractErr != nil {
-		return telemetry.LogError(span, extractErr, "failed to extract inventory resources")
+		return telemetry.LogError(span, extractErr, "failed to extract inventory assets")
 	}
-	if len(resources) == 0 {
-		log.Warn().Msg("no resources extracted; recording an empty inventory")
+	if len(assets) == 0 {
+		log.Warn().Msg("no assets extracted; recording an empty inventory")
 	}
 
 	pred := inventory.Predicate{
 		DeploymentContext: dctx,
 		Provisioner:       provisioner,
-		Resources:         resources,
+		Assets:            assets,
 	}
 
 	stmt, stmtErr := inventory.NewStatement(subjectURI, pred)
@@ -224,7 +223,7 @@ func runInventory(cmd *cobra.Command, provisioner string, extractor inventory.Ex
 		return telemetry.LogError(span, stmtErr, "failed to create inventory statement")
 	}
 
-	log.Info().Msgf("publishing inventory attestation for deployment %s via %s (%d resources)", dctx.DeploymentID, provisioner, len(resources))
+	log.Info().Msgf("publishing inventory attestation for deployment %s via %s (%d assets)", dctx.DeploymentID, provisioner, len(assets))
 	if pubErr := attestation.NewPublisher().Publish(ctx, dctx.DeploymentID, stmt); pubErr != nil {
 		return telemetry.LogError(span, pubErr, "failed to publish attestation")
 	}
@@ -283,7 +282,7 @@ func runComplianceAttest(cmd *cobra.Command, args []string) error {
 }
 
 // massdriverAttributes are the platform-assigned attributes stamped onto every
-// inventory resource, in place of scraping cloud tags/labels.
+// inventory asset, in place of scraping cloud tags/labels.
 func massdriverAttributes(dctx attestation.DeploymentContext) map[string]string {
 	attrs := map[string]string{}
 	if dctx.InstanceID != "" {

@@ -1,4 +1,4 @@
-// Package bicep extracts inventory resources from `az stack <scope> show -o
+// Package bicep extracts inventory assets from `az stack <scope> show -o
 // json` output (Azure deployment stacks).
 package bicep
 
@@ -15,7 +15,7 @@ import (
 // Extractor reads the JSON emitted by `az stack ... show -o json`.
 type Extractor struct{}
 
-func (Extractor) Resources(stackJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Assets(stackJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	// The managed-resources list appears at the top level on newer CLIs and under
 	// `properties` on older ones; accept either.
 	var stack struct {
@@ -33,7 +33,7 @@ func (Extractor) Resources(stackJSON []byte, attributes map[string]string) ([]*v
 		rawResources = stack.Properties.Resources
 	}
 
-	var resources []*v1.ResourceDescriptor
+	var assets []*v1.ResourceDescriptor
 	for _, raw := range rawResources {
 		var object map[string]any
 		if err := json.Unmarshal(raw, &object); err != nil {
@@ -56,14 +56,14 @@ func (Extractor) Resources(stackJSON []byte, attributes map[string]string) ([]*v
 			annotations[k] = v
 		}
 
-		resource, err := inventory.NewResource(id, azureName(id), digest, annotations)
+		asset, err := inventory.NewAsset(id, azureName(id), digest, annotations)
 		if err != nil {
 			return nil, err
 		}
-		resources = append(resources, resource)
+		assets = append(assets, asset)
 	}
 
-	return resources, nil
+	return assets, nil
 }
 
 // azureType derives a normalized type from an Azure resource id's provider path,

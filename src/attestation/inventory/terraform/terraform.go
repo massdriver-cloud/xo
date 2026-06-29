@@ -1,4 +1,4 @@
-// Package terraform extracts inventory resources from `terraform show -json`
+// Package terraform extracts inventory assets from `terraform show -json`
 // output (also covers OpenTofu's `tofu show -json`, same format).
 package terraform
 
@@ -17,7 +17,7 @@ import (
 // hashicorp/terraform-json — the supported, versioned format).
 type Extractor struct{}
 
-func (Extractor) Resources(showJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Assets(showJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	var state tfjson.State
 	if err := json.Unmarshal(showJSON, &state); err != nil {
 		return nil, fmt.Errorf("failed to parse terraform show output: %w", err)
@@ -26,15 +26,16 @@ func (Extractor) Resources(showJSON []byte, attributes map[string]string) ([]*v1
 		return nil, nil
 	}
 
-	var resources []*v1.ResourceDescriptor
-	if err := collectModule(state.Values.RootModule, attributes, &resources); err != nil {
+	var assets []*v1.ResourceDescriptor
+	if err := collectModule(state.Values.RootModule, attributes, &assets); err != nil {
 		return nil, err
 	}
-	return resources, nil
+	return assets, nil
 }
 
-// collectModule appends the managed resources of a module (and its children).
-func collectModule(module *tfjson.StateModule, attributes map[string]string, resources *[]*v1.ResourceDescriptor) error {
+// collectModule appends a module's managed resources (and its children's) as
+// inventory assets.
+func collectModule(module *tfjson.StateModule, attributes map[string]string, assets *[]*v1.ResourceDescriptor) error {
 	for _, resource := range module.Resources {
 		// Only managed resources are products of the apply; skip data sources.
 		if resource.Mode != tfjson.ManagedResourceMode {
@@ -52,15 +53,15 @@ func collectModule(module *tfjson.StateModule, attributes map[string]string, res
 			return fmt.Errorf("failed to digest resource config: %w", err)
 		}
 
-		resourceDesc, err := inventory.NewResource(id, name, digest, withType(normalizeType(resource.Type), attributes))
+		asset, err := inventory.NewAsset(id, name, digest, withType(normalizeType(resource.Type), attributes))
 		if err != nil {
 			return err
 		}
-		*resources = append(*resources, resourceDesc)
+		*assets = append(*assets, asset)
 	}
 
 	for _, child := range module.ChildModules {
-		if err := collectModule(child, attributes, resources); err != nil {
+		if err := collectModule(child, attributes, assets); err != nil {
 			return err
 		}
 	}
