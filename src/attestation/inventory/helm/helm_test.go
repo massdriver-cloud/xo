@@ -21,16 +21,16 @@ spec:
 ---
 `
 
-func TestExtractorSubjects(t *testing.T) {
-	subjects, err := Extractor{}.Subjects([]byte(sampleManifest), map[string]string{"md:instance": "inst-1"})
+func TestExtractorResources(t *testing.T) {
+	resources, err := Extractor{}.Resources([]byte(sampleManifest), map[string]string{"md:instance": "inst-1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(subjects) != 2 {
-		t.Fatalf("expected 2 subjects (empty trailing doc skipped), got %d", len(subjects))
+	if len(resources) != 2 {
+		t.Fatalf("expected 2 resources (empty trailing doc skipped), got %d", len(resources))
 	}
 
-	dep := subjects[0]
+	dep := resources[0]
 	if dep.Uri != "k8s://apps/v1/Deployment/production/my-app" {
 		t.Errorf("unexpected deployment uri: %s", dep.Uri)
 	}
@@ -50,14 +50,14 @@ func TestExtractorSubjects(t *testing.T) {
 		t.Errorf("expected md:instance 'inst-1', got %s", got)
 	}
 
-	svc := subjects[1]
+	svc := resources[1]
 	if got := svc.Annotations.Fields["type"].GetStringValue(); got != "k8s:core:service" {
 		t.Errorf("expected core-group type 'k8s:core:service', got %s", got)
 	}
 }
 
-func TestExtractorSubjects_InvalidYAML(t *testing.T) {
-	if _, err := (Extractor{}).Subjects([]byte("\tnot: [valid"), nil); err == nil {
+func TestExtractorResources_InvalidYAML(t *testing.T) {
+	if _, err := (Extractor{}).Resources([]byte("\tnot: [valid"), nil); err == nil {
 		t.Fatal("expected error for invalid YAML")
 	}
 }

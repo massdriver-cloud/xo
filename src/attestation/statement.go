@@ -14,7 +14,9 @@ import (
 const StatementType = v1.StatementTypeUri
 
 // DeploymentSubject builds the single-subject slice for a deployment-tier
-// statement. The in-toto v1 spec requires every subject to carry a digest; a
+// statement. The deployment is the subject of all three deployment-tier
+// attestations (provenance, inventory, compliance), so they anchor to the same
+// event. The in-toto v1 spec requires every subject to carry a digest; a
 // deployment has no byte content, so we digest its canonical URI to bind the
 // statement to that exact deployment.
 func DeploymentSubject(uri string) []*v1.ResourceDescriptor {

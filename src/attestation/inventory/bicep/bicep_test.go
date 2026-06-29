@@ -17,16 +17,16 @@ const sampleStack = `{
   ]
 }`
 
-func TestExtractorSubjects(t *testing.T) {
-	subjects, err := Extractor{}.Subjects([]byte(sampleStack), map[string]string{"md:instance": "inst-1"})
+func TestExtractorResources(t *testing.T) {
+	resources, err := Extractor{}.Resources([]byte(sampleStack), map[string]string{"md:instance": "inst-1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(subjects) != 2 {
-		t.Fatalf("expected 2 subjects, got %d", len(subjects))
+	if len(resources) != 2 {
+		t.Fatalf("expected 2 resources, got %d", len(resources))
 	}
 
-	db := subjects[0]
+	db := resources[0]
 	if db.Name != "mydb" {
 		t.Errorf("expected name 'mydb', got %s", db.Name)
 	}
@@ -40,24 +40,24 @@ func TestExtractorSubjects(t *testing.T) {
 		t.Errorf("expected md:instance 'inst-1', got %s", got)
 	}
 
-	if got := subjects[1].Annotations.Fields["type"].GetStringValue(); got != "azure:microsoft.storage:storageaccounts" {
+	if got := resources[1].Annotations.Fields["type"].GetStringValue(); got != "azure:microsoft.storage:storageaccounts" {
 		t.Errorf("expected storage type, got %s", got)
 	}
 }
 
-func TestExtractorSubjects_PropertiesFallback(t *testing.T) {
+func TestExtractorResources_PropertiesFallback(t *testing.T) {
 	data := `{"properties":{"resources":[{"id":"/subscriptions/s/resourceGroups/rg/providers/Microsoft.Web/sites/app"}]}}`
-	subjects, err := Extractor{}.Subjects([]byte(data), nil)
+	resources, err := Extractor{}.Resources([]byte(data), nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(subjects) != 1 || subjects[0].Name != "app" {
-		t.Fatalf("expected 1 subject named 'app', got %+v", subjects)
+	if len(resources) != 1 || resources[0].Name != "app" {
+		t.Fatalf("expected 1 resource named 'app', got %+v", resources)
 	}
 }
 
-func TestExtractorSubjects_InvalidJSON(t *testing.T) {
-	if _, err := (Extractor{}).Subjects([]byte(`{bad`), nil); err == nil {
+func TestExtractorResources_InvalidJSON(t *testing.T) {
+	if _, err := (Extractor{}).Resources([]byte(`{bad`), nil); err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
 }

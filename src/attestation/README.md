@@ -9,38 +9,48 @@ reference.
 ## Model in one paragraph
 
 An attestation is a signed claim — `subject` (what it's about) + `predicate`
-(the claim). Both deployment-tier attestations are published to the Massdriver
-API and indexed by deployment ID. Two types:
+(the claim). All three deployment-tier attestations are published to the
+Massdriver API, indexed by deployment ID, and share the **same subject: the
+deployment** — so they compose into one picture of a deployment event. Three
+types:
 
-- **Provenance** (`https://slsa.dev/provenance/v1`) — genuine SLSA provenance.
-  The deployment apply is the build; its inputs (params/connections, bundle) and
-  the versioned provisioner are the predicate, and the **produced cloud resources
-  are the subjects** (each digested by its deploy-time config). One signed
-  statement is both "how it was made" and "what it produced."
+- **Provenance** (`https://slsa.dev/provenance/v1`) — genuine SLSA provenance:
+  how the deployment was made. The apply is the build; its inputs
+  (params/connections, bundle) and the orchestrator builder are the predicate.
+  Provisioner-free — one command, no state-file.
+- **Inventory** (`https://massdriver.cloud/attestations/inventory/v1`) — what the
+  deployment produced: the cloud resources (each digested by its deploy-time
+  config) recorded in the predicate body. Self-reported, extracted per
+  provisioner.
 - **Compliance** (`https://massdriver.cloud/attestations/compliance/v1`) — the
-  security posture at deploy time; embeds scanner output (SARIF). Subject is the
-  deployment.
+  security posture at deploy time; embeds scanner output (SARIF).
 
 ## Usage
 
-Provenance has a subcommand per provisioner; each reads that tool's state/output
-and emits the same SLSA provenance:
+Provenance is provisioner-free — one command, no state-file:
+
+```bash
+xo attest provenance --id "$MASSDRIVER_DEPLOYMENT_ID"
+```
+
+Inventory has a subcommand per provisioner; each reads that tool's state/output
+and records the produced resources:
 
 ```bash
 # Terraform / OpenTofu
 terraform show -json > tfshow.json
-xo attest provenance terraform --id "$MASSDRIVER_DEPLOYMENT_ID" --state-file ./tfshow.json
+xo attest inventory terraform --id "$MASSDRIVER_DEPLOYMENT_ID" --state-file ./tfshow.json
 
 # Helm
 helm get manifest my-release > manifest.yaml
-xo attest provenance helm --id "$MASSDRIVER_DEPLOYMENT_ID" --manifest-file ./manifest.yaml
+xo attest inventory helm --id "$MASSDRIVER_DEPLOYMENT_ID" --manifest-file ./manifest.yaml
 
 # Bicep (Azure deployment stacks)
 az stack group show -n my-stack -g my-rg -o json > stack.json
-xo attest provenance bicep --id "$MASSDRIVER_DEPLOYMENT_ID" --stack-file ./stack.json
+xo attest inventory bicep --id "$MASSDRIVER_DEPLOYMENT_ID" --stack-file ./stack.json
 
-# Generic — custom provisioner supplies its own subjects (or none)
-xo attest provenance generic --id "$MASSDRIVER_DEPLOYMENT_ID" --provisioner my-tool --subjects-file ./subjects.json
+# Generic — custom provisioner supplies its own resources (or none)
+xo attest inventory generic --id "$MASSDRIVER_DEPLOYMENT_ID" --provisioner my-tool --resources-file ./resources.json
 
 # Compliance — wrap a scanner's SARIF output
 xo attest compliance --id "$MASSDRIVER_DEPLOYMENT_ID" --scanner checkov --results-file ./checkov.sarif.json
@@ -63,8 +73,9 @@ Shared `attestation/` package:
 
 Per-type subpackages:
 
-- `provenance/` — SLSA provenance predicate, statement builder, shared subject helpers + an `Extractor` interface, with one subpackage per provisioner:
-  - `provenance/terraform`, `provenance/helm`, `provenance/bicep`, `provenance/generic`
+- `provenance/` — SLSA provenance predicate and statement builder (provisioner-free)
+- `inventory/` — inventory predicate, statement builder, shared resource helpers + an `Extractor` interface, with one subpackage per provisioner:
+  - `inventory/terraform`, `inventory/helm`, `inventory/bicep`, `inventory/generic`
 - `compliance/` — compliance predicate, SARIF summarization
 
 ## Not yet implemented

@@ -1,4 +1,4 @@
-// Package terraform extracts SLSA provenance subjects from `terraform show -json`
+// Package terraform extracts inventory resources from `terraform show -json`
 // output (also covers OpenTofu's `tofu show -json`, same format).
 package terraform
 
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"xo/src/attestation/provenance"
+	"xo/src/attestation/inventory"
 
 	tfjson "github.com/hashicorp/terraform-json"
 	v1 "github.com/in-toto/attestation/go/v1"
@@ -17,7 +17,7 @@ import (
 // hashicorp/terraform-json — the supported, versioned format).
 type Extractor struct{}
 
-func (Extractor) Subjects(showJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Resources(showJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	var state tfjson.State
 	if err := json.Unmarshal(showJSON, &state); err != nil {
 		return nil, fmt.Errorf("failed to parse terraform show output: %w", err)
@@ -26,15 +26,15 @@ func (Extractor) Subjects(showJSON []byte, attributes map[string]string) ([]*v1.
 		return nil, nil
 	}
 
-	var subjects []*v1.ResourceDescriptor
-	if err := collectModule(state.Values.RootModule, attributes, &subjects); err != nil {
+	var resources []*v1.ResourceDescriptor
+	if err := collectModule(state.Values.RootModule, attributes, &resources); err != nil {
 		return nil, err
 	}
-	return subjects, nil
+	return resources, nil
 }
 
 // collectModule appends the managed resources of a module (and its children).
-func collectModule(module *tfjson.StateModule, attributes map[string]string, subjects *[]*v1.ResourceDescriptor) error {
+func collectModule(module *tfjson.StateModule, attributes map[string]string, resources *[]*v1.ResourceDescriptor) error {
 	for _, resource := range module.Resources {
 		// Only managed resources are products of the apply; skip data sources.
 		if resource.Mode != tfjson.ManagedResourceMode {
@@ -47,20 +47,20 @@ func collectModule(module *tfjson.StateModule, attributes map[string]string, sub
 		}
 		name, _ := resource.AttributeValues["name"].(string)
 
-		digest, err := provenance.ConfigDigest(resource.AttributeValues)
+		digest, err := inventory.ConfigDigest(resource.AttributeValues)
 		if err != nil {
 			return fmt.Errorf("failed to digest resource config: %w", err)
 		}
 
-		subject, err := provenance.NewSubject(id, name, digest, withType(normalizeType(resource.Type), attributes))
+		resourceDesc, err := inventory.NewResource(id, name, digest, withType(normalizeType(resource.Type), attributes))
 		if err != nil {
 			return err
 		}
-		*subjects = append(*subjects, subject)
+		*resources = append(*resources, resourceDesc)
 	}
 
 	for _, child := range module.ChildModules {
-		if err := collectModule(child, attributes, subjects); err != nil {
+		if err := collectModule(child, attributes, resources); err != nil {
 			return err
 		}
 	}

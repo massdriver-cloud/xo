@@ -1,4 +1,4 @@
-// Package helm extracts SLSA provenance subjects from `helm get manifest`
+// Package helm extracts inventory resources from `helm get manifest`
 // output (the rendered, multi-document Kubernetes manifest).
 package helm
 
@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"xo/src/attestation/provenance"
+	"xo/src/attestation/inventory"
 
 	v1 "github.com/in-toto/attestation/go/v1"
 	yaml "gopkg.in/yaml.v3"
@@ -17,10 +17,10 @@ import (
 // Extractor reads the multi-document YAML emitted by `helm get manifest`.
 type Extractor struct{}
 
-func (Extractor) Subjects(manifest []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Resources(manifest []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(manifest))
 
-	var subjects []*v1.ResourceDescriptor
+	var resources []*v1.ResourceDescriptor
 	for {
 		var object map[string]any
 		err := decoder.Decode(&object)
@@ -45,7 +45,7 @@ func (Extractor) Subjects(manifest []byte, attributes map[string]string) ([]*v1.
 			continue
 		}
 
-		digest, err := provenance.ConfigDigest(object)
+		digest, err := inventory.ConfigDigest(object)
 		if err != nil {
 			return nil, fmt.Errorf("failed to digest manifest object: %w", err)
 		}
@@ -58,14 +58,14 @@ func (Extractor) Subjects(manifest []byte, attributes map[string]string) ([]*v1.
 			annotations[k] = v
 		}
 
-		subject, err := provenance.NewSubject(k8sURI(apiVersion, kind, namespace, name), name, digest, annotations)
+		resource, err := inventory.NewResource(k8sURI(apiVersion, kind, namespace, name), name, digest, annotations)
 		if err != nil {
 			return nil, err
 		}
-		subjects = append(subjects, subject)
+		resources = append(resources, resource)
 	}
 
-	return subjects, nil
+	return resources, nil
 }
 
 // k8sType derives a normalized type from a Kubernetes object's group + kind,

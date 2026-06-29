@@ -7,8 +7,8 @@ import (
 )
 
 // DeploymentContext is the shared identity envelope embedded in deployment-tier
-// predicates that aren't SLSA-shaped (compliance). The deployment predicate
-// carries the same identity in SLSA-native fields instead.
+// predicates that aren't SLSA-shaped (compliance, inventory). The provenance
+// predicate carries the same identity in SLSA-native fields instead.
 type DeploymentContext struct {
 	DeploymentID string       `json:"deploymentId"`
 	InstanceID   string       `json:"instanceId,omitempty"`

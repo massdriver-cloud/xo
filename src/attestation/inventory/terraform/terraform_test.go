@@ -30,40 +30,40 @@ const sampleShowJSON = `{
   }
 }`
 
-func TestExtractorSubjects(t *testing.T) {
-	subjects, err := Extractor{}.Subjects([]byte(sampleShowJSON), map[string]string{"md:instance": "inst-1"})
+func TestExtractorResources(t *testing.T) {
+	resources, err := Extractor{}.Resources([]byte(sampleShowJSON), map[string]string{"md:instance": "inst-1"})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if len(subjects) != 2 {
-		t.Fatalf("expected 2 subjects (data source excluded), got %d", len(subjects))
+	if len(resources) != 2 {
+		t.Fatalf("expected 2 resources (data source excluded), got %d", len(resources))
 	}
-	if subjects[0].Uri != "my-db-instance" || subjects[0].Name != "production-db" {
-		t.Errorf("unexpected first subject: %+v", subjects[0])
+	if resources[0].Uri != "my-db-instance" || resources[0].Name != "production-db" {
+		t.Errorf("unexpected first resource: %+v", resources[0])
 	}
-	if len(subjects[0].Digest["sha256"]) != 64 {
-		t.Errorf("expected sha256 config digest, got %q", subjects[0].Digest["sha256"])
+	if len(resources[0].Digest["sha256"]) != 64 {
+		t.Errorf("expected sha256 config digest, got %q", resources[0].Digest["sha256"])
 	}
-	if got := subjects[0].Annotations.Fields["type"].GetStringValue(); got != "aws:db-instance" {
+	if got := resources[0].Annotations.Fields["type"].GetStringValue(); got != "aws:db-instance" {
 		t.Errorf("expected type 'aws:db-instance', got %s", got)
 	}
-	if got := subjects[0].Annotations.Fields["md:instance"].GetStringValue(); got != "inst-1" {
+	if got := resources[0].Annotations.Fields["md:instance"].GetStringValue(); got != "inst-1" {
 		t.Errorf("expected md:instance 'inst-1', got %s", got)
 	}
-	if subjects[1].Uri != "sg-123456" {
-		t.Errorf("expected child-module resource 'sg-123456', got %s", subjects[1].Uri)
+	if resources[1].Uri != "sg-123456" {
+		t.Errorf("expected child-module resource 'sg-123456', got %s", resources[1].Uri)
 	}
 }
 
-func TestExtractorSubjects_Empty(t *testing.T) {
-	subjects, err := Extractor{}.Subjects([]byte(`{"format_version":"1.0"}`), nil)
-	if err != nil || len(subjects) != 0 {
-		t.Fatalf("expected 0 subjects, got %d (err %v)", len(subjects), err)
+func TestExtractorResources_Empty(t *testing.T) {
+	resources, err := Extractor{}.Resources([]byte(`{"format_version":"1.0"}`), nil)
+	if err != nil || len(resources) != 0 {
+		t.Fatalf("expected 0 resources, got %d (err %v)", len(resources), err)
 	}
 }
 
-func TestExtractorSubjects_InvalidJSON(t *testing.T) {
-	if _, err := (Extractor{}).Subjects([]byte(`{bad`), nil); err == nil {
+func TestExtractorResources_InvalidJSON(t *testing.T) {
+	if _, err := (Extractor{}).Resources([]byte(`{bad`), nil); err == nil {
 		t.Fatal("expected error for invalid JSON")
 	}
 }

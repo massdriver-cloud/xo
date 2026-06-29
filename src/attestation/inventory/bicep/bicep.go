@@ -1,4 +1,4 @@
-// Package bicep extracts SLSA provenance subjects from `az stack <scope> show -o
+// Package bicep extracts inventory resources from `az stack <scope> show -o
 // json` output (Azure deployment stacks).
 package bicep
 
@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"xo/src/attestation/provenance"
+	"xo/src/attestation/inventory"
 
 	v1 "github.com/in-toto/attestation/go/v1"
 )
@@ -15,7 +15,7 @@ import (
 // Extractor reads the JSON emitted by `az stack ... show -o json`.
 type Extractor struct{}
 
-func (Extractor) Subjects(stackJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
+func (Extractor) Resources(stackJSON []byte, attributes map[string]string) ([]*v1.ResourceDescriptor, error) {
 	// The managed-resources list appears at the top level on newer CLIs and under
 	// `properties` on older ones; accept either.
 	var stack struct {
@@ -28,13 +28,13 @@ func (Extractor) Subjects(stackJSON []byte, attributes map[string]string) ([]*v1
 		return nil, fmt.Errorf("failed to parse az stack output: %w", err)
 	}
 
-	resources := stack.Resources
-	if len(resources) == 0 {
-		resources = stack.Properties.Resources
+	rawResources := stack.Resources
+	if len(rawResources) == 0 {
+		rawResources = stack.Properties.Resources
 	}
 
-	var subjects []*v1.ResourceDescriptor
-	for _, raw := range resources {
+	var resources []*v1.ResourceDescriptor
+	for _, raw := range rawResources {
 		var object map[string]any
 		if err := json.Unmarshal(raw, &object); err != nil {
 			return nil, fmt.Errorf("failed to parse stack resource: %w", err)
@@ -46,7 +46,7 @@ func (Extractor) Subjects(stackJSON []byte, attributes map[string]string) ([]*v1
 
 		// az stack lists resource references; the entry is the most config we
 		// have, so the digest binds to whatever fields it includes.
-		digest, err := provenance.ConfigDigest(object)
+		digest, err := inventory.ConfigDigest(object)
 		if err != nil {
 			return nil, fmt.Errorf("failed to digest stack resource: %w", err)
 		}
@@ -56,14 +56,14 @@ func (Extractor) Subjects(stackJSON []byte, attributes map[string]string) ([]*v1
 			annotations[k] = v
 		}
 
-		subject, err := provenance.NewSubject(id, azureName(id), digest, annotations)
+		resource, err := inventory.NewResource(id, azureName(id), digest, annotations)
 		if err != nil {
 			return nil, err
 		}
-		subjects = append(subjects, subject)
+		resources = append(resources, resource)
 	}
 
-	return subjects, nil
+	return resources, nil
 }
 
 // azureType derives a normalized type from an Azure resource id's provider path,
