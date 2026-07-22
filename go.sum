@@ -78,6 +78,8 @@ github.com/magiconair/properties v1.8.7 h1:IeQXZAiQcpL9mgcAe1Nu6cX9LLw6ExEHKjN0V
 github.com/magiconair/properties v1.8.7/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/massdriver-cloud/massdriver-sdk-go v0.2.5 h1:95aU6CbL1EvfDrt0wfWJUq5DSuzqJNzjqGAGuqsH/Ss=
 github.com/massdriver-cloud/massdriver-sdk-go v0.2.5/go.mod h1:6NrSP+wfGQvUOAggsz10/Wkln8CKmk3VBnD+OJzZgFY=
+github.com/massdriver-cloud/massdriver-sdk-go v0.2.12 h1:jm8WfZcBlDH0xEgE2WMOeNOrxV5ai+aOjVOgmEhBIJ4=
+github.com/massdriver-cloud/massdriver-sdk-go v0.2.12/go.mod h1:6NrSP+wfGQvUOAggsz10/Wkln8CKmk3VBnD+OJzZgFY=
 github.com/massdriver-cloud/terraform-config-inspect v0.0.0-20240906041648-e5461c213cea h1:+fS2DYjasqMDMzVeKJTiBLbqYJjv93MTf1yZV2nxjf8=
 github.com/massdriver-cloud/terraform-config-inspect v0.0.0-20240906041648-e5461c213cea/go.mod h1:3AbDpWxIRMdMAg7FDmTJuVBhCGNwdm49cBIOmUHjqRg=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
