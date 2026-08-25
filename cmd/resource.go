@@ -43,7 +43,6 @@ func init() {
 	resourcePublishCmd.Flags().StringP("field", "d", "", "Resource field in the massdriver.yaml file")
 	resourcePublishCmd.Flags().StringP("name", "n", "", "Human friendly name of the resource")
 	resourcePublishCmd.Flags().StringP("massdriver-file", "m", "../massdriver.yaml", "Path to massdriver.yaml file")
-	resourcePublishCmd.Flags().StringP("schema-file", "s", "../schema-artifacts.json", "Path to artifact schema file")
 	resourcePublishCmd.MarkFlagRequired("file")
 	resourcePublishCmd.MarkFlagRequired("field")
 	resourcePublishCmd.MarkFlagRequired("name")
@@ -76,10 +75,6 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read massdriver.yaml file flag")
 	}
-	schemasPath, err := cmd.Flags().GetString("schema-file")
-	if err != nil {
-		return telemetry.LogError(span, err, "unable to read schema file flag")
-	}
 
 	provClient, err := provisioning.NewClient()
 	if err != nil {
@@ -101,23 +96,11 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, err, "unable to read resource file")
 	}
 
-	schemasFile, err := os.Open(schemasPath)
-	if err != nil {
-		return telemetry.LogError(span, err, "unable to open schemas file")
-	}
-	defer schemasFile.Close()
-
-	log.Info().Msg("Validating resource...")
-	valid, err := resource.Validate(field, resourceBytes, schemasFile)
-	if !valid || err != nil {
-		return telemetry.LogError(span, err, "resource is invalid")
-	}
 	resourceMap := make(map[string]any)
 	unmarshalErr := json.Unmarshal(resourceBytes, &resourceMap)
 	if unmarshalErr != nil {
 		return telemetry.LogError(span, unmarshalErr, "unable to unmarshal resource bytes")
 	}
-	log.Info().Msg("Resource is valid!")
 
 	log.Info().Msg("Publishing resource...")
 	bun, err := bundle.ParseBundle(massYamlPath)
