@@ -50,7 +50,6 @@ func init() {
 	resourceCmd.AddCommand(resourceDeleteCmd)
 	resourceDeleteCmd.Flags().StringP("field", "d", "", "Resource field in the massdriver.yaml file")
 	resourceDeleteCmd.Flags().StringP("id", "i", "", "Resource identifier")
-	resourceDeleteCmd.Flags().StringP("massdriver-file", "m", "../massdriver.yaml", "Path to massdriver.yaml file")
 	resourceDeleteCmd.MarkFlagRequired("field")
 }
 
@@ -75,6 +74,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read massdriver.yaml file flag")
 	}
+	cmd.SilenceUsage = true
 
 	provClient, err := provisioning.NewClient()
 	if err != nil {
@@ -112,7 +112,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while publishing resource")
 	}
-	log.Info().Msgf("Resource \"%s-%s\" published", provClient.Config().InstanceID, field)
+	log.Info().Msgf("Resource \"%s.%s\" published", provClient.Config().InstanceID, field)
 
 	return nil
 }
@@ -129,6 +129,7 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read field flag")
 	}
+	cmd.SilenceUsage = true
 
 	provClient, err := provisioning.NewClient()
 	if err != nil {
@@ -146,7 +147,7 @@ func runResourceDelete(cmd *cobra.Command, args []string) error {
 			}
 			instanceId = packageName[:strings.LastIndex(packageName, "-")]
 		}
-		id = instanceId + "-" + field
+		id = instanceId + "." + field
 	}
 
 	log.Info().Msg("Deleting resource...")
