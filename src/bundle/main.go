@@ -26,17 +26,28 @@ type AppBlock struct {
 	Secrets  map[string]SecretsBlock `json:"secrets" yaml:"secrets"`
 }
 
+type Resource struct {
+	ResourceType string `json:"resource_type" yaml:"resource_type"`
+	Required     bool   `json:"required" yaml:"required"`
+}
+type Dependency struct {
+	ResourceType string `json:"resource_type" yaml:"resource_type"`
+	Required     bool   `json:"required" yaml:"required"`
+}
+
 type Bundle struct {
-	Schema      string                 `json:"schema" yaml:"schema"`
-	Name        string                 `json:"name" yaml:"name"`
-	Description string                 `json:"description" yaml:"description"`
-	Type        string                 `json:"type" yaml:"type"`
-	App         *AppBlock              `json:"app" yaml:"app"`
-	Steps       []BundleStep           `json:"steps" yaml:"steps"`
-	Artifacts   map[string]interface{} `json:"artifacts" yaml:"artifacts"`
-	Params      map[string]interface{} `json:"params" yaml:"params"`
-	Connections map[string]interface{} `json:"connections" yaml:"connections"`
-	Ui          map[string]interface{} `json:"ui" yaml:"ui"`
+	Schema       string                 `json:"schema" yaml:"schema"`
+	Name         string                 `json:"name" yaml:"name"`
+	Description  string                 `json:"description" yaml:"description"`
+	Type         string                 `json:"type" yaml:"type"`
+	App          *AppBlock              `json:"app" yaml:"app"`
+	Steps        []BundleStep           `json:"steps" yaml:"steps"`
+	Resources    map[string]Resource    `json:"resources" yaml:"resources"`
+	Dependencies map[string]Dependency  `json:"dependencies" yaml:"dependencies"`
+	Artifacts    map[string]interface{} `json:"artifacts" yaml:"artifacts"`
+	Params       map[string]interface{} `json:"params" yaml:"params"`
+	Connections  map[string]interface{} `json:"connections" yaml:"connections"`
+	Ui           map[string]interface{} `json:"ui" yaml:"ui"`
 }
 
 func ParseBundle(path string) (Bundle, error) {

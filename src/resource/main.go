@@ -15,6 +15,11 @@ type ResourceService interface {
 }
 
 func getResourceTypeFromBundle(bun *bundle.Bundle, field string) (string, error) {
+	resource, resourceExists := bun.Resources[field]
+	if resourceExists {
+		return resource.ResourceType, nil
+	}
+
 	properties, exists := bun.Artifacts["properties"].(map[string]interface{})
 	if !exists {
 		return "", errors.New("malformed resources specification: no properties")

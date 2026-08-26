@@ -6,7 +6,7 @@ require (
 	github.com/honeycombio/honeycomb-opentelemetry-go v0.11.0
 	github.com/honeycombio/otel-config-go v1.17.0
 	github.com/kelseyhightower/envconfig v1.4.0
-	github.com/massdriver-cloud/massdriver-sdk-go v0.2.12
+	github.com/massdriver-cloud/massdriver-sdk-go v0.2.19
 	github.com/massdriver-cloud/terraform-config-inspect v0.0.0-20240906041648-e5461c213cea
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/opencontainers/image-spec v1.1.1
@@ -14,7 +14,6 @@ require (
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.10.0
-	github.com/xeipuuv/gojsonschema v1.2.0
 	go.opentelemetry.io/otel v1.30.0
 	go.opentelemetry.io/otel/trace v1.30.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -67,8 +66,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.14 // indirect
 	github.com/tklauser/numcpus v0.8.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.5.26 // indirect
-	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.55.0 // indirect
