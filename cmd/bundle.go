@@ -49,7 +49,8 @@ func runBundlePull(cmd *cobra.Command, args []string) error {
 		return telemetry.LogError(span, fmt.Errorf("required flag bundleVersion must be set via flag or environment variable"), "an error occurred while pulling bundle")
 	}
 
-	mdClient, err := massdriver.NewClient()
+	// xo runs inside a provisioner container, so it needs to authenticate with the deployment token
+	mdClient, err := massdriver.NewClient(massdriver.WithDeploymentTokenAuth())
 	if err != nil {
 		return fmt.Errorf("error initializing massdriver client: %w", err)
 	}
