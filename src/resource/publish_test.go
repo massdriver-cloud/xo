@@ -3,7 +3,6 @@ package resource_test
 import (
 	"context"
 	"testing"
-	"xo/src/bundle"
 	"xo/src/resource"
 
 	"github.com/stretchr/testify/require"
@@ -31,8 +30,7 @@ func TestPublish(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			resourceMap := map[string]any{"foo": "bar"}
-			bun := &bundle.Bundle{Artifacts: map[string]interface{}{"properties": map[string]interface{}{"foobar": map[string]interface{}{"$ref": "massdriver/resource-type"}}}}
-			err := resource.Publish(context.Background(), tc.service, resourceMap, bun, "foobar", "resourceName")
+			err := resource.Publish(context.Background(), tc.service, resourceMap, "foobar", "resourceName")
 
 			require.True(t, tc.service.CreateCalled, "expected CreateResource to be called")
 

@@ -13,7 +13,7 @@ type fakeResourceService struct {
 	DeleteCalled bool
 }
 
-func (f *fakeResourceService) CreateResource(ctx context.Context, r *resources.Resource) (*resources.Resource, error) {
+func (f *fakeResourceService) CreateResource(ctx context.Context, input *resources.ResourceInput) (*resources.Resource, error) {
 	f.CreateCalled = true
 	if f.ShouldError {
 		return nil, fmt.Errorf("simulated failure")

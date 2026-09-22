@@ -2,7 +2,6 @@ package resource
 
 import (
 	"context"
-	"xo/src/bundle"
 	"xo/src/telemetry"
 
 	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning/resources"
@@ -10,25 +9,21 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-func Publish(ctx context.Context, svc ResourceService, resourceMap map[string]any, bun *bundle.Bundle, field, name string) error {
+// Publish creates a resource for the current deployment. The resource type is
+// resolved server-side from the deployment's release pin and field, so it is
+// not derived from the bundle here.
+func Publish(ctx context.Context, svc ResourceService, resourceMap map[string]any, field, name string) error {
 	_, span := otel.Tracer("xo").Start(ctx, "ResourcePublish")
 	telemetry.SetSpanAttributes(span)
 	defer span.End()
 
-	resourceType, err := getResourceTypeFromBundle(bun, field)
-	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, err.Error())
-		return err
+	input := resources.ResourceInput{
+		Field:   field,
+		Name:    name,
+		Payload: resourceMap,
 	}
 
-	resource := resources.Resource{}
-	resource.Name = name
-	resource.Field = field
-	resource.Type = resourceType
-	resource.Payload = resourceMap
-
-	_, createErr := svc.CreateResource(ctx, &resource)
+	_, createErr := svc.CreateResource(ctx, &input)
 	if createErr != nil {
 		span.RecordError(createErr)
 		span.SetStatus(codes.Error, createErr.Error())
