@@ -57,3 +57,5 @@ terraform.rc
 # VSCode
 
 .vscode
+
+.claude
