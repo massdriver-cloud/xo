@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find ~/go/pkg/mod/github.com/massdriver-cloud -maxdepth 2 -type d 2>/dev/null | head -20)",
+      "Read(//home/vscode/go/pkg/mod/github.com/**)",
+      "Bash(go env *)",
+      "Bash(find /go/pkg/mod/github.com/massdriver-cloud -maxdepth 2 -type d 2>/dev/null)",
+      "Read(//go/pkg/mod/github.com/massdriver-cloud/**)",
+      "Bash(go build *)",
+      "Bash(go test *)",
+      "Bash(docker exec *)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:slsa.dev)",
+      "Bash(git mv *)",
+      "Bash(git rm *)",
+      "Bash(echo \"--- grep exit: $?\")"
+    ]
+  }
+}

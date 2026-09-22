@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"xo/src/bundle"
 	"xo/src/resource"
 	"xo/src/telemetry"
 
@@ -42,7 +41,6 @@ func init() {
 	resourcePublishCmd.Flags().StringP("file", "f", "", "Path to the json formatted resource file to send (use '-' for stdin)")
 	resourcePublishCmd.Flags().StringP("field", "d", "", "Resource field in the massdriver.yaml file")
 	resourcePublishCmd.Flags().StringP("name", "n", "", "Human friendly name of the resource")
-	resourcePublishCmd.Flags().StringP("massdriver-file", "m", "../massdriver.yaml", "Path to massdriver.yaml file")
 	resourcePublishCmd.MarkFlagRequired("file")
 	resourcePublishCmd.MarkFlagRequired("field")
 	resourcePublishCmd.MarkFlagRequired("name")
@@ -69,10 +67,6 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	resourceName, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return telemetry.LogError(span, err, "unable to read name flag")
-	}
-	massYamlPath, err := cmd.Flags().GetString("massdriver-file")
-	if err != nil {
-		return telemetry.LogError(span, err, "unable to read massdriver.yaml file flag")
 	}
 	cmd.SilenceUsage = true
 
@@ -103,12 +97,7 @@ func runResourcePublish(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Info().Msg("Publishing resource...")
-	bun, err := bundle.ParseBundle(massYamlPath)
-	if err != nil {
-		return telemetry.LogError(span, err, "unable to open massdriver.yaml")
-	}
-
-	err = resource.Publish(ctx, provClient.Resources, resourceMap, &bun, field, resourceName)
+	err = resource.Publish(ctx, provClient.Resources, resourceMap, field, resourceName)
 	if err != nil {
 		return telemetry.LogError(span, err, "an error occurred while publishing resource")
 	}
