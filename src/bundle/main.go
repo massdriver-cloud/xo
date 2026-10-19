@@ -14,6 +14,15 @@ const UiSchemaFilename = "schema-ui.json"
 type BundleStep struct {
 	Path        string `json:"path" yaml:"path"`
 	Provisioner string `json:"provisioner" yaml:"provisioner"`
+	// Resources holds per-resource configuration for the resources this step
+	// produces, keyed by resource field.
+	Resources map[string]StepResource `json:"resources,omitempty" yaml:"resources,omitempty"`
+}
+
+type StepResource struct {
+	// Template is an inline jq template used to build the resource's payload
+	// from the step's inputs and outputs.
+	Template string `json:"template,omitempty" yaml:"template,omitempty"`
 }
 type SecretsBlock struct {
 	Required    bool   `json:"required" yaml:"required"`
@@ -78,4 +87,29 @@ func ParseBundle(path string) (Bundle, error) {
 	}
 
 	return bundle, nil
+}
+
+// Step returns the step with the given path.
+func (b *Bundle) Step(path string) (*BundleStep, bool) {
+	for i := range b.Steps {
+		if b.Steps[i].Path == path {
+			return &b.Steps[i], true
+		}
+	}
+	return nil, false
+}
+
+// ResourceFields returns the set of resource fields the bundle declares, from
+// both the `resources` block and the legacy `artifacts` schema properties.
+func (b *Bundle) ResourceFields() map[string]bool {
+	fields := map[string]bool{}
+	for field := range b.Resources {
+		fields[field] = true
+	}
+	if props, ok := b.Artifacts["properties"].(map[string]interface{}); ok {
+		for field := range props {
+			fields[field] = true
+		}
+	}
+	return fields
 }
