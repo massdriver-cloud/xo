@@ -28,3 +28,40 @@ func (f *fakeResourceService) DeleteResource(ctx context.Context, id string) err
 	}
 	return nil
 }
+
+func (f *fakeResourceService) ListResources(ctx context.Context) ([]resources.Resource, error) {
+	return nil, nil
+}
+
+// recordingResourceService records creates and deletes. Existing is what
+// ListResources returns.
+type recordingResourceService struct {
+	Existing   []resources.Resource
+	ListErr    error
+	ListCalled bool
+	Created    []resources.ResourceInput
+	Deleted    []string
+	CreateErr  error
+	DeleteErr  map[string]error
+}
+
+func (r *recordingResourceService) CreateResource(ctx context.Context, input *resources.ResourceInput) (*resources.Resource, error) {
+	if r.CreateErr != nil {
+		return nil, r.CreateErr
+	}
+	r.Created = append(r.Created, *input)
+	return &resources.Resource{ID: "inst." + input.Field}, nil
+}
+
+func (r *recordingResourceService) DeleteResource(ctx context.Context, id string) error {
+	if err := r.DeleteErr[id]; err != nil {
+		return err
+	}
+	r.Deleted = append(r.Deleted, id)
+	return nil
+}
+
+func (r *recordingResourceService) ListResources(ctx context.Context) ([]resources.Resource, error) {
+	r.ListCalled = true
+	return r.Existing, r.ListErr
+}
