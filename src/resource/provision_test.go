@@ -94,6 +94,23 @@ func TestProvisionContinuesPastFailedDeletes(t *testing.T) {
 	require.Equal(t, []string{"legacy"}, result.Deleted)
 }
 
+func TestProvisionListFailureSkipsCleanup(t *testing.T) {
+	// Older servers don't support listing; publishing must still succeed.
+	resSvc := &recordingResourceService{ListErr: fmt.Errorf("list resources: 404")}
+
+	result, err := resource.Provision(context.Background(), resSvc, resource.ProvisionInput{
+		InstanceID:  "inst",
+		Bundle:      provisionBundle(map[string]string{"reader": `{}`, "writer": `{}`}),
+		StepPath:    "src",
+		TemplateDir: t.TempDir(),
+		Inputs:      provisionInputs(),
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{"reader", "writer"}, result.Published)
+	require.Empty(t, result.Deleted)
+	require.Empty(t, resSvc.Deleted)
+}
+
 func TestProvisionNameFormat(t *testing.T) {
 	resSvc := &recordingResourceService{}
 	_, err := resource.Provision(context.Background(), resSvc, resource.ProvisionInput{
@@ -114,7 +131,6 @@ func TestProvisionFailures(t *testing.T) {
 		stepResources map[string]string
 		stepPath      string
 		createErr     error
-		listErr       error
 		wantErr       string
 		wantListed    bool
 	}{
@@ -145,13 +161,6 @@ func TestProvisionFailures(t *testing.T) {
 			wantErr: "expected a JSON object",
 		},
 		{
-			name:          "list failure publishes nothing",
-			stepResources: map[string]string{"reader": `{}`},
-			listErr:       fmt.Errorf("nope"),
-			wantErr:       `unable to list resources for instance "inst": nope`,
-			wantListed:    true,
-		},
-		{
 			name:          "publish failure skips pruning",
 			stepResources: map[string]string{"reader": `{}`},
 			createErr:     fmt.Errorf("boom"),
@@ -169,7 +178,6 @@ func TestProvisionFailures(t *testing.T) {
 			resSvc := &recordingResourceService{
 				CreateErr: tc.createErr,
 				Existing:  []resources.Resource{{ID: "inst.database", Field: "database"}},
-				ListErr:   tc.listErr,
 			}
 
 			_, err := resource.Provision(context.Background(), resSvc, resource.ProvisionInput{

@@ -7,6 +7,7 @@ import (
 	"xo/src/bundle"
 	"xo/src/telemetry"
 
+	"github.com/massdriver-cloud/massdriver-sdk-go/massdriver/provisioning/resources"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
@@ -57,9 +58,14 @@ func decommission(ctx context.Context, svc ResourceService, input DecommissionIn
 	}
 	declared := input.Bundle.ResourceFields()
 
+	// Older self-hosted) servers don't support listing. Fall back to deleting
+	// the step's managed resources by ID and skip cleanup of stale resources.
 	existing, err := svc.ListResources(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list resources for instance %q: %w", input.InstanceID, err)
+		existing = make([]resources.Resource, 0, len(fields))
+		for _, field := range fields {
+			existing = append(existing, resources.Resource{Field: field})
+		}
 	}
 
 	result := &Result{}
@@ -76,7 +82,12 @@ func decommission(ctx context.Context, svc ResourceService, input DecommissionIn
 		}
 		id := resourceID(input.InstanceID, res)
 		log.Info().Msgf("Deleting resource \"%s\": %s", id, reason)
-		if delErr := Delete(ctx, svc, id); delErr != nil {
+		delErr := Delete(ctx, svc, id)
+		if errors.Is(delErr, resources.ErrNotFound) {
+			log.Info().Msgf("Resource \"%s\" does not exist, nothing to delete", id)
+			continue
+		}
+		if delErr != nil {
 			errs = append(errs, fmt.Errorf("unable to delete resource %q: %w", id, delErr))
 			continue
 		}

@@ -32,11 +32,6 @@ type ProvisionInput struct {
 // Provision publishes every resource the current step has a template for, then
 // deletes resources on the instance whose field is no longer declared in the
 // bundle (i.e. the resource was removed or renamed in a bundle update).
-//
-// All templates are compiled and rendered, and the instance's existing
-// resources are listed, before anything is published. Stale resources are only
-// removed once every publish has succeeded; every stale resource is attempted
-// even if some deletions fail, and the failures are returned together.
 func Provision(ctx context.Context, svc ResourceService, input ProvisionInput) (*Result, error) {
 	ctx, span := otel.Tracer("xo").Start(ctx, "ResourceProvision")
 	telemetry.SetSpanAttributes(span)
@@ -93,9 +88,12 @@ func provision(ctx context.Context, svc ResourceService, input ProvisionInput) (
 		return nil, errors.Join(renderErrs...)
 	}
 
+	// Listing is only needed to find stale resources. Older (self-hosted)
+	// servers don't support it, so a failure skips cleanup rather than failing
+	// the deployment.
 	existing, err := svc.ListResources(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("unable to list resources for instance %q: %w", input.InstanceID, err)
+		existing = nil
 	}
 
 	result := &Result{}
