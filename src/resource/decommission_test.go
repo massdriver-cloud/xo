@@ -75,29 +75,35 @@ func TestDecommissionContinuesPastFailures(t *testing.T) {
 	require.Equal(t, []string{"writer"}, result.Deleted)
 }
 
-func TestDecommissionFailures(t *testing.T) {
-	tests := []struct {
-		name     string
-		stepPath string
-		listErr  error
-		wantErr  string
-	}{
-		{name: "unknown step", stepPath: "nope", wantErr: `step "nope" not found in massdriver.yaml (steps: src, app)`},
-		{name: "list failure", stepPath: "src", listErr: fmt.Errorf("nope"), wantErr: `unable to list resources for instance "inst": nope`},
+func TestDecommissionUnknownStep(t *testing.T) {
+	resSvc := &recordingResourceService{}
+	_, err := resource.Decommission(context.Background(), resSvc, resource.DecommissionInput{
+		InstanceID:  "inst",
+		Bundle:      decommissionBundle(),
+		StepPath:    "nope",
+		TemplateDir: t.TempDir(),
+	})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), `step "nope" not found in massdriver.yaml (steps: src, app)`)
+	require.Empty(t, resSvc.Deleted)
+	require.False(t, resSvc.ListCalled)
+}
+
+func TestDecommissionListFailureFallsBackToManagedFields(t *testing.T) {
+	// Older servers don't support listing: the step's managed resources are
+	// deleted by ID, missing ones are tolerated, and stale cleanup is skipped.
+	resSvc := &recordingResourceService{
+		ListErr:   fmt.Errorf("list resources: 404"),
+		DeleteErr: map[string]error{"inst.writer": fmt.Errorf("delete resource inst.writer: %w", resources.ErrNotFound)},
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			resSvc := &recordingResourceService{ListErr: tc.listErr}
-			_, err := resource.Decommission(context.Background(), resSvc, resource.DecommissionInput{
-				InstanceID:  "inst",
-				Bundle:      decommissionBundle(),
-				StepPath:    tc.stepPath,
-				TemplateDir: t.TempDir(),
-			})
-			require.Error(t, err)
-			require.Contains(t, err.Error(), tc.wantErr)
-			require.Empty(t, resSvc.Deleted)
-		})
-	}
+	result, err := resource.Decommission(context.Background(), resSvc, resource.DecommissionInput{
+		InstanceID:  "inst",
+		Bundle:      decommissionBundle(),
+		StepPath:    "src",
+		TemplateDir: t.TempDir(),
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{"inst.reader"}, resSvc.Deleted)
+	require.Equal(t, []string{"reader"}, result.Deleted)
 }
