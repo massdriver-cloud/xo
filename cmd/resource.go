@@ -45,8 +45,10 @@ var resourceProvisionCmd = &cobra.Command{
 deletes any resource on the instance whose field is no longer declared in massdriver.yaml
 (e.g. after a bundle update removed or renamed it).
 
-Templates are evaluated against {params, connections, envs, secrets, outputs} and are
-looked up, in priority order, from:
+Templates are evaluated against {params, connections, envs, secrets, outputs}, where
+outputs is whatever JSON the provisioner produced (an object of IaC outputs for
+OpenTofu/Terraform, an array of rendered manifests for Helm). Templates are looked up,
+in priority order, from:
   1. steps[].resources.<field>.template in massdriver.yaml
   2. resource_<field>.jq in the step directory
   3. artifact_<field>.jq in the step directory (legacy)`,
@@ -238,7 +240,7 @@ func runResourceProvision(cmd *cobra.Command, args []string) error {
 			return telemetry.LogError(span, err, fmt.Sprintf("unable to read %s", key))
 		}
 	}
-	if inputs["outputs"], err = readJSONObject(outputsPath); err != nil {
+	if inputs["outputs"], err = readJSON(outputsPath); err != nil {
 		return telemetry.LogError(span, err, "unable to read outputs")
 	}
 
@@ -290,7 +292,10 @@ func runResourceDecommission(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func readJSONObject(path string) (any, error) {
+// readJSON reads any JSON value from path ('-' for stdin). Outputs use this
+// because their shape depends on the provisioner (e.g. Helm produces an array
+// of manifests).
+func readJSON(path string) (any, error) {
 	var data []byte
 	var err error
 	if path == "-" {
@@ -301,9 +306,27 @@ func readJSONObject(path string) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var obj any
-	if err := json.Unmarshal(data, &obj); err != nil {
-		return nil, fmt.Errorf("%s is not a valid JSON object: %w", path, err)
+	var v any
+	if err := json.Unmarshal(data, &v); err != nil {
+		return nil, fmt.Errorf("%s is not valid JSON: %w", path, err)
+	}
+	return v, nil
+}
+
+// readJSONObject reads a JSON object from path. The platform-provided inputs
+// (params, connections, envs, secrets) are always objects.
+func readJSONObject(path string) (map[string]any, error) {
+	v, err := readJSON(path)
+	if err != nil {
+		return nil, err
+	}
+	if v == nil {
+		// null was previously accepted as an empty object; keep that behavior.
+		return map[string]any{}, nil
+	}
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return nil, fmt.Errorf("%s must contain a JSON object", path)
 	}
 	return obj, nil
 }

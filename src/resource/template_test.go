@@ -150,6 +150,49 @@ func TestTemplateRender(t *testing.T) {
 	}
 }
 
+func TestTemplateRenderArrayOutputs(t *testing.T) {
+	// Helm outputs are an array of rendered manifests rather than an object.
+	inputs := map[string]any{
+		"params": map[string]any{"region": "us-east-1"},
+		"outputs": []any{
+			map[string]any{"kind": "Service", "metadata": map[string]any{"name": "web"}},
+			map[string]any{"kind": "Deployment", "metadata": map[string]any{"name": "web"}},
+			map[string]any{"kind": "Service", "metadata": map[string]any{"name": "web-headless"}},
+		},
+	}
+
+	t.Run("selects from manifests", func(t *testing.T) {
+		templates, _, err := resource.LoadTemplates(map[string]bundle.StepResource{
+			"svc": {Template: `{ name: ([.outputs[] | select(.kind == "Service")][0].metadata.name) }`},
+		}, t.TempDir())
+		require.NoError(t, err)
+		got, err := templates[0].Render(inputs)
+		require.NoError(t, err)
+		require.Equal(t, map[string]any{"name": "web"}, got)
+	})
+
+	t.Run("runtime error describes array outputs", func(t *testing.T) {
+		templates, _, err := resource.LoadTemplates(map[string]bundle.StepResource{
+			"svc": {Template: `{ url: .outputs.url }`},
+		}, t.TempDir())
+		require.NoError(t, err)
+		_, err = templates[0].Render(inputs)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ".outputs: array of 3 items, kinds: Deployment, Service")
+		require.Contains(t, err.Error(), ".params keys: region")
+	})
+
+	t.Run("runtime error describes empty array outputs", func(t *testing.T) {
+		templates, _, err := resource.LoadTemplates(map[string]bundle.StepResource{
+			"svc": {Template: `{ url: .outputs.url }`},
+		}, t.TempDir())
+		require.NoError(t, err)
+		_, err = templates[0].Render(map[string]any{"outputs": []any{}})
+		require.Error(t, err)
+		require.Contains(t, err.Error(), ".outputs: (empty array)")
+	})
+}
+
 func TestNullPaths(t *testing.T) {
 	got := resource.NullPaths(map[string]any{
 		"a": nil,

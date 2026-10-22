@@ -263,25 +263,48 @@ func locate(src string, offset int) (int, int, string) {
 func inputHint(inputs map[string]any) string {
 	var parts []string
 	for _, key := range []string{"params", "connections", "envs", "secrets", "outputs"} {
-		obj, ok := inputs[key].(map[string]any)
-		if !ok {
-			continue
-		}
-		keys := make([]string, 0, len(obj))
-		for k := range obj {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		if len(keys) == 0 {
-			parts = append(parts, fmt.Sprintf("  .%s: (empty)", key))
-		} else {
-			parts = append(parts, fmt.Sprintf("  .%s keys: %s", key, strings.Join(keys, ", ")))
+		switch val := inputs[key].(type) {
+		case map[string]any:
+			keys := make([]string, 0, len(val))
+			for k := range val {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			if len(keys) == 0 {
+				parts = append(parts, fmt.Sprintf("  .%s: (empty)", key))
+			} else {
+				parts = append(parts, fmt.Sprintf("  .%s keys: %s", key, strings.Join(keys, ", ")))
+			}
+		case []any:
+			parts = append(parts, fmt.Sprintf("  .%s: %s", key, describeArray(val)))
 		}
 	}
 	if len(parts) == 0 {
 		return ""
 	}
 	return "  available inputs:\n  " + strings.Join(parts, "\n  ")
+}
+
+// describeArray summarizes an array input. When its items carry a "kind"
+// (e.g. Kubernetes manifests from Helm), the distinct kinds are listed since
+// templates typically select on them.
+func describeArray(items []any) string {
+	if len(items) == 0 {
+		return "(empty array)"
+	}
+	kindSet := map[string]bool{}
+	for _, item := range items {
+		if obj, ok := item.(map[string]any); ok {
+			if kind, ok := obj["kind"].(string); ok && kind != "" {
+				kindSet[kind] = true
+			}
+		}
+	}
+	desc := fmt.Sprintf("array of %d items", len(items))
+	if len(kindSet) > 0 {
+		desc += ", kinds: " + strings.Join(sortedKeys(kindSet), ", ")
+	}
+	return desc
 }
 
 func typeName(v any) string {
