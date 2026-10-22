@@ -293,8 +293,7 @@ func runResourceDecommission(cmd *cobra.Command, args []string) error {
 }
 
 // readJSON reads any JSON value from path ('-' for stdin). Outputs use this
-// because their shape depends on the provisioner (e.g. Helm produces an array
-// of manifests).
+// because their shape is dynamic.
 func readJSON(path string) (any, error) {
 	var data []byte
 	var err error
