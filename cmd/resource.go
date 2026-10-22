@@ -290,7 +290,7 @@ func runResourceDecommission(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func readJSONObject(path string) (map[string]any, error) {
+func readJSONObject(path string) (any, error) {
 	var data []byte
 	var err error
 	if path == "-" {
@@ -301,7 +301,7 @@ func readJSONObject(path string) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	obj := map[string]any{}
+	var obj any
 	if err := json.Unmarshal(data, &obj); err != nil {
 		return nil, fmt.Errorf("%s is not a valid JSON object: %w", path, err)
 	}
